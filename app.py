@@ -29,3 +29,27 @@ def upload_post():
 @app.get('/posts')
 def posts():
     pass
+
+
+#TODO: Create a get request for the user login page.
+@app.get('/login')
+def login():
+    pass
+
+#TODO: Create a post request for the user login page.
+@app.post('/login')
+def verify_login():
+    pass
+
+#TODO: Create a get request for the registration page.
+@app.get('/register')
+def register():
+    pass
+
+#TODO: Create a post request for the registration page.
+@app.post('/register')
+def create_user():
+    pass
+
+
+
