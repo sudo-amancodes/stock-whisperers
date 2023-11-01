@@ -13,6 +13,8 @@ def index():
 #@app.get('/test')
 #def testing():
 #    pass
+ 
+
 
 
 #TODO: Create a get request for the upload page.
@@ -54,5 +56,10 @@ def create_user():
 #TODO: Create a get request for the profile page.
 app.get('/profile')
 def profile():
+    pass  
+
+#TODO: Create a get request for live comments.
+@app.get('/comment')
+def live_comment():
     pass
 
