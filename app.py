@@ -51,5 +51,8 @@ def register():
 def create_user():
     pass
 
-
+#TODO: Create a get request for the profile page.
+app.get('/profile')
+def profile():
+    pass
 
