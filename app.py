@@ -13,3 +13,19 @@ def index():
 #@app.get('/test')
 #def testing():
 #    pass
+
+
+#TODO: Create a get request for the upload page.
+@app.get('/upload')
+def upload():
+    pass
+
+#TODO: Create a post request for the upload page.
+@app.post('/upload')
+def upload_post():
+    pass
+
+#TODO: Create a get request for the posts page.
+@app.get('/posts')
+def posts():
+    pass
