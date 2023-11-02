@@ -1,34 +1,48 @@
+#import numpy as np
+#import pandas as pd
+#from pandas_datareader import data as pdr
+
+#Market Data
 import yfinance as yf
-import matplotlib.pyplot as plt
 
-# Set the start and end dates
-start_date = "2023-10-13 10:00:00"
-end_date = "2023-10-13 10:10:00"
+#Graphing/Visualization
+import datetime as dt 
+import plotly.graph_objs as go 
 
-# Get the ticker symbol for the stock you want to track
-ticker = "AAPL"
+#Override Yahoo Finance
+yf.pdr_override()
 
-# Get the historical data for the stock
-df = yf.download(ticker, start_date, end_date, interval="10m")
+#Create input field for our desired stock
+stock='AAPL'
 
-# Plot the data
-plt.plot(df["Close"])
+#Retrieve stock data frame (df) from yfinance API at an interval of 1m
+df = yf.download(tickers=stock,period='1d',interval='1m', threads = True)
+df['Datetime'] = df.index.strftime('%I:%M %p')
 
-# Add a legend to the graph
-plt.legend([ticker], loc="upper left")
+print(df)
+#Declare plotly figure (go)
+fig=go.Figure()
 
-# Change the line color to blue
-plt.plot(df["Close"], color="blue")
+fig.add_trace(go.Candlestick(x=df.index,
+                open=df['Open'],
+                high=df['High'],
+                low=df['Low'],
+                close=df['Close'], name = 'market data'))
 
-# Add a grid to the graph
-plt.grid(True)
+fig.update_layout(
+    title= str(stock)+' Live Share Price:',
+    yaxis_title='Stock Price (USD per Shares)')
 
-# Change the axis labels
-plt.xlabel("Time (PST)")
-plt.ylabel("Price (USD)")
-
-# Change the title of the graph
-plt.title("Current Market for {} on 2023-10-13".format(ticker))
-
-# Show the graph
-plt.show()
+fig.update_xaxes(
+    rangeslider_visible=True,
+    rangeselector=dict(
+        buttons=list([
+            dict(count=15, label="15m", step="minute", stepmode="backward"),
+            dict(count=45, label="45m", step="minute", stepmode="backward"),
+            dict(count=1, label="HTD", step="hour", stepmode="todate"),
+            dict(count=3, label="3h", step="hour", stepmode="backward"),
+            dict(step="all")
+        ])
+    )
+)
+fig.show()
