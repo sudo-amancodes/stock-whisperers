@@ -3,6 +3,7 @@ from flask_bcrypt import Bcrypt
 import os
 from dotenv import load_dotenv
 from models import users, db, live_posts
+from flask_login import login_user, login_required, logout_user, current_user, LoginManager
 
 load_dotenv()
 
@@ -15,12 +16,19 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{os.getenv("DB_USER")}:{o
 
 db.init_app(app)
 
+login_manager = LoginManager(app)
+login_manager.login_view = '/login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return users.query.get(int(user_id))
+
 @app.get('/')
 def index():
-    # temp_user = users.query.get(4)
+    # temp_user = users.query.get(3)
     # db.session.delete(temp_user)
     # db.session.commit()
-    return render_template('index.html')
+    return render_template('index.html', user=current_user)
 
 #Create Comments or add a temporary get/post request. That has a pass statement.
 #Example:
@@ -48,7 +56,7 @@ def posts():
 #TODO: Create a get request for the user login page.
 @app.get('/login')
 def login():
-    return render_template('login.html')
+    return render_template('login.html', user=current_user)
 
 @app.post('/login')
 def verify_login():
@@ -63,6 +71,7 @@ def verify_login():
     if temp_username is not None:
         if bcrypt.check_password_hash(temp_username.password, password):
             flash('Successfully logged in, ' + temp_username.first_name + '!', category= 'success') 
+            login_user(temp_username, remember=True)
             # figure out how to send this msg to home page
             return redirect('/')
         else:
@@ -72,10 +81,16 @@ def verify_login():
 
     return redirect('/login')
 
+@app.get('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect('/login')
+
 
 @app.get('/register')
 def register():
-    return render_template('register.html')
+    return render_template('register.html', user=current_user)
 
 @app.post('/register')
 def create_user():
@@ -104,6 +119,7 @@ def create_user():
         temp_user = users(first_name, last_name, username, bcrypt.generate_password_hash(password).decode('utf-8'))
         db.session.add(temp_user)
         db.session.commit()
+        login_user(temp_user, remember= True)
         flash('account successfully created!', category= 'success')
         return redirect('/')
 
