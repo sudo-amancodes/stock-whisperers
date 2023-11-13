@@ -26,7 +26,7 @@ def index():
 #TODO: Create a get request for the upload page.
 @app.get('/upload')
 def upload():
-    pass
+    return render_template('upload.html')
 
 #TODO: Create a post request for the upload page.
 @app.post('/upload')
@@ -94,7 +94,7 @@ def profile():
 def live_comment():
     pass
 
-# TODO: Implement the 'Post Discussions' feature
-@app.get('post discussions')
-def Post_discussions():
-    pass
+# # TODO: Implement the 'Post Discussions' feature
+# @app.get('post discussions')
+# def Post_discussions():
+#     pass
