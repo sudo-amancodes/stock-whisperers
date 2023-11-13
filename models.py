@@ -1,5 +1,4 @@
 from flask_sqlalchemy import SQLAlchemy
-from app import app
 
 db = SQLAlchemy()
 
@@ -37,3 +36,42 @@ class users():
 #live posts table
 class Live_Posts():
     pass
+
+
+#post
+class Post(db.model):
+    # PRIMARY KEY post_id SERIAL,
+    post_id = db.Column(db.Integer, primary_key = True)
+
+    # title VARCHAR(255) NOT NULL,
+    title = db.Column(db.String(255), nullable = False)
+
+    # content TEXT,
+    content = db.Column(db.Text, nullable = True)
+
+    # date_posted TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    date_posted = db.Column(db.DateTime, nullable = False)
+
+    # likes INT NOT NULL DEFAULT 0,
+    likes = db.Column(db.Integer, nullable = True, default = 0)
+
+    # image BLOB,
+    image = db.Column(db.LargeBinary, nullable = True)
+
+    # user_id INT,
+    # FOREIGN KEY (user_id) references users(user_id)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable = False)
+
+    # each user's posts
+    posts = db.relationship('users', backref='posts')
+
+    def __init__(self, post_id: int, user_id: int, title: str, content: str, date_posted: str, likes: int):
+        self.post_id = post_id
+        self.user_id = user_id
+        self.title = title
+        self.content = content
+        self.date_posted = date_posted
+        self.likes = likes
+
+    def __repr__(self) -> str:
+        return f'Post #{self.post_id} by {self.user_id})'
