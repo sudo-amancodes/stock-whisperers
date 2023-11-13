@@ -1,0 +1,28 @@
+{% extends '_layout.html' %}
+
+{% block title %}Upload to Stock Whisperers{% endblock %}
+{% block body %}
+
+<main>
+    {% if dict|length == 0 %}
+    <h1 class="mt-3">There are no posts available.</h1>
+    {% else %}
+
+    <h1 class="mt-3 mb-3">Posts</h1>
+
+    {% for post in dict %}
+
+    <div class="container bg-secondary p-3 mb-5 rounded" style="color: white;">
+        <h3>{{ dict[post].title }}</h3>
+        <div class="container p-0">
+            <p>{{ dict[post].content }}</p>
+            <p>{{ dict[post].date_posted }}</p>
+        </div>
+    </div>
+
+    {% endfor %}
+
+    {% endif %}
+</main>
+
+{% endblock %}
