@@ -1,6 +1,7 @@
 from flask import Flask, abort, redirect, render_template, request
 import os
 from dotenv import load_dotenv
+from models import Post
 
 load_dotenv()
 
@@ -21,6 +22,7 @@ def index():
  
 
 
+dict = {}
 
 
 #TODO: Create a get request for the upload page.
@@ -31,12 +33,19 @@ def upload():
 #TODO: Create a post request for the upload page.
 @app.post('/upload')
 def upload_post():
-    pass
+    title = request.form.get('title')
+    description = request.form.get('text')
+    if title == '' or title is None:
+        abort(400)
+    post1 = Post(1, 1, title, description, '2021-09-01')
+    dict[title] = post1
+    
+    return redirect('/posts')
 
 #TODO: Create a get request for the posts page.
 @app.get('/posts')
 def posts():
-    pass
+    return render_template('posts.html', dict=dict)
 
 
 #TODO: Create a get request for the user login page.
