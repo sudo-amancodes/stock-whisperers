@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS post (
     content TEXT,
     date_posted TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     likes INT NOT NULL DEFAULT 0,
-    file_upload BYTEA,
+    file_upload VARCHAR(255),
     user_id INT REFERENCES users(user_id) ON DELETE CASCADE
 );
 
