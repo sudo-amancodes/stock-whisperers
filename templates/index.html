@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live-Chat</title> 
+    <script src = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.js "> 
+    </script> 
+    <script src = https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js> </script>
+
+</head>
+<body style = "text-align: left; font-family: Arial, serif; font-size: 14pt">  
+    <script type="text/javascript">
+        $(document).ready(function() {  
+            var socket = io.connect("http://localhost:5000"); 
+            socket.on('connect', function() { 
+               socket.send("User connected!");  
+            });      
+
+            socket.on('message', function(data) { 
+                $('#messages').append($('<p>').text(data)); 
+            }); 
+    
+            $('#sendBtn').on('click', function() { 
+                var username = $('#username').val();
+                var message = $('#message').val();
+                socket.send($('#username').val() + ': ' + $('#message').val()); 
+                $('#message').val(' '); 
+
+            }); 
+        })
+    </script>
+    
+    <div id = "messages" style="width: 30%; text-align: bottom; min-height: 200px;">  
+
+    </div>  
+
+    <input type="text" id = "username" placeholder="Username">
+    <input type="text" id="message" placeholder="Message"> 
+    <button id = "sendBtn">Send</button>
+    
+</body>
+</html> 
+
+
+
+
