@@ -1,7 +1,8 @@
 from flask import Flask, abort, redirect, render_template, request
 import os
 from dotenv import load_dotenv
-from models import Post
+from src.repositories.post_repository import post_repository_singleton
+from src.models import db
 
 load_dotenv()
 
@@ -9,6 +10,8 @@ app = Flask(__name__)
 app.debug = True
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{os.getenv("DB_USER")}:{os.getenv("DB_PASS")}@{os.getenv("DB_HOST")}:{os.getenv("DB_PORT")}/{os.getenv("DB_NAME")}'
+
+db.init_app(app)
 
 @app.get('/')
 def index():
@@ -22,7 +25,7 @@ def index():
  
 
 
-dict = {}
+
 
 
 #TODO: Create a get request for the upload page.
@@ -37,15 +40,14 @@ def upload_post():
     description = request.form.get('text')
     if title == '' or title is None:
         abort(400)
-    post1 = Post(1, 1, title, description, '2021-09-01')
-    dict[title] = post1
-    
+    created_post = post_repository_singleton.create_post(title, description)
     return redirect('/posts')
 
 #TODO: Create a get request for the posts page.
 @app.get('/posts')
 def posts():
-    return render_template('posts.html', dict=dict)
+    all_posts = post_repository_singleton.get_all_posts()
+    return render_template('posts.html', list_posts_active=True, posts=all_posts)
 
 
 #TODO: Create a get request for the user login page.
