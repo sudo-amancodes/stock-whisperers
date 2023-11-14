@@ -72,7 +72,6 @@ def verify_login():
         if bcrypt.check_password_hash(temp_username.password, password):
             flash('Successfully logged in, ' + temp_username.first_name + '!', category= 'success') 
             login_user(temp_username, remember=True)
-            # figure out how to send this msg to home page
             return redirect('/')
         else:
             flash('Incorrect username or password', category='error')
@@ -97,15 +96,20 @@ def create_user():
     first_name = request.form.get('first-name')
     last_name = request.form.get('last-name')
     username = request.form.get('username')
-    # email = request.form.get('email')
+    email = request.form.get('email')
     password = request.form.get('password')
 
-    if username == '' or password == '' or first_name == '' or last_name == '':
+    if username == '' or password == '' or first_name == '' or last_name == '' or email == '':
         abort(400)
 
     temp_user = users.query.filter_by(username = username).first()
+    temp_email = users.query.filter_by(email = email).first()
     if temp_user is not None:
         flash('Username already exists', category= 'error')
+        return redirect('/register')
+    if temp_email is not None:
+        flash('email address already exists', category= 'error')
+        return redirect('/register')
 
     if len(first_name) <= 1:
         flash('First name must be greater than 1 character', category='error')
@@ -116,11 +120,11 @@ def create_user():
     elif len(password) < 8:
         flash('Password must be contain at least 8 characters, a number, and a special character', category='error')
     else:
-        temp_user = users(first_name, last_name, username, bcrypt.generate_password_hash(password).decode('utf-8'))
+        temp_user = users(first_name, last_name, username, email, bcrypt.generate_password_hash(password).decode('utf-8'))
         db.session.add(temp_user)
         db.session.commit()
-        login_user(temp_user, remember= True)
-        flash('account successfully created!', category= 'success')
+        login_user(temp_user, remember = True)
+        flash('account successfully created!', category = 'success')
         return redirect('/')
 
     return redirect('/register')
