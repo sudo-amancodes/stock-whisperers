@@ -2,13 +2,88 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Temporary Webpage</title>
+    <title>Single Post Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #F8F9FA;
+            color: #353A3F;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background-color: #353A3F;
+            color: #F8F9FA;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header .logo {
+            font-size: 24px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+        .nav-links a {
+            color: #F8F9FA;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        .profile-icon {
+            cursor: pointer;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            background-color: #8A8888;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .post {
+            background-color: #F8F9FA;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .post-header {
+            font-size: 24px;
+            color: #353A3F;
+        }
+        .post-content {
+            margin-top: 10px;
+        }
+        .like-comment-section {
+            margin-top: 20px;
+        }
+        .like-comment-section button {
+            background-color: #353A3F;
+            color: #F8F9FA;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <h1>
-        This is the stock whisperers. 
-    </h1>
+    <div class="header">
+        <div class="logo">Stock Whisperers</div>
+        <div class="nav-links">
+            <a href="/whisperwall">WhisperWall</a>
+            <a href="/whisperposts">WhisperPosts</a>
+        </div>
+        <div class="profile-icon">Profile</div>
+    </div>
+    <div class="content">
+        <div class="stock-section">
+            <!-- Stock Section Content Here -->
+        </div>
+        <div class="live-chat-section">
+            <!-- Live Chat Section Content Here -->
+        </div>
+    </div>
 </body>
 </html>

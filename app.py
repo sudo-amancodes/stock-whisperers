@@ -65,6 +65,13 @@ def live_comment():
     pass
 
 # TODO: Implement the 'Post Discussions' feature
-@app.get('post discussions')
-def Post_discussions():
-    pass
+@app.route('/post/<int:post_id>')
+def post_discussions(post_id):
+    # Fetch the post by ID
+    post = live_posts.query.get_or_404(post_id)
+
+    # Fetch comments related to the post
+    # Assuming you have a 'comments' table and a 'post_id' column in it
+    post_comments = Comments.query.filter_by(post_id=post_id).all()
+
+    return render_template('SinglePost.html', post=post, comments=post_comments)
