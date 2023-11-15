@@ -2,8 +2,9 @@ from flask import Flask, abort, redirect, render_template, request, flash
 from flask_bcrypt import Bcrypt 
 import os
 from dotenv import load_dotenv
-from models import users, db, live_posts
 from flask_login import login_user, login_required, logout_user, current_user, LoginManager
+from src.repositories.post_repository import post_repository_singleton
+from src.models import db, users, live_posts
 
 load_dotenv()
 
@@ -40,20 +41,27 @@ def index():
 
 
 
+
 #TODO: Create a get request for the upload page.
 @app.get('/upload')
 def upload():
-    pass
+    return render_template('upload.html')
 
 #TODO: Create a post request for the upload page.
 @app.post('/upload')
 def upload_post():
-    pass
+    title = request.form.get('title')
+    description = request.form.get('text')
+    if title == '' or title is None:
+        abort(400)
+    created_post = post_repository_singleton.create_post(title, description)
+    return redirect('/posts')
 
 #TODO: Create a get request for the posts page.
 @app.get('/posts')
 def posts():
-    pass
+    all_posts = post_repository_singleton.get_all_posts()
+    return render_template('posts.html', list_posts_active=True, posts=all_posts)
 
 
 #TODO: Create a get request for the user login page.
@@ -138,7 +146,7 @@ def profile():
 def live_comment():
     pass
 
-# TODO: Implement the 'Post Discussions' feature
-@app.get('post discussions')
-def Post_discussions():
-    pass
+# # TODO: Implement the 'Post Discussions' feature
+# @app.get('post discussions')
+# def Post_discussions():
+#     pass

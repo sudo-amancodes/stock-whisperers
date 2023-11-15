@@ -1,0 +1,21 @@
+{% extends '_layout.html' %}
+
+{% block title %}Upload to Stock Whisperers{% endblock %}
+{% block body %}
+
+<main>
+    <h1>Create a Post</h1>
+    <form action="/upload" method="post">
+        <div class="w-50 mt-4">
+            <input type="text" name="title" id="title" class="form-control" placeholder="Title" required>
+            <textarea name="text" placeholder="Text (optional)" id="text" cols="30" rows="5" class="form-control mt-3"></textarea>
+        </div>
+
+        <div class="w-50 mt-3 d-flex justify-content-between">
+            <input class="form-control w-50" type="file" id="formFile">
+            <input type="submit" class="btn btn-primary w-25" value="Post">
+        </div>
+    </form>
+</main>
+
+{% endblock %}
