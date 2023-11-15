@@ -2,8 +2,10 @@ from flask import Flask, abort, redirect, render_template, request, flash
 from flask_bcrypt import Bcrypt 
 import os
 from dotenv import load_dotenv
-from models import users, db, live_posts
 from flask_login import login_user, login_required, logout_user, current_user, LoginManager
+from src.repositories.post_repository import post_repository_singleton
+from src.models import db, users, live_posts
+from sqlalchemy import or_
 
 load_dotenv()
 
@@ -36,21 +38,26 @@ def index():
 #def testing():
 #    pass
 
-
 #TODO: Create a get request for the upload page.
 @app.get('/upload')
 def upload():
-    pass
+    return render_template('upload.html', user = current_user)
 
 #TODO: Create a post request for the upload page.
 @app.post('/upload')
 def upload_post():
-    pass
+    title = request.form.get('title')
+    description = request.form.get('text')
+    if title == '' or title is None:
+        abort(400)
+    created_post = post_repository_singleton.create_post(title, description)
+    return redirect('/posts')
 
 #TODO: Create a get request for the posts page.
 @app.get('/posts')
 def posts():
-    pass
+    all_posts = post_repository_singleton.get_all_posts()
+    return render_template('posts.html', list_posts_active=True, posts=all_posts, user = current_user)
 
 
 #TODO: Create a get request for the user login page.
@@ -66,7 +73,9 @@ def verify_login():
     if username == '' or password == '':
         abort(400) 
 
-    temp_username = users.query.filter_by(username = username).first()
+    # temp_username = users.query.filter_by(username = username).first()
+
+    temp_username = users.query.filter(or_(users.username == username, users.email == username)).first()
 
     if temp_username is not None:
         if bcrypt.check_password_hash(temp_username.password, password):
@@ -102,15 +111,15 @@ def create_user():
     if username == '' or password == '' or first_name == '' or last_name == '' or email == '':
         abort(400)
 
-    temp_user = users.query.filter_by(username = username).first()
-    temp_email = users.query.filter_by(email = email).first()
+    temp_user = users.query.filter(or_(users.username == username, users.email == email)).first()
     if temp_user is not None:
-        flash('Username already exists', category= 'error')
+        if temp_user.email is not None:
+            flash('email already exists', category= 'error')
+        elif temp_user.username is not None:
+            flash('username already exists', category= 'error')
+            
         return redirect('/register')
-    if temp_email is not None:
-        flash('email address already exists', category= 'error')
-        return redirect('/register')
-
+    
     if len(first_name) <= 1:
         flash('First name must be greater than 1 character', category='error')
     elif len(last_name) <= 1:
@@ -129,5 +138,17 @@ def create_user():
 
     return redirect('/register')
 
+#TODO: Create a get request for the profile page.
+app.get('/profile')
+def profile():
+    pass  
 
+#TODO: Create a get request for live comments.
+@app.get('/comment')
+def live_comment():
+    pass
 
+# # TODO: Implement the 'Post Discussions' feature
+# @app.get('post discussions')
+# def Post_discussions():
+#     pass
