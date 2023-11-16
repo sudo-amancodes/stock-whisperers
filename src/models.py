@@ -86,14 +86,16 @@ class Post(db.Model):
     # each user's posts
     posts = db.relationship('users', backref='posts')
 
-    def __init__(self, title: str, content: str):
-        self.title = title
-        self.content = content
+    liked_by = db.relationship('users', secondary='likes', backref='liked_posts')
 
-    # def __init__(self, user_id: int, title: str, content: str):
-    #     self.user_id = user_id
+    # def __init__(self, title: str, content: str):
     #     self.title = title
     #     self.content = content
+
+    def __init__(self, user_id: int, title: str, content: str):
+        self.user_id = user_id
+        self.title = title
+        self.content = content
 
     def __repr__(self) -> str:
         return f'Post #{self.post_id} by {self.user_id})'
@@ -133,3 +135,9 @@ class Comment(db.Model):
 
     def __repr__(self) -> str:
         return f'{self.content}'
+    
+likes = db.Table(
+    'likes',
+    db.Column('user_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True),
+    db.Column('post_id', db.Integer, db.ForeignKey('post.post_id'), primary_key=True)
+)

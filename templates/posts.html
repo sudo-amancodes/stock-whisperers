@@ -10,17 +10,47 @@
 
     <h1 class="mt-3 mb-3">Posts</h1>
 
-    {% for post in posts %}
+    {% for post, user in posts %}
 
     <div class="container bg-secondary p-3 mb-5 rounded" style="color: white;">
-        <h3>{{ post.title }}</h3>
+        <div class="d-inline-flex align-items-center justify-content-between w-100">
+            <h3>{{ post.title }}</h3>
+            <h6>Posted by {{ user.username }}, {{ post.date_posted|time_ago }}</h6>
+        </div>
+        
         <div class="container p-0">
             <p>{{ post.content }}</p>
-            <p>{{ post.date_posted }}</p>
+            <p>num of likes: {{ post.likes }}</p>
+            <div>
+                <button class="like-button" data-post-id="{{ post.post_id }}" data-user-id="{{ user.user_id }}">Like</button>
+                <button>Comment</button>
+            </div>
         </div>
     </div>
 
     {% endfor %}
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('.like-button').click(function () {
+                var postId = $(this).data('post-id');
+                var userId = $(this).data('user-id');
+    
+                $.ajax({
+                    type: 'POST',
+                    url: '/posts/like',
+                    data: { post_id: postId, user_id: userId },
+                    success: function (data) {
+                        console.log('Like added successfully');
+                    },
+                    error: function (error) {
+                        console.error('Error adding like:', error);
+                    }
+                });
+            });
+        });
+    </script>
 
     {% endif %}
 </main>
