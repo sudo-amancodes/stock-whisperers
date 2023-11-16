@@ -7,7 +7,7 @@ import plotly.express as px
 import pandas as pd
 
 #Server Setup
-from flask import Flask, abort, redirect, render_template, request, flash
+from flask import Flask, abort, redirect, render_template, request, flash, url_for
 from flask_socketio import SocketIO, emit
 from threading import Lock
 from flask_bcrypt import Bcrypt 
@@ -17,6 +17,7 @@ from flask_login import login_user, login_required, logout_user, current_user, L
 from src.repositories.post_repository import post_repository_singleton
 from src.models import db, users, live_posts
 from sqlalchemy import or_
+from flask_mail import Mail, Message
 
 thread = None
 thread_lock = Lock()
@@ -29,6 +30,7 @@ app = Flask(__name__)
 bcrypt = Bcrypt(app) 
 app.secret_key = 'try'
 
+
 # If bugs occur with sockets then try: 
 # app.config['SECRET_KEY'] = 'ABC'
 
@@ -37,12 +39,23 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 
 app.debug = True
 
+# DB connection
 app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{os.getenv("DB_USER")}:{os.getenv("DB_PASS")}@{os.getenv("DB_HOST")}:{os.getenv("DB_PORT")}/{os.getenv("DB_NAME")}'
 
 db.init_app(app)
 
+# Login Initialization
 login_manager = LoginManager(app)
 login_manager.login_view = '/login'
+
+# Mail Initialization
+app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.getenv("EMAIL_USER")
+app.config['MAIL_PASS'] = os.getenv("EMAIL_PASS")
+mail = Mail(app)
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -162,7 +175,6 @@ def logout():
     logout_user()
     return redirect('/login')
 
-
 @app.get('/register')
 def register():
     return render_template('register.html', user=current_user)
@@ -204,6 +216,58 @@ def create_user():
         return redirect('/')
 
     return redirect('/register')
+
+# Route for requesting password reset
+app.get('/request_password_reset')
+def rquest_password_form():
+    return render_template('request_password_reset')
+
+app.post('/request_password_reset')
+def request_password_reset():
+    if current_user.is_authenticated:
+        return redirect(url_for('index.html'))
+    email = request.form.get('email')
+    temp_user = users.query.filter_by(email = email).first()
+    if temp_user is None:
+        flash('User with associated email address does not exist. Please register first.')
+        return redirect('/request_password_reset')
+    
+    token = users.get_reset_token()
+    msg = Message('Password Reset Request', sender='noreply@stock-whisperers.com', recipients=[temp_user.email])
+    msg.body = f'''To reset your password, click the following link:
+    {url_for('reset_password', token = token, _external =True)}
+
+    If you did not make this request, please ignore this email
+    '''
+    
+    flash('An email has been sent with instructions to reset your password')
+    return redirect(url_for('login.html'))
+    
+app.get('/password_reset')
+def password_reset_form():
+    return render_template('reset_password')
+
+# Route for resetting a password
+app.post('/password_reset/<token>')
+def password_reset(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('index.html'))
+    user = users.verify_reset_token(token)
+    if user is None:
+        flash('Invalid or expired token', 'error')
+        return redirect(url_for('reset_password_request'))
+    
+    password = request.form.get('password')
+    confirm_password = request.form.get('confirm-password')
+    if password != confirm_password:
+        flash('Passwords do not match')
+        return redirect('/password_reset')
+    user.password = password
+    db.session.add(user)
+    db.session.commit()
+
+    return redirect('/login')
+    
 
 #TODO: Create a get request for the profile page.
 app.get('/profile')

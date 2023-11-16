@@ -1,4 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from app import app
 from sqlalchemy import text
 from sqlalchemy.sql import func
 from flask_login import UserMixin
@@ -25,12 +27,26 @@ class users(db.Model, UserMixin):
 
     profile_picture = db.Column(db.String(255), nullable = True)
 
+
     def __init__(self, first_name: str, last_name: str, username: str, email:str , password: str):
         self.first_name = first_name
         self.last_name = last_name
         self.username = username
         self.email = email
         self.password = password
+
+    def get_reset_token(self, expires_sec=900):
+        s = Serializer(app.config['SECRET_KEY'], expires_sec)
+        return s.dumps({'user_id' : self.user_id}).decode('utf-8')
+    
+    @staticmethod
+    def verify_reset_token(token):
+        s = Serializer(app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token)['user_id']
+        except:
+            return None
+        return users.query.get(user_id)
 
     def __repr__(self) -> str:
         return f'users({self.first_name}, {self.last_name})'
