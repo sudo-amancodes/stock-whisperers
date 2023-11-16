@@ -1,6 +1,9 @@
-from flask import Flask, abort, redirect, render_template, request
+from flask import Flask, abort, redirect, render_template, request, url_for
 import os
 from dotenv import load_dotenv
+from models import db, users
+from flask_login import current_user, login_required
+from flask_wtf import FileField
 
 load_dotenv()
 
@@ -85,9 +88,13 @@ def create_user():
                 # add user to db
 
 #TODO: Create a get request for the profile page.
-app.get('/profile')
-def profile():
-    pass  
+app.get('/profile/<int:user_id>')
+@login_required
+def profile(user_id):
+    user = current_user
+    profile_picture = url_for('static', filename = 'profile_pics/' + user.profile_picture)
+
+    return render_template('profile.html', user=user, profile_picture=profile_picture)
 
 #TODO: Create a get request for live comments.
 @app.get('/comment')
@@ -95,6 +102,19 @@ def live_comment():
     pass
 
 # TODO: Implement the 'Post Discussions' feature
-@app.get('post discussions')
+@app.get('/post discussions')
 def Post_discussions():
     pass
+
+app.post('/users/<int:user_id>')
+def edit_profile(user_id: int):
+    user = current_user
+
+    user.email = request.form.get('email')
+    user.username = request.form.get('username')
+
+    profile_pic = request.files['profile_picture']
+    db.session.add(user)
+    db.session.commit()
+
+    return redirect(f'/profile/{user_id}', user_id=user_id)
