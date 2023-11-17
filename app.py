@@ -19,6 +19,7 @@ from src.repositories.post_repository import post_repository_singleton
 from src.models import db, users, live_posts
 from sqlalchemy import or_
 from flask_mail import Mail, Message
+from numpy import numpy
 
 thread = None
 thread_lock = Lock()
