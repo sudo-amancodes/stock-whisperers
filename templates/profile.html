@@ -1,0 +1,20 @@
+{% extends "_layout.html" %}
+
+{% block content %}
+<div class="content-section">
+    <div class="media">
+        {% if current_user %}
+      <div class="mt3">
+        <h2>Profile Page</h2>
+        <img class="rounded-circle account-img" src="{{ profile_picture }}">
+        <p>Name: {{ current_user.username }}</p>
+        <p>Email: {{ current_user.email }}</p>
+        <form action="/users/{{current_user.user_id}}/edit" method="get" class="mt-3">
+            <button type="submit" class="btn btn-secondary">Edit Profile</button>
+      </div>
+      {% endif %}
+    </div>
+    <!-- FORM HERE -->
+  </div>
+
+{% endblock content %}
