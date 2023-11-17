@@ -1,3 +1,5 @@
+from flask import Flask, abort, redirect, render_template, request, url_for, flash
+# from flask_wtf import FileField
 #Market Data
 import yfinance as yf
 import plotly.graph_objs as go 
@@ -7,7 +9,6 @@ import plotly.express as px
 import pandas as pd
 
 #Server Setup
-from flask import Flask, abort, redirect, render_template, request, flash, url_for
 from flask_socketio import SocketIO, emit
 from threading import Lock
 from flask_bcrypt import Bcrypt 
@@ -270,14 +271,36 @@ def password_reset(token):
     
 
 #TODO: Create a get request for the profile page.
-app.get('/profile')
-def profile():
-    pass  
+@app.get('/profile/<int:user_id>')
+@login_required
+def profile(user_id):
+    user = current_user
+    profile_picture = url_for('static', filename = 'profile_pics/' + user.profile_picture)
+
+    return render_template('profile.html', user=user, profile_picture=profile_picture)
 
 #TODO: Create a get request for live comments.
 @app.get('/comment')
 def live_comment():
     pass
+
+# TODO: Implement the 'Post Discussions' feature
+@app.get('/post discussions')
+def Post_discussions():
+    pass
+
+@app.post('/users/<int:user_id>')
+def edit_profile(user_id: int):
+    user = current_user
+
+    user.email = request.form.get('email')
+    user.username = request.form.get('username')
+
+    profile_pic = request.files['profile_picture']
+    db.session.add(user)
+    db.session.commit()
+
+    return redirect(f'/profile/{user_id}', user_id=user_id)
 
 # # TODO: Implement the 'Post Discussions' feature
 # @app.get('post discussions')
