@@ -153,8 +153,8 @@ def time_ago_filter(timestamp):
 #TODO: Create a get request for the posts page.
 @app.get('/posts')
 def posts():
-    all_posts = post_repository_singleton.get_all_posts()
-    return render_template('posts.html', list_posts_active=True, posts=all_posts)
+    all_posts = post_repository_singleton.get_all_posts_with_users()
+    return render_template('posts.html', list_posts_active=True, posts=all_posts, user=current_user)
 
 #TODO: Create a get request for the user login page.
 @app.get('/login')
