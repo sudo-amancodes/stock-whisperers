@@ -188,7 +188,7 @@ def create_user():
     email = request.form.get('email')
     password = request.form.get('password')
 
-    if username == '' or password == '' or first_name == '' or last_name == '' or email == '':
+    if username is None or password is None or first_name is None or last_name is None or email is None:
         abort(400)
 
     temp_user = users.query.filter(or_(users.username == username, users.email == email)).first()
