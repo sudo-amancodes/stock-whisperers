@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
 from app import app
 from sqlalchemy import text
 from sqlalchemy.sql import func
