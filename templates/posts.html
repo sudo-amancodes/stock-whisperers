@@ -2,7 +2,12 @@
 
 {% block title %}Upload to Stock Whisperers{% endblock %}
 {% block body %}
-
+<style>
+    .liked {
+        /* style the like button here to show that it is liked */
+        background-color: red;
+    }
+</style>
 <main>
     {% if posts|length == 0 %}
     <h1 class="mt-3">There are no posts available.</h1>
@@ -10,19 +15,27 @@
 
     <h1 class="mt-3 mb-3">Posts</h1>
 
-    {% for post, user in posts %}
+    {% for post, creator in posts %}
 
     <div class="container bg-secondary p-3 mb-5 rounded" style="color: white;">
         <div class="d-inline-flex align-items-center justify-content-between w-100">
             <h3>{{ post.title }}</h3>
-            <h6>Posted by {{ user.username }}, {{ post.date_posted|time_ago }}</h6>
+            <h6>Posted by {{ creator.username }}, {{ post.date_posted|time_ago }}</h6>
         </div>
         
         <div class="container p-0">
             <p>{{ post.content }}</p>
-            <p>num of likes: {{ post.likes }}</p>
+            <p id="like-count">{{ post.likes }}</p>
             <div>
-                <button class="like-button" data-post-id="{{ post.post_id }}" data-user-id="{{ user.user_id }}">Like</button>
+                {% if user.is_authenticated %}
+                {% if post in user.liked_posts %}
+                <button onclick="liked_or_not()" id="like-button" class="like-button liked" data-post-id="{{ post.post_id }}" data-user-id="{{ user.user_id }}">Liked</button>
+                {% else %}
+                <button onclick="liked_or_not()" id="like-button" class="like-button" data-post-id="{{ post.post_id }}" data-user-id="{{ user.user_id }}">Like</button>
+                {% endif %}
+                {% else %}
+                <a href="/login"><button>Like</button></a>
+                {% endif %}
                 <button>Comment</button>
             </div>
         </div>
@@ -50,6 +63,20 @@
                 });
             });
         });
+    </script>
+    <script>
+        function liked_or_not() {
+            const like_button = document.getElementById("like-button");
+            const like_count = document.getElementById("like-count");
+            if (like_button.classList.contains("liked")) {
+                like_count.innerHTML = parseInt(like_count.innerHTML) - 1;
+                like_button.innerHTML = "Like";
+            } else {
+                like_button.innerHTML = "Liked";
+                like_count.innerHTML = parseInt(like_count.innerHTML) + 1;
+            }
+            like_button.classList.toggle("liked");
+        }
     </script>
 
     {% endif %}
