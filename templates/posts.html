@@ -25,13 +25,13 @@
         
         <div class="container p-0">
             <p>{{ post.content }}</p>
-            <p id="like-count">{{ post.likes }}</p>
+            <p class="like-count">{{ post.likes }}</p>
             <div>
                 {% if user.is_authenticated %}
                 {% if post in user.liked_posts %}
-                <button onclick="liked_or_not()" id="like-button" class="like-button liked" data-post-id="{{ post.post_id }}" data-user-id="{{ user.user_id }}">Liked</button>
+                <button class="like-button liked" data-post-id="{{ post.post_id }}" data-user-id="{{ user.user_id }}">Liked</button>
                 {% else %}
-                <button onclick="liked_or_not()" id="like-button" class="like-button" data-post-id="{{ post.post_id }}" data-user-id="{{ user.user_id }}">Like</button>
+                <button class="like-button" data-post-id="{{ post.post_id }}" data-user-id="{{ user.user_id }}">Like</button>
                 {% endif %}
                 {% else %}
                 <a href="/login"><button>Like</button></a>
@@ -66,17 +66,23 @@
     </script>
     <script>
         function liked_or_not() {
-            const like_button = document.getElementById("like-button");
-            const like_count = document.getElementById("like-count");
-            if (like_button.classList.contains("liked")) {
-                like_count.innerHTML = parseInt(like_count.innerHTML) - 1;
-                like_button.innerHTML = "Like";
-            } else {
-                like_button.innerHTML = "Liked";
-                like_count.innerHTML = parseInt(like_count.innerHTML) + 1;
+            const like_button = document.getElementsByClassName("like-button");
+            const like_count = document.getElementsByClassName("like-count");
+            for (let i = 0; i < like_button.length; i++) {
+                like_button[i].addEventListener("click", function () {
+                    if (like_button[i].classList.contains("liked")) {
+                        like_count[i].innerHTML = parseInt(like_count[i].innerHTML) - 1;
+                        like_button[i].innerHTML = "Like";
+                    } else {
+                        like_button[i].innerHTML = "Liked";
+                        like_count[i].innerHTML = parseInt(like_count[i].innerHTML) + 1;
+                    }
+                    like_button[i].classList.toggle("liked");
+                });
+   
             }
-            like_button.classList.toggle("liked");
         }
+        liked_or_not();
     </script>
 
     {% endif %}
