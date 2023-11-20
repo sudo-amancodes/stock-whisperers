@@ -50,7 +50,7 @@
             <p>ID: {{ post.post_id }}</p>
             {% for comment in post.comments %}
             <div class="comment-container container p-0">
-                <h6>{{ comment.user_comments.username }}</h6>
+                <h6>{{ comment.comment_creator.username }}</h6>
                 <div class="d-inline-flex align-items-center w-100 ps-3 border-start">
                     <p class="m-0 p-2">{{ comment.content }}</p>
                 </div>
