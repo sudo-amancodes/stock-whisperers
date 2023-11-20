@@ -8,7 +8,8 @@ class PostRepository:
     
     # get all posts from the DB with their creators
     def get_all_posts_with_users(self):
-        return db.session.query(Post, users).join(users, users.user_id == Post.user_id).all()
+        #filter by date
+        return db.session.query(Post, users).join(users, users.user_id == Post.user_id).order_by(Post.date_posted.desc()).all()
 
     # create a new post in the DB
     def create_post(self, title, content, user_id):
