@@ -88,6 +88,9 @@ class Post(db.Model):
 
     liked_by = db.relationship('users', secondary='likes', backref='liked_posts')
 
+    # each post's comments
+    comments = db.relationship('Comment', backref='comments')
+
     # def __init__(self, title: str, content: str):
     #     self.title = title
     #     self.content = content
@@ -123,10 +126,7 @@ class Comment(db.Model):
     post_id = db.Column(db.Integer, db.ForeignKey('post.post_id'), nullable = False)
 
     # each user's comments
-    user_comments = db.relationship('users', backref='user_comments', foreign_keys=[user_id])
-
-    # each post's comments
-    post_comments = db.relationship('Post', backref='post_comments', foreign_keys=[post_id])
+    comment_creator = db.relationship('users', backref='comment_creator', foreign_keys=[user_id])
 
     def __init__(self, user_id: int, post_id: int, content: str):
         self.user_id = user_id
