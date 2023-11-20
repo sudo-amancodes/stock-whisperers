@@ -16,14 +16,10 @@ import os
 from dotenv import load_dotenv
 from flask_login import login_user, login_required, logout_user, current_user, LoginManager
 from src.repositories.post_repository import post_repository_singleton
-<<<<<<< HEAD
-from src.models import db, users, live_posts
 from sqlalchemy import or_
 from flask_mail import Mail, Message
-=======
 from src.models import db, users, live_posts, Post
 from datetime import datetime, timedelta
->>>>>>> main
 
 thread = None
 thread_lock = Lock()
@@ -128,11 +124,7 @@ def index():
 #TODO: Create a get request for the upload page.
 @app.get('/upload')
 def upload():
-<<<<<<< HEAD
     return render_template('upload.html', user = current_user)
-=======
-    return render_template('upload.html', user=current_user)
->>>>>>> main
 
 #TODO: Create a post request for the upload page.
 @app.post('/upload')
@@ -182,18 +174,18 @@ def posts():
 #TODO: Create a get request for the user login page.
 @app.get('/login')
 def login():
-    return render_template('login.html', user=current_user)
+    return render_template('login.html', user = current_user)
 
 @app.post('/login')
 def verify_login():
     username = request.form.get('username')
     password = request.form.get('password')
 
-    if username == '' or password == '':
-        abort(400) 
+    if not username or not password:
+        flash('Please enter a username and a password') 
+        return redirect('/login')
 
     # temp_username = users.query.filter_by(username = username).first()
-
     temp_username = users.query.filter(or_(users.username == username, users.email == username)).first()
 
     if temp_username is not None:
@@ -226,8 +218,9 @@ def create_user():
     email = request.form.get('email')
     password = request.form.get('password')
 
-    if username is None or password is None or first_name is None or last_name is None or email is None:
-        abort(400)
+    if not username or not password or not first_name or not last_name or not email:
+        flash('Please fill out all of the fields') 
+        return redirect('/register')
 
     temp_user = users.query.filter(or_(users.username == username, users.email == email)).first()
     if temp_user is not None:
@@ -267,7 +260,7 @@ def request_password_reset():
         return redirect(url_for('index.html'))
     email = request.form.get('email')
     temp_user = users.query.filter_by(email = email).first()
-    if temp_user is None:
+    if not temp_user:
         flash('User with associated email address does not exist. Please register first.')
         return redirect('/request_password_reset')
     

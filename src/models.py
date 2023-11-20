@@ -15,9 +15,9 @@ class users(db.Model, UserMixin):
 
     last_name = db.Column(db.String(255), nullable = False)
 
-    username = db.Column(db.String(255), nullable = False)
+    username = db.Column(db.String(255), nullable = False, unique = True)
 
-    email = db.Column(db.String(255), nullable = False)
+    email = db.Column(db.String(255), nullable = False, unique = True)
 
     password = db.Column(db.String(255), nullable = False)
 
