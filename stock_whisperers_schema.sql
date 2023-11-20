@@ -21,7 +21,6 @@ CREATE TABLE IF NOT EXISTS live_posts (
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
-
 CREATE TABLE IF NOT EXISTS post (
     post_id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
@@ -39,4 +38,12 @@ CREATE TABLE IF NOT EXISTS comment (
     likes INT NOT NULL DEFAULT 0,
     user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
     post_id INT REFERENCES post(post_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS likes (
+    post_id INT,
+    user_id INT,
+    PRIMARY KEY (post_id, user_id),
+    FOREIGN KEY (post_id) REFERENCES post(post_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
