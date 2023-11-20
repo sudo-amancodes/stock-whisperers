@@ -1,4 +1,4 @@
-from flask import Flask, abort, redirect, render_template, request, url_for, flash
+from flask import Flask, abort, redirect, render_template, request, url_for, flash, jsonify
 # from flask_wtf import FileField
 #Market Data
 import yfinance as yf
@@ -16,7 +16,8 @@ import os
 from dotenv import load_dotenv
 from flask_login import login_user, login_required, logout_user, current_user, LoginManager
 from src.repositories.post_repository import post_repository_singleton
-from src.models import db, users, live_posts
+from src.models import db, users, live_posts, Post
+from datetime import datetime, timedelta
 
 thread = None
 thread_lock = Lock()
@@ -109,7 +110,7 @@ def index():
 #TODO: Create a get request for the upload page.
 @app.get('/upload')
 def upload():
-    return render_template('upload.html')
+    return render_template('upload.html', user=current_user)
 
 #TODO: Create a post request for the upload page.
 @app.post('/upload')
@@ -118,14 +119,43 @@ def upload_post():
     description = request.form.get('text')
     if title == '' or title is None:
         abort(400)
-    created_post = post_repository_singleton.create_post(title, description)
+    created_post = post_repository_singleton.create_post(title, description, current_user.user_id)
     return redirect('/posts')
+
+# when a user likes a post
+@app.post('/posts/like')
+def like_post():
+    post_id = request.form.get('post_id')
+    user_id = request.form.get('user_id')
+    if post_id == '' or post_id is None or user_id == '' or user_id is None:
+        abort(400)
+    post_repository_singleton.add_like(post_id, user_id)
+
+    return jsonify({'status': 'success'})
+
+# format timestamp to display how long ago a post was made
+@app.template_filter('time_ago')
+def time_ago_filter(timestamp):
+    now = datetime.now()
+    time_difference = now - timestamp
+
+    if time_difference < timedelta(minutes=1):
+        return 'just now'
+    elif time_difference < timedelta(hours=1):
+        minutes = int(time_difference.total_seconds() / 60)
+        return f'{minutes} minute{"s" if minutes != 1 else ""} ago'
+    elif time_difference < timedelta(days=1):
+        hours = int(time_difference.total_seconds() / 3600)
+        return f'{hours} hour{"s" if hours != 1 else ""} ago'
+    else:
+        days = int(time_difference.total_seconds() / (3600 * 24))
+        return f'{days} day{"s" if days != 1 else ""} ago'
 
 #TODO: Create a get request for the posts page.
 @app.get('/posts')
 def posts():
-    all_posts = post_repository_singleton.get_all_posts()
-    return render_template('posts.html', list_posts_active=True, posts=all_posts)
+    all_posts = post_repository_singleton.get_all_posts_with_users()
+    return render_template('posts.html', list_posts_active=True, posts=all_posts, user=current_user)
 
 #TODO: Create a get request for the user login page.
 @app.get('/login')
