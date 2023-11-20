@@ -16,12 +16,11 @@
     </button>
     <div class="collapse navbar-collapse" id="navbar">
       <div class="navbar-nav">
-        {% if user.is_authenticated %}
+        {% if user %}
         <a class="nav-item nav-link" id="home" href="/">Home</a>
         <a class="nav-item nav-link" id="posts" href="/posts">Posts</a>
         <a class="nav-item nav-link" id="upload" href="/upload">Upload</a>
         <a class="nav-item nav-link" id="logout" href="/logout">Logout</a>
-        <a class="nav-item nav-link" id="upload" href="/upload">upload</a>
         {% else %}
         <a class="nav-item nav-link" id="login" href="/login">Login</a>
         <a class="nav-item nav-link" id="signUp" href="/register">Sign Up</a>

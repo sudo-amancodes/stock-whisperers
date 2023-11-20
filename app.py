@@ -1,4 +1,4 @@
-from flask import Flask, abort, redirect, render_template, request, url_for, flash, jsonify
+from flask import Flask, abort, redirect, render_template, request, url_for, flash, jsonify, session
 # from flask_wtf import FileField
 #Market Data
 import yfinance as yf
@@ -30,7 +30,7 @@ app = Flask(__name__)
 
 #Bcrypt Initialization
 bcrypt = Bcrypt(app) 
-app.secret_key = 'try'
+app.secret_key = os.getenv('APP_SECRET_KEY', 'default')
 
 
 # If bugs occur with sockets then try: 
@@ -112,7 +112,7 @@ def background_thread():
 @app.get('/')
 def index():
     graph = get_plotly_json('AAPL')
-    return render_template('index.html', user=current_user, plot=graph)
+    return render_template('index.html', user = session.get('username'), plot=graph)
 
 #Create Comments or add a temporary get/post request. That has a pass statement.
 #Example:
@@ -174,10 +174,12 @@ def posts():
 #TODO: Create a get request for the user login page.
 @app.get('/login')
 def login():
-    return render_template('login.html', user = current_user)
+    return render_template('login.html', user = session.get('username'))
 
 @app.post('/login')
 def verify_login():
+    if 'username' in session:
+        return redirect('/')
     username = request.form.get('username')
     password = request.form.get('password')
 
@@ -191,7 +193,7 @@ def verify_login():
     if temp_username is not None:
         if bcrypt.check_password_hash(temp_username.password, password):
             flash('Successfully logged in, ' + temp_username.first_name + '!', category= 'success') 
-            login_user(temp_username, remember=True)
+            session['username'] = username
             return redirect('/')
         else:
             flash('Incorrect username or password', category='error')
@@ -201,17 +203,20 @@ def verify_login():
     return redirect('/login')
 
 @app.get('/logout')
-@login_required
 def logout():
-    logout_user()
+    if 'username' not in session:
+        abort(401)
+    del session['username']
     return redirect('/login')
 
 @app.get('/register')
 def register():
-    return render_template('register.html', user=current_user)
+    return render_template('register.html', user = session.get('username'))
 
 @app.post('/register')
 def create_user():
+    if 'username' in session:
+        return redirect('/')
     first_name = request.form.get('first-name')
     last_name = request.form.get('last-name')
     username = request.form.get('username')
@@ -243,7 +248,7 @@ def create_user():
         temp_user = users(first_name, last_name, username, email, bcrypt.generate_password_hash(password).decode('utf-8'))
         db.session.add(temp_user)
         db.session.commit()
-        login_user(temp_user, remember = True)
+        session['username'] = username
         flash('account successfully created!', category = 'success')
         return redirect('/')
 
