@@ -28,12 +28,13 @@ class users(db.Model, UserMixin):
     profile_picture = db.Column(db.String(255), nullable = True)
 
 
-    def __init__(self, first_name: str, last_name: str, username: str, email:str , password: str):
+    def __init__(self, first_name: str, last_name: str, username: str, email:str , password: str, profile_picture: str):
         self.first_name = first_name
         self.last_name = last_name
         self.username = username
         self.email = email
         self.password = password
+        self.profile_picture = profile_picture
 
     # def get_reset_token(self, expires_sec=900):
     #     s = Serializer(app.config['SECRET_KEY'], expires_sec)

@@ -222,6 +222,7 @@ def create_user():
     username = request.form.get('username')
     email = request.form.get('email')
     password = request.form.get('password')
+    profile_picture = 'static/profile_pics/default-profile-pic.jpg'
 
     if not username or not password or not first_name or not last_name or not email:
         flash('Please fill out all of the fields') 
@@ -245,7 +246,7 @@ def create_user():
     elif len(password) < 8:
         flash('Password must be contain at least 8 characters, a number, and a special character', category='error')
     else:
-        temp_user = users(first_name, last_name, username, email, bcrypt.generate_password_hash(password).decode('utf-8'))
+        temp_user = users(first_name, last_name, username, email, bcrypt.generate_password_hash(password).decode('utf-8'), profile_picture)
         db.session.add(temp_user)
         db.session.commit()
         session['username'] = username
