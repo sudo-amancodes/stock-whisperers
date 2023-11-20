@@ -20,7 +20,14 @@
     <div class="container bg-secondary p-3 mb-5 rounded" style="color: white;">
         <div class="d-inline-flex align-items-center justify-content-between w-100">
             <h3>{{ post.title }}</h3>
+            {% if user.is_authenticated and user.user_id == creator.user_id %}
+            <!-- TODO: Add edit and delete buttons -->
+            <!-- <a href="/posts/edit/{{ post.post_id }}"><button>Edit</button></a>
+            <a href="/posts/delete/{{ post.post_id }}"><button>Delete</button></a> -->
+            <h6>Posted by you, {{ post.date_posted|time_ago }}</h6>
+            {% else %}
             <h6>Posted by {{ creator.username }}, {{ post.date_posted|time_ago }}</h6>
+            {% endif %}
         </div>
         
         <div class="container p-0">
@@ -38,6 +45,17 @@
                 {% endif %}
                 <button>Comment</button>
             </div>
+        </div>
+        <div class="comments-container container p-0">
+            <p>ID: {{ post.post_id }}</p>
+            {% for comment in post.comments %}
+            <div class="comment-container container p-0">
+                <h6>{{ comment.user_comments.username }}</h6>
+                <div class="d-inline-flex align-items-center w-100 ps-3 border-start">
+                    <p class="m-0 p-2">{{ comment.content }}</p>
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
 
