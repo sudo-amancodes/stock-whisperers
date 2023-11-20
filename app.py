@@ -127,7 +127,8 @@ def upload_post():
 def like_post():
     post_id = request.form.get('post_id')
     user_id = request.form.get('user_id')
-    # Your logic to add a like goes here
+    if post_id == '' or post_id is None or user_id == '' or user_id is None:
+        abort(400)
     post_repository_singleton.add_like(post_id, user_id)
 
     return jsonify({'status': 'success'})
