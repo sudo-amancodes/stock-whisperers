@@ -16,7 +16,7 @@ import os
 from dotenv import load_dotenv
 from flask_login import login_user, login_required, logout_user, current_user, LoginManager
 from src.repositories.post_repository import post_repository_singleton
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from flask_mail import Mail, Message
 from src.models import db, users, live_posts, Post
 from datetime import datetime, timedelta
@@ -31,7 +31,6 @@ app = Flask(__name__)
 #Bcrypt Initialization
 bcrypt = Bcrypt(app) 
 app.secret_key = os.getenv('APP_SECRET_KEY', 'default')
-
 
 # If bugs occur with sockets then try: 
 # app.config['SECRET_KEY'] = 'ABC'
@@ -48,7 +47,7 @@ db.init_app(app)
 
 # Login Initialization
 login_manager = LoginManager(app)
-login_manager.login_view = '/login'
+# login_manager.login_view = '/login'
 
 # Mail Initialization
 app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
@@ -174,21 +173,24 @@ def posts():
 #TODO: Create a get request for the user login page.
 @app.get('/login')
 def login():
+    if 'username' in session:
+        return redirect('/')
     return render_template('login.html', user = session.get('username'))
 
 @app.post('/login')
 def verify_login():
     if 'username' in session:
-        return redirect('/')
+        return abort(400)
     username = request.form.get('username')
     password = request.form.get('password')
 
     if not username or not password:
-        flash('Please enter a username and a password') 
+        flash('Please enter a username and a password', category='error') 
         return redirect('/login')
 
     # temp_username = users.query.filter_by(username = username).first()
-    temp_username = users.query.filter(or_(users.username == username, users.email == username)).first()
+    # temp_username = users.query.filter(or_(users.username == username, users.email == username)).first()
+    temp_username = users.query.filter((func.lower(users.username) == username.lower()) | (func.lower(users.email) == username.lower())).first()
 
     if temp_username is not None:
         if bcrypt.check_password_hash(temp_username.password, password):
@@ -211,12 +213,14 @@ def logout():
 
 @app.get('/register')
 def register():
+    if 'username' in session:
+        return redirect('/')
     return render_template('register.html', user = session.get('username'))
 
 @app.post('/register')
 def create_user():
     if 'username' in session:
-        return redirect('/')
+        return abort(400)
     first_name = request.form.get('first-name')
     last_name = request.form.get('last-name')
     username = request.form.get('username')
@@ -228,7 +232,7 @@ def create_user():
         flash('Please fill out all of the fields') 
         return redirect('/register')
 
-    temp_user = users.query.filter(or_(users.username == username, users.email == email)).first()
+    temp_user = users.query.filter((func.lower(users.username) == username.lower()) | (func.lower(users.email) == email.lower())).first()
     if temp_user is not None:
         if temp_user.email is not None:
             flash('email already exists', category= 'error')
@@ -256,54 +260,54 @@ def create_user():
     return redirect('/register')
 
 # Route for requesting password reset
-app.get('/request_password_reset')
-def rquest_password_form():
-    return render_template('request_password_reset')
+@app.get('/request_password_reset')
+def request_password_form():
+    return render_template('request_password_reset.html')
 
-app.post('/request_password_reset')
+@app.post('/request_password_reset')
 def request_password_reset():
-    if current_user.is_authenticated:
+    if 'username' in session:
         return redirect(url_for('index.html'))
     email = request.form.get('email')
     temp_user = users.query.filter_by(email = email).first()
     if not temp_user:
-        flash('User with associated email address does not exist. Please register first.')
+        flash('User with associated email address does not exist. Please register first.' , category='error')
         return redirect('/request_password_reset')
     
-    token = users.get_reset_token()
+    print(temp_user)
+    token = temp_user.get_reset_token()
     msg = Message('Password Reset Request', sender='noreply@stock-whisperers.com', recipients=[temp_user.email])
     msg.body = f'''To reset your password, click the following link:
     {url_for('reset_password', token = token, _external =True)}
 
     If you did not make this request, please ignore this email
     '''
-    
-    flash('An email has been sent with instructions to reset your password')
+    mail.send(msg)
+    flash('An email has been sent with instructions to reset your password',  category='success')
     return redirect(url_for('login.html'))
     
-app.get('/password_reset')
+@app.get('/password_reset')
 def password_reset_form():
     return render_template('reset_password')
 
 # Route for resetting a password
-app.post('/password_reset/<token>')
+@app.post('/password_reset/<token>')
 def password_reset(token):
-    if current_user.is_authenticated:
+    if 'username' in session:
         return redirect(url_for('index.html'))
     user = users.verify_reset_token(token)
     if user is None:
-        flash('Invalid or expired token', 'error')
+        flash('Invalid or expired token', category = 'error')
         return redirect(url_for('reset_password_request'))
     
     password = request.form.get('password')
     confirm_password = request.form.get('confirm-password')
     if password != confirm_password:
-        flash('Passwords do not match')
+        flash('Passwords do not match',  category='error')
         return redirect('/password_reset')
-    user.password = password
-    db.session.add(user)
+    user.password = bcrypt.generate_password_hash(password).decode('utf-8')
     db.session.commit()
-
+    flash('your password has been updated!', category = 'success')
     return redirect('/login')
     
 
