@@ -83,8 +83,8 @@ class Post(db.Model):
     # FOREIGN KEY (user_id) references users(user_id)
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable = False)
 
-    # each user's posts
-    posts = db.relationship('users', backref='posts')
+    # post creator
+    creator = db.relationship('users', backref='creator', foreign_keys=[user_id])
 
     liked_by = db.relationship('users', secondary='likes', backref='liked_posts')
 
