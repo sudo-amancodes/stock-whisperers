@@ -1,4 +1,4 @@
-from src.models import Post, db, users
+from src.models import Comment, Post, db, users
 
 class PostRepository:
 
@@ -34,6 +34,13 @@ class PostRepository:
     # get the user who created the post
     def get_post_creator_id(self, post_id):
         return Post.query.get(post_id).user_id
+    
+    # add a comment to a post
+    def add_comment(self, user_id, post_id, content):
+        new_comment = Comment(user_id, post_id, content)
+        db.session.add(new_comment)
+        db.session.commit()
+        return new_comment
 
 # Singleton to be used in other modules
 post_repository_singleton = PostRepository()
