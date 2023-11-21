@@ -7,17 +7,26 @@
         /* style the like button here to show that it is liked */
         background-color: red;
     }
+
+    #post {
+        border-width: 2px !important;
+    }
+
+    #post:hover {
+        cursor: pointer;
+        border: 2px solid rgb(52, 53, 54) !important;
+    }
 </style>
-<main>
+<main class="d-flex justify-content-center flex-column">
     {% if posts|length == 0 %}
     <h1 class="mt-3">There are no posts available.</h1>
     {% else %}
 
-    <h1 class="mt-3 mb-3">Posts</h1>
+    <h1 class="mt-3 mb-3 text-center">Posts</h1>
 
     {% for post, creator in posts %}
 
-    <div class="container bg-secondary p-3 mb-5 rounded" style="color: white;">
+    <div id="post" class="container bg-secondary p-3 mb-5 w-50 rounded border border-secondary" onclick="location.href='posts/{{post.post_id}}';" style="color: white;">
         <div class="d-inline-flex align-items-center justify-content-between w-100">
             <h3>{{ post.title }}</h3>
             {% if user.is_authenticated and user.user_id == creator.user_id %}
@@ -64,7 +73,8 @@
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script>
         $(document).ready(function () {
-            $('.like-button').click(function () {
+            $('.like-button').click(function (event) {
+                event.stopPropagation();
                 var postId = $(this).data('post-id');
                 var userId = $(this).data('user-id');
     
