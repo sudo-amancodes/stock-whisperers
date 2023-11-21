@@ -133,6 +133,20 @@ def like_post():
 
     return jsonify({'status': 'success'})
 
+# when a user comments on a post
+@app.post('/posts/<int:post_id>/comment')
+def comment_post(post_id):
+    print('commenting on post')
+    user_id = request.form.get('user_id')
+    print(user_id)
+    content = request.form.get('content')
+    print(content)
+    if post_id == '' or post_id is None or user_id == '' or user_id is None or content == '' or content is None:
+        abort(400)
+    post_repository_singleton.add_comment(user_id, post_id, content)
+
+    return redirect(f'/posts/{post_id}')
+
 # format timestamp to display how long ago a post was made
 @app.template_filter('time_ago')
 def time_ago_filter(timestamp):
@@ -156,6 +170,11 @@ def time_ago_filter(timestamp):
 def posts():
     all_posts = post_repository_singleton.get_all_posts_with_users()
     return render_template('posts.html', list_posts_active=True, posts=all_posts, user=current_user)
+
+@app.get('/posts/<int:post_id>')
+def post(post_id):
+    post = post_repository_singleton.get_post_by_id(post_id)
+    return render_template('single_post.html', post=post, user=current_user)
 
 #TODO: Create a get request for the user login page.
 @app.get('/login')
