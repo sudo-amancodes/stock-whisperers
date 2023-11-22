@@ -178,13 +178,13 @@ def posts():
 #TODO: Create a get request for the user login page.
 @app.get('/login')
 def login():
-    if 'username' in session:
+    if user_repository_singleton.is_logged_in():
         return redirect('/')
     return render_template('login.html', user = session.get('username'))
 
 @app.post('/login')
 def verify_login():
-    if 'username' in session:
+    if user_repository_singleton.is_logged_in():
         return abort(400)
     username = request.form.get('username')
     password = request.form.get('password')
@@ -209,20 +209,20 @@ def verify_login():
 
 @app.get('/logout')
 def logout():
-    if 'username' not in session:
+    if not user_repository_singleton.is_logged_in():
         abort(401)
     del session['username']
     return redirect('/login')
 
 @app.get('/register')
 def register():
-    if 'username' in session:
+    if user_repository_singleton.is_logged_in():
         return redirect('/')
     return render_template('register.html', user = session.get('username'))
 
 @app.post('/register')
 def create_user():
-    if 'username' in session:
+    if user_repository_singleton.is_logged_in():
         return abort(400)
     first_name = request.form.get('first-name')
     last_name = request.form.get('last-name')
@@ -246,18 +246,8 @@ def create_user():
             
         return redirect('/register')
     
-    if len(first_name) <= 1:
-        flash('First name must be greater than 1 character', category='error')
-    elif len(last_name) <= 1:
-        flash('Last name must be greater than 1 character', category='error')
-    elif len(username) < 4:
-        flash('Username name must be at least 4 characters', category='error')
-    elif user_repository_singleton.validate_password(password) == False:
-        flash('Password must contain at least 6 characters, a letter, a number, a special character, and no spaces', category='error')
-    else:
-        temp_user = users(first_name, last_name, username, email, bcrypt.generate_password_hash(password).decode('utf-8'), profile_picture)
-        db.session.add(temp_user)
-        db.session.commit()
+    if user_repository_singleton.validate_input(first_name, last_name, username, password):
+        user_repository_singleton.add_user(first_name, last_name, username, email, bcrypt.generate_password_hash(password).decode(), profile_picture)
         session['username'] = username
         flash('account successfully created!', category = 'success')
         return redirect('/')
@@ -271,7 +261,7 @@ def request_password_form():
 
 @app.post('/request_password_reset')
 def request_password_reset():
-    if 'username' in session:
+    if user_repository_singleton.is_logged_in():
         return redirect(url_for('index.html'))
     email = request.form.get('email')
     if not email:
@@ -294,7 +284,7 @@ If you did not make this request, please ignore this email
     
 @app.get('/password_reset/<token>')
 def password_reset_form(token):
-    if 'username' in session:
+    if user_repository_singleton.is_logged_in():
         return redirect('/')
     user = users.verify_reset_token(token)
     if user is None:
@@ -305,7 +295,7 @@ def password_reset_form(token):
 # Route for resetting a password
 @app.post('/password_reset/<token>')
 def password_reset(token):
-    if 'username' in session:
+    if user_repository_singleton.is_logged_in():
         return redirect('/')
     user = users.verify_reset_token(token)
     if user is None:
@@ -317,7 +307,7 @@ def password_reset(token):
     if password != confirm_password:
         flash('Passwords do not match',  category='error')
         return redirect(f'/password_reset/{token}')
-    user.password = bcrypt.generate_password_hash(password).decode('utf-8')
+    user.password = bcrypt.generate_password_hash(password).decode()
     db.session.commit()
     flash('your password has been updated!', category = 'success')
     return redirect('/login')
