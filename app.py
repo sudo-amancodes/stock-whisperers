@@ -229,6 +229,8 @@ def create_user():
     username = request.form.get('username')
     email = request.form.get('email')
     password = request.form.get('password')
+    
+    # temp path until we switch to storing pp as a blob
     profile_picture = 'static/profile_pics/default-profile-pic.jpg'
 
     if not username or not password or not first_name or not last_name or not email:
