@@ -54,6 +54,9 @@ login_manager = LoginManager(app)
 app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
+# To use, Must be a valid gmail account. EMAIL_USER is your username, password must be a generated "app password", not your actual password
+# To create app password, go to google account settings, enable two step verification, click on two step verfication and scroll to bottom 
+# click on app password and geenrate one, copy 16 digit password and set it as EMAIL_PASS
 app.config['MAIL_USERNAME'] = os.getenv("EMAIL_USER")
 app.config['MAIL_PASSWORD'] = os.getenv("EMAIL_PASS")
 mail = Mail(app)
