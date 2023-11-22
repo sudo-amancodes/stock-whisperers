@@ -1,7 +1,10 @@
 from flask_sqlalchemy import SQLAlchemy
+from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
 from sqlalchemy import text
 from sqlalchemy.sql import func
 from flask_login import UserMixin
+import os
+# from src import app
 
 db = SQLAlchemy()
 
@@ -13,9 +16,9 @@ class users(db.Model, UserMixin):
 
     last_name = db.Column(db.String(255), nullable = False)
 
-    username = db.Column(db.String(255), nullable = False)
+    username = db.Column(db.String(255), nullable = False, unique = True)
 
-    email = db.Column(db.String(255), nullable = False)
+    email = db.Column(db.String(255), nullable = False, unique = True)
 
     password = db.Column(db.String(255), nullable = False)
 
@@ -25,12 +28,30 @@ class users(db.Model, UserMixin):
 
     profile_picture = db.Column(db.String(255), nullable = True)
 
-    def __init__(self, first_name: str, last_name: str, username: str, password: str):
+
+    def __init__(self, first_name: str, last_name: str, username: str, email:str , password: str, profile_picture: str):
         self.first_name = first_name
         self.last_name = last_name
         self.username = username
-        # self.email = email
+        self.email = email
         self.password = password
+        self.profile_picture = profile_picture
+
+    def get_reset_token(self, expires_sec=900):
+        s = Serializer(os.getenv('APP_SECRET_KEY'))
+        token = s.dumps({'user_id' : self.user_id})
+        if isinstance(token, bytes):
+            token = token.decode()
+        return token
+    
+    @staticmethod
+    def verify_reset_token(token):
+        s = Serializer(os.getenv('APP_SECRET_KEY'))
+        try:
+            user_id = s.loads(token)['user_id']
+        except:
+            return None
+        return users.query.get(user_id)
 
     def __repr__(self) -> str:
         return f'users({self.first_name}, {self.last_name})'
