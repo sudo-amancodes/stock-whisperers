@@ -16,6 +16,7 @@ import os
 from dotenv import load_dotenv
 from flask_login import login_user, login_required, logout_user, current_user, LoginManager
 from src.repositories.post_repository import post_repository_singleton
+from src.repositories.user_repository import user_repository_singleton
 from sqlalchemy import or_, func
 from flask_mail import Mail, Message
 from src.models import db, users, live_posts, Post
@@ -189,11 +190,9 @@ def verify_login():
     password = request.form.get('password')
 
     if not username or not password:
-        flash('Please enter a username and a password', category='error') 
+        flash('Please enter a username and a password', category= 'error') 
         return redirect('/login')
 
-    # temp_username = users.query.filter_by(username = username).first()
-    # temp_username = users.query.filter(or_(users.username == username, users.email == username)).first()
     temp_username = users.query.filter((func.lower(users.username) == username.lower()) | (func.lower(users.email) == username.lower())).first()
 
     if temp_username is not None:
@@ -251,8 +250,8 @@ def create_user():
         flash('Last name must be greater than 1 character', category='error')
     elif len(username) < 4:
         flash('Username name must be at least 4 characters', category='error')
-    elif len(password) < 8:
-        flash('Password must be contain at least 8 characters, a number, and a special character', category='error')
+    elif user_repository_singleton.validate_password(password) == False:
+        flash('Password must contain at least 6 characters, a letter, a number, a special character, and no spaces', category='error')
     else:
         temp_user = users(first_name, last_name, username, email, bcrypt.generate_password_hash(password).decode('utf-8'), profile_picture)
         db.session.add(temp_user)
