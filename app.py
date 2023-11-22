@@ -136,11 +136,8 @@ def like_post():
 # when a user comments on a post
 @app.post('/posts/<int:post_id>/comment')
 def comment_post(post_id):
-    print('commenting on post')
     user_id = request.form.get('user_id')
-    print(user_id)
     content = request.form.get('content')
-    print(content)
     if post_id == '' or post_id is None or user_id == '' or user_id is None or content == '' or content is None:
         abort(400)
     post_repository_singleton.add_comment(user_id, post_id, content)
