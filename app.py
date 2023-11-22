@@ -270,6 +270,9 @@ def request_password_reset():
     if 'username' in session:
         return redirect(url_for('index.html'))
     email = request.form.get('email')
+    if not email:
+        flash('please enter an email address.', category = 'error')
+        return redirect('/request_password_reset')
     temp_user = users.query.filter_by(email = email).first()
     if not temp_user:
         flash('User with associated email address does not exist. Please register first.' , category='error')
