@@ -304,14 +304,19 @@ def password_reset(token):
     
     password = request.form.get('password')
     confirm_password = request.form.get('confirm-password')
-    if password != confirm_password:
+    if not password or not confirm_password:
+        flash('Please fill out all of the fileds',  category='error')
+    elif password != confirm_password:
         flash('Passwords do not match',  category='error')
-        return redirect(f'/password_reset/{token}')
-    user.password = bcrypt.generate_password_hash(password).decode()
-    db.session.commit()
-    flash('your password has been updated!', category = 'success')
-    return redirect('/login')
+    elif (len(password) < 6) or not any(char.isdigit() for char in password) or not any(char.isalpha() for char in password) or any(char.isspace() for char in password):
+        flash('Password must contain at least 6 characters, a letter, a number, and no spaces', category='error')
+    else:
+        user.password = bcrypt.generate_password_hash(password).decode()
+        db.session.commit()
+        flash('your password has been updated!', category = 'success')
+        return redirect('/login')
     
+    return redirect(f'/password_reset/{token}')
 
 #TODO: Create a get request for the profile page.
 @app.get('/profile/<int:user_id>')
