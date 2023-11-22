@@ -4,7 +4,7 @@ from sqlalchemy import text
 from sqlalchemy.sql import func
 from flask_login import UserMixin
 import os
-from src import app
+# from src import app
 
 db = SQLAlchemy()
 
@@ -38,12 +38,15 @@ class users(db.Model, UserMixin):
         self.profile_picture = profile_picture
 
     def get_reset_token(self, expires_sec=900):
-        s = Serializer(app.config[os.getenv('APP_SECRET_KEY')] , expires_in = expires_sec)
-        return s.dumps({'user_id' : self.user_id}).decode('utf-8')
+        s = Serializer(os.getenv('APP_SECRET_KEY'))
+        token = s.dumps({'user_id' : self.user_id})
+        if isinstance(token, bytes):
+            token = token.decode()
+        return token
     
     @staticmethod
     def verify_reset_token(token):
-        s = Serializer(app.config[os.getenv('APP_SECRET_KEY')])
+        s = Serializer(os.getenv('APP_SECRET_KEY'))
         try:
             user_id = s.loads(token)['user_id']
         except:

@@ -20,6 +20,7 @@ from sqlalchemy import or_, func
 from flask_mail import Mail, Message
 from src.models import db, users, live_posts, Post
 from datetime import datetime, timedelta
+from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
 
 thread = None
 thread_lock = Lock()
@@ -54,7 +55,7 @@ app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.getenv("EMAIL_USER")
-app.config['MAIL_PASS'] = os.getenv("EMAIL_PASS")
+app.config['MAIL_PASSWORD'] = os.getenv("EMAIL_PASS")
 mail = Mail(app)
 
 
@@ -234,9 +235,9 @@ def create_user():
 
     temp_user = users.query.filter((func.lower(users.username) == username.lower()) | (func.lower(users.email) == email.lower())).first()
     if temp_user is not None:
-        if temp_user.email is not None:
+        if temp_user.email.lower() == email.lower():
             flash('email already exists', category= 'error')
-        elif temp_user.username is not None:
+        elif temp_user.username.lower() == username.lower():
             flash('username already exists', category= 'error')
             
         return redirect('/register')
@@ -274,21 +275,28 @@ def request_password_reset():
         flash('User with associated email address does not exist. Please register first.' , category='error')
         return redirect('/request_password_reset')
     
-    print(temp_user)
+    # s = Serializer(os.getenv('APP_SECRET_KEY'))
+    # token = s.dumps({'user_id' : temp_user.user_id})
     token = temp_user.get_reset_token()
     msg = Message('Password Reset Request', sender='noreply@stock-whisperers.com', recipients=[temp_user.email])
     msg.body = f'''To reset your password, click the following link:
-    {url_for('reset_password', token = token, _external =True)}
+{url_for('password_reset', token = token, _external = True)}
 
-    If you did not make this request, please ignore this email
-    '''
+If you did not make this request, please ignore this email
+'''
     mail.send(msg)
     flash('An email has been sent with instructions to reset your password',  category='success')
-    return redirect(url_for('login.html'))
+    return redirect(url_for('verify_login'))
     
-@app.get('/password_reset')
-def password_reset_form():
-    return render_template('reset_password')
+@app.get('/password_reset/<token>')
+def password_reset_form(token):
+    if 'username' in session:
+        return redirect(url_for('index.html'))
+    user = users.verify_reset_token(token)
+    if user is None:
+        flash('Invalid or expired token', category = 'error')
+        return redirect(url_for('reset_password_request'))
+    return render_template('reset_password.html', token = token)
 
 # Route for resetting a password
 @app.post('/password_reset/<token>')
@@ -304,7 +312,7 @@ def password_reset(token):
     confirm_password = request.form.get('confirm-password')
     if password != confirm_password:
         flash('Passwords do not match',  category='error')
-        return redirect('/password_reset')
+        return redirect(f'/password_reset/{token}')
     user.password = bcrypt.generate_password_hash(password).decode('utf-8')
     db.session.commit()
     flash('your password has been updated!', category = 'success')
