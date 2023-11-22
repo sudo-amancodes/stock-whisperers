@@ -23,6 +23,12 @@ class UserRepository:
         db.session.add(temp_user)
         db.session.commit()
 
+    def login_user(self, username):
+        session['username'] = username
+
+    def logout_user(self):
+        del session['username']
+
     def is_logged_in(self):
         return 'username' in session
 

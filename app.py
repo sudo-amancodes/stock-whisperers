@@ -198,7 +198,7 @@ def verify_login():
     if temp_username is not None:
         if bcrypt.check_password_hash(temp_username.password, password):
             flash('Successfully logged in, ' + temp_username.first_name + '!', category= 'success') 
-            session['username'] = username
+            user_repository_singleton.login_user(username)
             return redirect('/')
         else:
             flash('Incorrect username or password', category='error')
@@ -211,7 +211,7 @@ def verify_login():
 def logout():
     if not user_repository_singleton.is_logged_in():
         abort(401)
-    del session['username']
+    user_repository_singleton.logout_user()
     return redirect('/login')
 
 @app.get('/register')
@@ -248,7 +248,7 @@ def create_user():
     
     if user_repository_singleton.validate_input(first_name, last_name, username, password):
         user_repository_singleton.add_user(first_name, last_name, username, email, bcrypt.generate_password_hash(password).decode(), profile_picture)
-        session['username'] = username
+        user_repository_singleton.login_user(username)
         flash('account successfully created!', category = 'success')
         return redirect('/')
 
