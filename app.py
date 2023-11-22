@@ -274,9 +274,6 @@ def request_password_reset():
     if not temp_user:
         flash('User with associated email address does not exist. Please register first.' , category='error')
         return redirect('/request_password_reset')
-    
-    # s = Serializer(os.getenv('APP_SECRET_KEY'))
-    # token = s.dumps({'user_id' : temp_user.user_id})
     token = temp_user.get_reset_token()
     msg = Message('Password Reset Request', sender='noreply@stock-whisperers.com', recipients=[temp_user.email])
     msg.body = f'''To reset your password, click the following link:
@@ -291,22 +288,22 @@ If you did not make this request, please ignore this email
 @app.get('/password_reset/<token>')
 def password_reset_form(token):
     if 'username' in session:
-        return redirect(url_for('index.html'))
+        return redirect('/')
     user = users.verify_reset_token(token)
     if user is None:
         flash('Invalid or expired token', category = 'error')
-        return redirect(url_for('reset_password_request'))
+        return redirect('/login')
     return render_template('reset_password.html', token = token)
 
 # Route for resetting a password
 @app.post('/password_reset/<token>')
 def password_reset(token):
     if 'username' in session:
-        return redirect(url_for('index.html'))
+        return redirect('/')
     user = users.verify_reset_token(token)
     if user is None:
         flash('Invalid or expired token', category = 'error')
-        return redirect(url_for('reset_password_request'))
+        return redirect('/request_password_reset')
     
     password = request.form.get('password')
     confirm_password = request.form.get('confirm-password')
