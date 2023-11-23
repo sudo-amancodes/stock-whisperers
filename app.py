@@ -22,6 +22,7 @@ from flask_mail import Mail, Message
 from src.models import db, users, live_posts, Post
 from datetime import datetime, timedelta
 from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
+import random
 
 thread = None
 thread_lock = Lock()
@@ -61,6 +62,8 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.getenv("EMAIL_USER")
 app.config['MAIL_PASSWORD'] = os.getenv("EMAIL_PASS")
 mail = Mail(app)
+
+code = 0
 
 
 @login_manager.user_loader
@@ -182,6 +185,43 @@ def login():
         return redirect('/')
     return render_template('login.html', user = session.get('username'))
 
+def send_verification_email(user):
+    # user = users.query.get(user_id)
+    if not user:
+        abort(400)
+    global code   
+    code = random.randint(100000, 999999)
+    msg = Message('Verification code', sender='noreply@stock-whisperers.com', recipients=[user.email])
+    msg.body = f'''Enter the 6-digit code below to verify your identity and login to your stock-whisperers account.
+
+{code}
+
+If you did not make this request, please ignore this email
+'''
+    mail.send(msg)
+
+# to-do: when user inputs invalid code email resends, move to post route. fix invalid code error
+@app.get('/verify_user/<user_id>')
+def verify_user(user_id):
+    return render_template('verify_user.html', user_id = user_id)
+
+@app.post('/verify_user/<user_id>')
+def verify_code(user_id):
+    user = users.query.get(user_id)
+    global code
+    user_code = request.form.get('user-code')
+    if not user_code or not user:
+        abort(400)
+    # print(code)
+    # print(user_code)
+    if str(code) != str(user_code):
+        flash('Incorrect code', category='error')
+        return redirect(f'/verify_user/{user_id}')
+
+    flash('Successfully logged in, ' + user.first_name + '!', category= 'success') 
+    user_repository_singleton.login_user(user.username)
+    return redirect('/')
+
 @app.post('/login')
 def verify_login():
     if user_repository_singleton.is_logged_in():
@@ -197,9 +237,13 @@ def verify_login():
 
     if temp_username is not None:
         if bcrypt.check_password_hash(temp_username.password, password):
-            flash('Successfully logged in, ' + temp_username.first_name + '!', category= 'success') 
-            user_repository_singleton.login_user(username)
-            return redirect('/')
+            # IF YOU WANT TO LOGIN WITHOUT HAVING TO SEND EMAIL AND VERIFY, COMMENT OUT THE LINE BELOW AND UNCOMMENT THE 3 COMMENTED LINES
+            # below line 243
+            send_verification_email(temp_username)
+            return redirect(f'/verify_user/{temp_username.user_id}')
+            # flash('Successfully logged in, ' + temp_username.first_name + '!', category= 'success') 
+            # user_repository_singleton.login_user(username)
+            # return redirect('/')
         else:
             flash('Incorrect username or password', category='error')
     else:
