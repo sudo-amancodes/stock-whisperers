@@ -12,6 +12,10 @@ class UserRepository:
         if any(char.isspace() for char in password):
             return False
         return True
+    
+    # get user by username
+    def get_user_by_username(self, username):
+        return users.query.filter_by(username=username).first()
 
 # Singleton to be used in other modules
 user_repository_singleton = UserRepository()
