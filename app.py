@@ -128,7 +128,9 @@ def index():
 #TODO: Create a get request for the upload page.
 @app.get('/upload')
 def upload():
-    return render_template('upload.html', user = current_user)
+    if 'username' not in session:
+        abort(401)
+    return render_template('upload.html', user=session.get('username'))
 
 #TODO: Create a post request for the upload page.
 @app.post('/upload')
@@ -137,7 +139,8 @@ def upload_post():
     description = request.form.get('text')
     if title == '' or title is None:
         abort(400)
-    created_post = post_repository_singleton.create_post(title, description, current_user.user_id)
+    user = user_repository_singleton.get_user_by_username(session.get('username'))
+    created_post = post_repository_singleton.create_post(title, description, user.user_id)
     return redirect('/posts')
 
 # when a user likes a post
@@ -154,9 +157,9 @@ def like_post():
 # when a user comments on a post
 @app.post('/posts/<int:post_id>/comment')
 def comment_post(post_id):
-    user_id = request.form.get('user_id')
+    user_id = user_repository_singleton.get_user_by_username(session.get('username')).user_id
     content = request.form.get('content')
-    if post_id == '' or post_id is None or user_id == '' or user_id is None or content == '' or content is None:
+    if post_id == '' or post_id is None or content == '' or content is None:
         abort(400)
     post_repository_singleton.add_comment(user_id, post_id, content)
 
@@ -184,12 +187,19 @@ def time_ago_filter(timestamp):
 @app.get('/posts')
 def posts():
     all_posts = post_repository_singleton.get_all_posts_with_users()
-    return render_template('posts.html', list_posts_active=True, posts=all_posts, user=current_user)
+    if 'username' not in session:
+        user = None
+    else:
+        user = user_repository_singleton.get_user_by_username(session.get('username'))
+    return render_template('posts.html', list_posts_active=True, posts=all_posts, user=user)
 
 @app.get('/posts/<int:post_id>')
 def post(post_id):
+    if 'username' not in session:
+        abort(401)
     post = post_repository_singleton.get_post_by_id(post_id)
-    return render_template('single_post.html', post=post, user=current_user)
+    user = user_repository_singleton.get_user_by_username(session.get('username'))
+    return render_template('single_post.html', post=post, user=user)
 
 #TODO: Create a get request for the user login page.
 @app.get('/login')
