@@ -1,4 +1,4 @@
-from flask import Flask, abort, redirect, render_template, request, url_for, flash, jsonify
+from flask import Flask, abort, redirect, render_template, request, url_for, flash, jsonify, session
 # from flask_wtf import FileField
 #Market Data
 import yfinance as yf
@@ -16,8 +16,12 @@ import os
 from dotenv import load_dotenv
 from flask_login import login_user, login_required, logout_user, current_user, LoginManager
 from src.repositories.post_repository import post_repository_singleton
+from src.repositories.user_repository import user_repository_singleton
+from sqlalchemy import or_, func
+from flask_mail import Mail, Message
 from src.models import db, users, live_posts, Post
 from datetime import datetime, timedelta
+from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
 
 thread = None
 thread_lock = Lock()
@@ -28,7 +32,7 @@ app = Flask(__name__)
 
 #Bcrypt Initialization
 bcrypt = Bcrypt(app) 
-app.secret_key = 'try'
+app.secret_key = os.getenv('APP_SECRET_KEY', 'default')
 
 # If bugs occur with sockets then try: 
 # app.config['SECRET_KEY'] = 'ABC'
@@ -38,12 +42,26 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 
 app.debug = True
 
+# DB connection
 app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{os.getenv("DB_USER")}:{os.getenv("DB_PASS")}@{os.getenv("DB_HOST")}:{os.getenv("DB_PORT")}/{os.getenv("DB_NAME")}'
 
 db.init_app(app)
 
+# Login Initialization
 login_manager = LoginManager(app)
-login_manager.login_view = '/login'
+# login_manager.login_view = '/login'
+
+# Mail Initialization
+app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+# To use, Must be a valid gmail account. EMAIL_USER is your username, password must be a generated "app password", not your actual password
+# To create app password, go to google account settings, enable two step verification, click on two step verfication and scroll to bottom 
+# click on app password and geenrate one, copy 16 digit password and set it as EMAIL_PASS
+app.config['MAIL_USERNAME'] = os.getenv("EMAIL_USER")
+app.config['MAIL_PASSWORD'] = os.getenv("EMAIL_PASS")
+mail = Mail(app)
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -98,7 +116,7 @@ def background_thread():
 @app.get('/')
 def index():
     graph = get_plotly_json('AAPL')
-    return render_template('index.html', user=current_user, plot=graph)
+    return render_template('index.html', user = session.get('username'), plot=graph)
 
 #Create Comments or add a temporary get/post request. That has a pass statement.
 #Example:
@@ -110,7 +128,7 @@ def index():
 #TODO: Create a get request for the upload page.
 @app.get('/upload')
 def upload():
-    return render_template('upload.html', user=current_user)
+    return render_template('upload.html', user = current_user)
 
 #TODO: Create a post request for the upload page.
 @app.post('/upload')
@@ -176,23 +194,27 @@ def post(post_id):
 #TODO: Create a get request for the user login page.
 @app.get('/login')
 def login():
-    return render_template('login.html', user=current_user)
+    if 'username' in session:
+        return redirect('/')
+    return render_template('login.html', user = session.get('username'))
 
 @app.post('/login')
 def verify_login():
+    if 'username' in session:
+        return abort(400)
     username = request.form.get('username')
     password = request.form.get('password')
 
-    if username == '' or password == '':
-        abort(400) 
+    if not username or not password:
+        flash('Please enter a username and a password', category= 'error') 
+        return redirect('/login')
 
-    temp_username = users.query.filter_by(username = username).first()
+    temp_username = users.query.filter((func.lower(users.username) == username.lower()) | (func.lower(users.email) == username.lower())).first()
 
     if temp_username is not None:
         if bcrypt.check_password_hash(temp_username.password, password):
             flash('Successfully logged in, ' + temp_username.first_name + '!', category= 'success') 
-            login_user(temp_username, remember=True)
-            # figure out how to send this msg to home page
+            session['username'] = username
             return redirect('/')
         else:
             flash('Incorrect username or password', category='error')
@@ -202,48 +224,120 @@ def verify_login():
     return redirect('/login')
 
 @app.get('/logout')
-@login_required
 def logout():
-    logout_user()
+    if 'username' not in session:
+        abort(401)
+    del session['username']
     return redirect('/login')
-
 
 @app.get('/register')
 def register():
-    return render_template('register.html', user=current_user)
+    if 'username' in session:
+        return redirect('/')
+    return render_template('register.html', user = session.get('username'))
 
 @app.post('/register')
 def create_user():
+    if 'username' in session:
+        return abort(400)
     first_name = request.form.get('first-name')
     last_name = request.form.get('last-name')
     username = request.form.get('username')
-    # email = request.form.get('email')
+    email = request.form.get('email')
     password = request.form.get('password')
+    
+    # temp path until we switch to storing pp as a blob
+    profile_picture = 'static/profile_pics/default-profile-pic.jpg'
 
-    if username == '' or password == '' or first_name == '' or last_name == '':
-        abort(400)
+    if not username or not password or not first_name or not last_name or not email:
+        flash('Please fill out all of the fields') 
+        return redirect('/register')
 
-    temp_user = users.query.filter_by(username = username).first()
+    temp_user = users.query.filter((func.lower(users.username) == username.lower()) | (func.lower(users.email) == email.lower())).first()
     if temp_user is not None:
-        flash('Username already exists', category= 'error')
-
+        if temp_user.email.lower() == email.lower():
+            flash('email already exists', category= 'error')
+        elif temp_user.username.lower() == username.lower():
+            flash('username already exists', category= 'error')
+            
+        return redirect('/register')
+    
     if len(first_name) <= 1:
         flash('First name must be greater than 1 character', category='error')
     elif len(last_name) <= 1:
         flash('Last name must be greater than 1 character', category='error')
     elif len(username) < 4:
         flash('Username name must be at least 4 characters', category='error')
-    elif len(password) < 8:
-        flash('Password must be contain at least 8 characters, a number, and a special character', category='error')
+    elif user_repository_singleton.validate_password(password) == False:
+        flash('Password must contain at least 6 characters, a letter, a number, a special character, and no spaces', category='error')
     else:
-        temp_user = users(first_name, last_name, username, bcrypt.generate_password_hash(password).decode('utf-8'))
+        temp_user = users(first_name, last_name, username, email, bcrypt.generate_password_hash(password).decode('utf-8'), profile_picture)
         db.session.add(temp_user)
         db.session.commit()
-        login_user(temp_user, remember= True)
-        flash('account successfully created!', category= 'success')
+        session['username'] = username
+        flash('account successfully created!', category = 'success')
         return redirect('/')
 
     return redirect('/register')
+
+# Route for requesting password reset
+@app.get('/request_password_reset')
+def request_password_form():
+    return render_template('request_password_reset.html')
+
+@app.post('/request_password_reset')
+def request_password_reset():
+    if 'username' in session:
+        return redirect(url_for('index.html'))
+    email = request.form.get('email')
+    if not email:
+        flash('please enter an email address.', category = 'error')
+        return redirect('/request_password_reset')
+    temp_user = users.query.filter_by(email = email).first()
+    if not temp_user:
+        flash('User with associated email address does not exist. Please register first.' , category='error')
+        return redirect('/request_password_reset')
+    token = temp_user.get_reset_token()
+    msg = Message('Password Reset Request', sender='noreply@stock-whisperers.com', recipients=[temp_user.email])
+    msg.body = f'''To reset your password, click the following link:
+{url_for('password_reset', token = token, _external = True)}
+
+If you did not make this request, please ignore this email
+'''
+    mail.send(msg)
+    flash('An email has been sent with instructions to reset your password',  category='success')
+    return redirect(url_for('verify_login'))
+    
+@app.get('/password_reset/<token>')
+def password_reset_form(token):
+    if 'username' in session:
+        return redirect('/')
+    user = users.verify_reset_token(token)
+    if user is None:
+        flash('Invalid or expired token', category = 'error')
+        return redirect('/login')
+    return render_template('reset_password.html', token = token)
+
+# Route for resetting a password
+@app.post('/password_reset/<token>')
+def password_reset(token):
+    if 'username' in session:
+        return redirect('/')
+    user = users.verify_reset_token(token)
+    if user is None:
+        flash('Invalid or expired token', category = 'error')
+        return redirect('/request_password_reset')
+    
+    password = request.form.get('password')
+    confirm_password = request.form.get('confirm-password')
+    if password != confirm_password:
+        flash('Passwords do not match',  category='error')
+        return redirect(f'/password_reset/{token}')
+    user.password = bcrypt.generate_password_hash(password).decode('utf-8')
+    db.session.commit()
+    flash('your password has been updated!', category = 'success')
+    return redirect('/login')
+    
 
 #TODO: Create a get request for the profile page.
 @app.get('/profile/<int:user_id>')
