@@ -47,18 +47,23 @@
         <p>Add a comment as {{user.username}}</p>
         <form class="w-100 d-flex flex-column" action="/posts/{{ post.post_id }}/comment" method="post">
             <textarea class="w-100 border bg-secondary mb-2 p-2" style="color: white;" name="content" id="content" cols="30"
-                rows="5" placeholder="What are your thoughts?"></textarea>
-            <input type="hidden" name="user_id" value="{{ user.user_id }}">
+                rows="5" placeholder="What are your thoughts?" required></textarea>
             <input class="w-25 align-self-end" type="submit" value="Comment">
         </form>
 
         <div class="comments-container container p-0">
             <p>ID: {{ post.post_id }}</p>
             {% for comment in post.comments %}
-            <div class="comment-container container p-0">
+            <div class="comment-container container pt-3 ps-0 pe-0">
                 <h6>{{ comment.comment_creator.username }}</h6>
-                <div class="d-inline-flex align-items-center w-100 ps-3 border-start">
-                    <p class="m-0 p-2">{{ comment.content }}</p>
+                <div class="d-inline-flex align-items-center w-100 ps-3 border-start justify-content-between flex-wrap">
+                    <p class="m-0 p-0">{{ comment.content }}</p>
+                    <input type="submit" class="reply-button" value="Reply">
+                    <!-- REPLY TEXT AREA -->
+                    <div class="d-none d-inline-flex w-100 ps-3 pt-3 border-start flex-column reply-area">
+                        <textarea style="color: white;" class="w-100 border bg-secondary" name="reply" id="reply" cols="30" rows="5" placeholder="What are your thoughts?" required></textarea>
+                        <input class="w-100 align-self-end" type="submit" value="Reply">
+                    </div>
                 </div>
             </div>
             {% endfor %}
@@ -104,6 +109,18 @@
             }
         }
         liked_or_not();
+
+        // display reply area when reply button is clicked
+        function reply() {
+            const reply_button = document.getElementsByClassName("reply-button");
+            const reply_area = document.getElementsByClassName("reply-area");
+            for (let i = 0; i < reply_button.length; i++) {
+                reply_button[i].addEventListener("click", function () {
+                    reply_area[i].classList.toggle("d-none");
+                });
+            }
+        }
+        reply();
     </script>
 </main>
 
