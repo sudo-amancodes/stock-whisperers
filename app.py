@@ -1,4 +1,4 @@
-from flask import Flask, abort, redirect, render_template, request, url_for, flash
+from flask import Flask, abort, redirect, render_template, request, url_for, flash, session
 # from flask_wtf import FileField
 #Market Data
 import yfinance as yf
@@ -203,9 +203,15 @@ def create_user():
 @app.get('/profile/<int:user_id>')
 @login_required
 def profile(user_id):
-    user = current_user
-    profile_picture = url_for('static', filename = 'profile_pics/' + user.profile_picture)
+    if 'username' not in session:
+        abort(401)
+    
+    user = users.query.get(user_id)
 
+    if user.profile_picture:
+        profile_picture = url_for('static', filename = 'profile_pics/' + user.profile_picture)
+    else:
+        profile_picture = url_for('static', filename = 'profile_pics/default-profile-pic.jpg')
     return render_template('profile.html', user=user, profile_picture=profile_picture)
 
 #TODO: Create a get request for live comments.
@@ -220,7 +226,11 @@ def Post_discussions():
 
 @app.post('/users/<int:user_id>')
 def edit_profile(user_id: int):
-    user = current_user
+    if 'username' not in session:
+        abort(401)
+
+    user = users.query.get(user_id)
+
 
     user.email = request.form.get('email')
     user.username = request.form.get('username')
