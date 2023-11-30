@@ -74,7 +74,7 @@ yf.pdr_override()
 def get_plotly_json(stock):
     #Retrieve stock data frame (df) from yfinance API at an interval of 1m
     df = yf.download(tickers=stock,period='1d',interval='1m', threads = True)
-    df['Datetime'] = df.index.strftime('%I:%M %p')
+    #df['Regular time'] = df.index.strftime('%I:%M %p')
 
     print(df)
     #Declare plotly figure (go)
@@ -87,11 +87,16 @@ def get_plotly_json(stock):
                     close=df['Close'], name = 'market data'))
 
     fig.update_layout(
-        title= str(stock)+' Live Share Price:',
-        yaxis_title='Stock Price (USD per Shares)')
+        #title= str(stock)+' Live Share Price:',
+        #template='plotly_dark',
+        autosize=True,
+        uirevision=True,
+        #yaxis_title='Stock Price (USD per Shares)'
+        )
 
     fig.update_xaxes(
         rangeslider_visible=True,
+        tickformat="%I:%M %p",
         rangeselector=dict(
             buttons=list([
                 dict(count=15, label="15m", step="minute", stepmode="backward"),
@@ -102,6 +107,7 @@ def get_plotly_json(stock):
             ])
         )
     )
+    
     graph_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     return graph_json
 
