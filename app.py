@@ -1,4 +1,5 @@
 from flask import Flask, abort, redirect, render_template, request, url_for, flash, jsonify, session
+
 # from flask_wtf import FileField
 #Market Data
 import yfinance as yf
@@ -77,7 +78,7 @@ yf.pdr_override()
 def get_plotly_json(stock):
     #Retrieve stock data frame (df) from yfinance API at an interval of 1m
     df = yf.download(tickers=stock,period='1d',interval='1m', threads = True)
-    df['Datetime'] = df.index.strftime('%I:%M %p')
+    #df['Regular time'] = df.index.strftime('%I:%M %p')
 
     print(df)
     #Declare plotly figure (go)
@@ -90,11 +91,16 @@ def get_plotly_json(stock):
                     close=df['Close'], name = 'market data'))
 
     fig.update_layout(
-        title= str(stock)+' Live Share Price:',
-        yaxis_title='Stock Price (USD per Shares)')
+        #title= str(stock)+' Live Share Price:',
+        #template='plotly_dark',
+        autosize=True,
+        uirevision=True,
+        #yaxis_title='Stock Price (USD per Shares)'
+        )
 
     fig.update_xaxes(
         rangeslider_visible=True,
+        tickformat="%I:%M %p",
         rangeselector=dict(
             buttons=list([
                 dict(count=15, label="15m", step="minute", stepmode="backward"),
@@ -105,6 +111,7 @@ def get_plotly_json(stock):
             ])
         )
     )
+    
     graph_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     return graph_json
 
@@ -131,7 +138,9 @@ def index():
 #TODO: Create a get request for the upload page.
 @app.get('/upload')
 def upload():
-    return render_template('upload.html', user = current_user)
+    if 'username' not in session:
+        abort(401)
+    return render_template('upload.html', user=session.get('username'))
 
 #TODO: Create a post request for the upload page.
 @app.post('/upload')
@@ -140,7 +149,8 @@ def upload_post():
     description = request.form.get('text')
     if title == '' or title is None:
         abort(400)
-    created_post = post_repository_singleton.create_post(title, description, current_user.user_id)
+    user = user_repository_singleton.get_user_by_username(session.get('username'))
+    created_post = post_repository_singleton.create_post(title, description, user.user_id)
     return redirect('/posts')
 
 # when a user likes a post
@@ -153,6 +163,17 @@ def like_post():
     post_repository_singleton.add_like(post_id, user_id)
 
     return jsonify({'status': 'success'})
+
+# when a user comments on a post
+@app.post('/posts/<int:post_id>/comment')
+def comment_post(post_id):
+    user_id = user_repository_singleton.get_user_by_username(session.get('username')).user_id
+    content = request.form.get('content')
+    if post_id == '' or post_id is None or content == '' or content is None:
+        abort(400)
+    post_repository_singleton.add_comment(user_id, post_id, content)
+
+    return redirect(f'/posts/{post_id}')
 
 # format timestamp to display how long ago a post was made
 @app.template_filter('time_ago')
@@ -176,7 +197,19 @@ def time_ago_filter(timestamp):
 @app.get('/posts')
 def posts():
     all_posts = post_repository_singleton.get_all_posts_with_users()
-    return render_template('posts.html', list_posts_active=True, posts=all_posts, user=current_user)
+    if 'username' not in session:
+        user = None
+    else:
+        user = user_repository_singleton.get_user_by_username(session.get('username'))
+    return render_template('posts.html', list_posts_active=True, posts=all_posts, user=user)
+
+@app.get('/posts/<int:post_id>')
+def post(post_id):
+    if 'username' not in session:
+        abort(401)
+    post = post_repository_singleton.get_post_by_id(post_id)
+    user = user_repository_singleton.get_user_by_username(session.get('username'))
+    return render_template('single_post.html', post=post, user=user)
 
 #TODO: Create a get request for the user login page.
 @app.get('/login')
@@ -366,9 +399,15 @@ def password_reset(token):
 @app.get('/profile/<int:user_id>')
 @login_required
 def profile(user_id):
-    user = current_user
-    profile_picture = url_for('static', filename = 'profile_pics/' + user.profile_picture)
+    if 'username' not in session:
+        abort(401)
+    
+    user = users.query.get(user_id)
 
+    if user.profile_picture:
+        profile_picture = url_for('static', filename = 'profile_pics/' + user.profile_picture)
+    else:
+        profile_picture = url_for('static', filename = 'profile_pics/default-profile-pic.jpg')
     return render_template('profile.html', user=user, profile_picture=profile_picture)
 
 #TODO: Create a get request for live comments.
@@ -383,7 +422,11 @@ def Post_discussions():
 
 @app.post('/users/<int:user_id>')
 def edit_profile(user_id: int):
-    user = current_user
+    if 'username' not in session:
+        abort(401)
+
+    user = users.query.get(user_id)
+
 
     user.email = request.form.get('email')
     user.username = request.form.get('username')

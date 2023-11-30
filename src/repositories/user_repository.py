@@ -18,6 +18,7 @@ class UserRepository:
             return False
         return True
     
+<<<<<<< HEAD
     def add_user(self, first_name, last_name, username, email, password, profile_picture):
         temp_user = users(first_name, last_name, username, email, password, profile_picture)
         db.session.add(temp_user)
@@ -31,6 +32,11 @@ class UserRepository:
 
     def is_logged_in(self):
         return 'username' in session
+=======
+    # get user by username
+    def get_user_by_username(self, username):
+        return users.query.filter_by(username=username).first()
+>>>>>>> main
 
 # Singleton to be used in other modules
 user_repository_singleton = UserRepository()
