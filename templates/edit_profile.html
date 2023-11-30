@@ -5,14 +5,14 @@
 <div class="mb-3">
     <h1>Edit Profile</h1>
 </div>
-<form method="POST" action="/users/{{current_user.user_id}}" enctype="multipart/form-data">
+<form method="POST" action="/users/{{user.user_id}}" enctype="multipart/form-data">
 <div class="mb-3">
         <label for="email" class="form-label">Email address</label>
-        <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" value="{{current_user.email}}">
+        <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" value="{{user.email}}">
 </div>
 <div class="mb-3">
     <label for="username" class="form-label">Username</label>
-    <input class="form-control" type="text" id="username" name="username" placeholder="Default input" aria-label="default input example" value="{{current_user.username}}">
+    <input class="form-control" type="text" id="username" name="username" placeholder="Default input" aria-label="default input example" value="{{user.username}}">
 </div>
     <div class="input-group mb-3">
         <input type="file" class="form-control" id="profile_picture" name="profile_picture">
