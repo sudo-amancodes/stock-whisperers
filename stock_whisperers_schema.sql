@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS users (
     user_id SERIAL,
-    first_name VARCHAR(255),
-    last_name VARCHAR(255),
-    username VARCHAR(255) UNIQUE,
-    email VARCHAR(255) UNIQUE,
-    password VARCHAR(255),
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
     role VARCHAR(50),
     registration_date TIMESTAMP,
     profile_picture VARCHAR(255), 
@@ -20,7 +20,6 @@ CREATE TABLE IF NOT EXISTS live_posts (
     PRIMARY KEY (post_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
-
 
 CREATE TABLE IF NOT EXISTS post (
     post_id SERIAL PRIMARY KEY,
@@ -39,4 +38,12 @@ CREATE TABLE IF NOT EXISTS comment (
     likes INT NOT NULL DEFAULT 0,
     user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
     post_id INT REFERENCES post(post_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS likes (
+    post_id INT,
+    user_id INT,
+    PRIMARY KEY (post_id, user_id),
+    FOREIGN KEY (post_id) REFERENCES post(post_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
