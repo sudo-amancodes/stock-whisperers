@@ -20,7 +20,7 @@
         <a class="nav-item nav-link" id="home" href="/">Home</a>
         <a class="nav-item nav-link" id="posts" href="/posts">Posts</a>
         <a class="nav-item nav-link" id="upload" href="/upload">Upload</a>
-        <a class="nav-item nav-link" id="profile" href="/profile">Profile</a>
+        <a class="nav-item nav-link" id="profile" href="/profile/{{ session.get('username') }}" >Profile</a>
         <a class="nav-item nav-link" id="logout" href="/logout">Logout</a>
         {% else %}
         <a class="nav-item nav-link" id="login" href="/login">Login</a>

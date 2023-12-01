@@ -227,7 +227,6 @@ def verify_login():
         return redirect('/login')
 
     temp_username = users.query.filter((func.lower(users.username) == username.lower()) | (func.lower(users.email) == username.lower())).first()
-
     if temp_username is not None:
         if bcrypt.check_password_hash(temp_username.password, password):
             flash('Successfully logged in, ' + temp_username.first_name + '!', category= 'success') 
@@ -357,18 +356,16 @@ def password_reset(token):
     
 
 #TODO: Create a get request for the profile page.
-@app.get('/profile/<int:user_id>')
-@login_required
-def profile(user_id):
-    if 'username' not in session:
-        abort(401)
+@app.get('/profile/<string:username>')
+def profile(username: str):
     
-    user = users.query.get(user_id)
+    if 'username' not in session:
+        return redirect('/login')
 
-    if user.profile_picture:
-        profile_picture = url_for('static', filename = 'profile_pics/' + user.profile_picture)
-    else:
-        profile_picture = url_for('static', filename = 'profile_pics/default-profile-pic.jpg')
+    user = user_repository_singleton.get_user_by_username(username)
+    
+
+    profile_picture = url_for('static', filename = 'profile_pics/default-profile-pic.jpg')
     return render_template('profile.html', user=user, profile_picture=profile_picture)
 
 #TODO: Create a get request for live comments.
@@ -381,22 +378,52 @@ def live_comment():
 def Post_discussions():
     pass
 
-@app.post('/users/<int:user_id>')
-def edit_profile(user_id: int):
+@app.get('/profile/<string:username>/edit')
+def get_edit_profile_page(username: str):
     if 'username' not in session:
         abort(401)
 
-    user = users.query.get(user_id)
+    user_to_edit = users.query.filter_by(username=username).first()
+    if user_to_edit is None:
+        redirect(f'/profile/{username}')
+    return render_template('edit_profile.html', user = user_to_edit)
+    
+
+@app.post('/profile/<string:username>')
+def update_profile(username: str):
+    if 'username' not in session:
+        abort(401)
+    
+    user_to_edit = users.query.filter_by(username=username).first()
+
+    new_email = request.form.get('email')
+    new_username = request.form.get('username')
+    new_fname = request.form.get('first_name')
+    new_lname = request.form.get('last_name')
 
 
-    user.email = request.form.get('email')
-    user.username = request.form.get('username')
+    existing_user = users.query.filter_by(username=new_username).first()
+    existing_email = users.query.filter_by(email=new_email).first()
 
-    profile_pic = request.files['profile_picture']
-    db.session.add(user)
+    
+    if existing_user and existing_user != user_to_edit:
+        flash('Username already in use', 'error')
+        return redirect(f'/profile/{username}/edit')
+    if existing_email and existing_email != user_to_edit:
+        flash('Email already in use', 'error')
+        return redirect(f'/profile/{username}/edit')
+    
+    user_to_edit.email = new_email
+    user_to_edit.username = new_username
+    user_to_edit.first_name = new_fname
+    user_to_edit.last_name = new_lname
+
+    session['username'] = new_username
+
+    db.session.add(user_to_edit)
     db.session.commit()
 
-    return redirect(f'/profile/{user_id}', user_id=user_id)
+    return redirect(f'/profile/{new_username}')
 
 # # TODO: Implement the 'Post Discussions' feature
 # @app.get('post discussions')
