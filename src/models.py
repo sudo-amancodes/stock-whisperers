@@ -24,7 +24,11 @@ class users(db.Model, UserMixin):
 
     role = db.Column(db.String(255), nullable = True)
 
+    num_of_attempts = db.Column(db.Integer, default = 0)
+
     registration_date = db.Column(db.DateTime, nullable=True, default=func.now())
+
+    last_login = db.Column(db.DateTime, nullable=True, default=func.now())
 
     profile_picture = db.Column(db.String(255), nullable = True)
 

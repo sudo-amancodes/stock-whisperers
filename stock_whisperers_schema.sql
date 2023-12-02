@@ -1,3 +1,5 @@
+CREATE DATABASE stock_whisperers
+
 CREATE TABLE IF NOT EXISTS users (
     user_id SERIAL,
     first_name VARCHAR(255) NOT NULL,
@@ -7,6 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     role VARCHAR(50),
     registration_date TIMESTAMP,
+    last_login TIMESTAMP,
     profile_picture VARCHAR(255), 
     PRIMARY KEY (user_id)
 );

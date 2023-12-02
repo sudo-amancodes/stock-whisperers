@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from src.models import Post, db, users
 from flask import flash, session
 
@@ -18,25 +19,34 @@ class UserRepository:
             return False
         return True
     
-<<<<<<< HEAD
     def add_user(self, first_name, last_name, username, email, password, profile_picture):
         temp_user = users(first_name, last_name, username, email, password, profile_picture)
         db.session.add(temp_user)
         db.session.commit()
+    
+    def remove_user(self, user_id):
+        user = users.query.get(user_id)
+        if user:
+            db.session.delete(user)
+            db.session.commit()
 
     def login_user(self, username):
         session['username'] = username
+        user = users.query.filter_by(username=username).first()
+        if user:
+            user.last_login = datetime.utcnow()
+            user.num_of_attempts = 0
 
     def logout_user(self):
         del session['username']
 
     def is_logged_in(self):
         return 'username' in session
-=======
+
     # get user by username
     def get_user_by_username(self, username):
         return users.query.filter_by(username=username).first()
->>>>>>> main
+
 
 # Singleton to be used in other modules
 user_repository_singleton = UserRepository()

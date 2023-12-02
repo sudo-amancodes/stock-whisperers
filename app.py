@@ -53,19 +53,22 @@ db.init_app(app)
 login_manager = LoginManager(app)
 # login_manager.login_view = '/login'
 
+# Make sure you are not on school wifi when trying to send emails, it will not work.
 # Mail Initialization
 app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-# To use, Must be a valid gmail account. EMAIL_USER is your username, password must be a generated "app password", not your actual password
-# To create app password, go to google account settings, enable two step verification, click on two step verfication and scroll to bottom 
-# click on app password and geenrate one, copy 16 digit password and set it as EMAIL_PASS
+
+# app.config['MAIL_USERNAME'] = os.getenv('EMAIL_USER')
+# app.config['MAIL_PASSWORD'] = os.getenv('EMAIL_PASS')
 app.config['MAIL_USERNAME'] = 'the.stock.whisperers@gmail.com'
 app.config['MAIL_PASSWORD'] = 'spwlegjkdfjabdhx'
 mail = Mail(app)
 
+# Variable for random code sent in emails
 code = 0
-
+temp_user_info = []
+num_of_attempts = 0
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -218,14 +221,13 @@ def login():
         return redirect('/')
     return render_template('login.html', user = session.get('username'))
 
-def send_verification_email(user):
-    # user = users.query.get(user_id)
-    if not user:
+def send_verification_email(email):
+    if not email:
         abort(400)
     global code   
     code = random.randint(100000, 999999)
-    msg = Message('Verification code', sender='noreply@stock-whisperers.com', recipients=[user.email])
-    msg.body = f'''Enter the 6-digit code below to verify your identity and login to your stock-whisperers account.
+    msg = Message('Verification code', sender='noreply@stock-whisperers.com', recipients=[email])
+    msg.body = f'''Enter the 6-digit code below to verify your identity.
 
 {code}
 
@@ -234,27 +236,36 @@ If you did not make this request, please ignore this email
     mail.send(msg)
 
 # to-do: when user inputs invalid code email resends, move to post route. fix invalid code error
-@app.get('/verify_user/<user_id>')
-def verify_user(user_id):
-    return render_template('verify_user.html', user_id = user_id)
+@app.get('/verify_user/<username>/<method>')
+def verify_user(username, method):
+    return render_template('verify_user.html', username = username, method = method)
 
-@app.post('/verify_user/<user_id>')
-def verify_code(user_id):
-    user = users.query.get(user_id)
+@app.post('/verify_user/<username>/<method>')
+def verify_code(username, method):
     global code
     user_code = request.form.get('user-code')
-    if not user_code or not user:
+    if not user_code:
         abort(400)
-    # print(code)
-    # print(user_code)
     if str(code) != str(user_code):
-        flash('Incorrect code', category='error')
-        return redirect(f'/verify_user/{user_id}')
+        flash('Incorrect code. Try Again', category='error')
+        return redirect(f'/verify_user/{username}/{method}')
 
+    if method == "signup":
+        user_repository_singleton.add_user(temp_user_info[0], temp_user_info[1], temp_user_info[2], temp_user_info[3], temp_user_info[4], temp_user_info[5])
+        user = user_repository_singleton.get_user_by_username(temp_user_info[2])
+        if not user:
+            abort(401)
+        user_repository_singleton.login_user(user.username)
+        flash('Successfully created an account. Welcome, ' + user.first_name + '!', category= 'success') 
+        return redirect('/')
+
+    user = user_repository_singleton.get_user_by_username(username)
+    if not user:
+        abort(401)
     flash('Successfully logged in, ' + user.first_name + '!', category= 'success') 
     user_repository_singleton.login_user(user.username)
     return redirect('/')
-
+    
 @app.post('/login')
 def verify_login():
     if user_repository_singleton.is_logged_in():
@@ -270,13 +281,15 @@ def verify_login():
 
     if temp_username is not None:
         if bcrypt.check_password_hash(temp_username.password, password):
-            # IF YOU WANT TO LOGIN WITHOUT HAVING TO SEND EMAIL AND VERIFY, COMMENT OUT THE TWO LINES BELOW AND UNCOMMENT THE 3 COMMENTED LINES
-            # below the return statement
-            send_verification_email(temp_username)
-            return redirect(f'/verify_user/{temp_username.user_id}')
-            # flash('Successfully logged in, ' + temp_username.first_name + '!', category= 'success') 
-            # user_repository_singleton.login_user(username)
-            # return redirect('/')
+            time_difference = datetime.utcnow() - temp_username.last_login
+
+            if time_difference > timedelta(days=14):
+                send_verification_email(temp_username.email)
+                return redirect(f'/verify_user/{temp_username.username}/login')
+            else:
+                flash('Successfully logged in, ' + temp_username.first_name + '!', category= 'success') 
+                user_repository_singleton.login_user(username)
+                return redirect('/')
         else:
             flash('Incorrect username or password', category='error')
     else:
@@ -324,10 +337,10 @@ def create_user():
         return redirect('/register')
     
     if user_repository_singleton.validate_input(first_name, last_name, username, password):
-        user_repository_singleton.add_user(first_name, last_name, username, email, bcrypt.generate_password_hash(password).decode(), profile_picture)
-        user_repository_singleton.login_user(username)
-        flash('account successfully created!', category = 'success')
-        return redirect('/')
+        global temp_user_info
+        temp_user_info = [first_name, last_name, username, email, bcrypt.generate_password_hash(password).decode(), profile_picture]
+        send_verification_email(email)
+        return redirect(f'/verify_user/{username}/signup')
 
     return redirect('/register')
 
