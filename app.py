@@ -51,7 +51,6 @@ db.init_app(app)
 
 # Login Initialization
 login_manager = LoginManager(app)
-# login_manager.login_view = '/login'
 
 # Make sure you are not on school wifi when trying to send emails, it will not work.
 # Mail Initialization
@@ -68,7 +67,6 @@ mail = Mail(app)
 # Variable for random code sent in emails
 code = 0
 temp_user_info = []
-num_of_attempts = 0
 
 @login_manager.user_loader
 def load_user(user_id):
