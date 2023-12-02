@@ -64,7 +64,7 @@ app.config['MAIL_USERNAME'] = 'the.stock.whisperers@gmail.com'
 app.config['MAIL_PASSWORD'] = 'spwlegjkdfjabdhx'
 mail = Mail(app)
 
-# Variable for random code sent in emails
+# Variables to use for email verification
 code = 0
 temp_user_info = []
 
