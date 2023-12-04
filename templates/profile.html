@@ -11,27 +11,154 @@
 {% if session.get('username') != user.username %}
 <div class="content-section">
   <div class="mt3">
-    <h2>{{ user.first_name }} {{user.last_name}}!</h2>
-    <div class="media">
-    <img class="rounded-circle" src="{{ profile_picture }}" width = "150" height = "150" style="float: right;">
+    <div class="card">
+      <div class="card-header">
+        {{ user.first_name }} {{user.last_name}}
+      </div>
+      <div class="card-body">
+        <h5 class="card-title">User information:</h5>
+        <p class="card-text">
+          <div class="media">
+            <img class="rounded-circle" src="{{ profile_picture }}" width = "150" height = "150" style="float: right;">
+            </div>
+            <strong>Username:</strong>
+            <p>{{ user.username }}</p>
+            <strong>Email:</strong>
+            <p>{{ user.email }}</p>
+        </p>
+      </div>
     </div>
-    <p>Username: {{ user.username }}</p>
-    <p>Email: {{ user.email }}</p>
   </div>
 </div>
 {% else %}
 <div class="content-section">
       <div class="mt3">
-        <h2>Hello {{ user.first_name }} {{user.last_name}}!</h2>
-        <div class="media">
-        <img class="rounded-circle" src="{{ profile_picture }}" width = "150" height = "150" style="float: right;">
+        <div class="card">
+          <div class="card-header">
+            {{ user.first_name }} {{user.last_name}}
+          </div>
+          <div class="card-body">
+            <h5 class="card-title">Welcome!</h5>
+            <p class="card-text">
+              <div class="media">
+                <img class="rounded-circle" src="{{ profile_picture }}" width = "150" height = "150" style="float: right;">
+                </div>
+                <strong>Username:</strong>
+                <p>{{ user.username }}</p>
+                <strong>Email:</strong>
+                <p>{{ user.email }}</p>
+            </p>
+            <form action="/profile/{{session.get('username')}}/edit" method="get" class="mt-3">
+              <button type="submit" class="btn btn-secondary">Edit Profile</button>
+          </form>
+          </div>
         </div>
-        <p>Username: {{ user.username }}</p>
-        <p>Email: {{ user.email }}</p>
-        <form action="/profile/{{session.get('username')}}/edit" method="get" class="mt-3">
-            <button type="submit" class="btn btn-secondary">Edit Profile</button>
-        </form>
       </div>
     </div>
     {% endif %}
+      {% if posts|length == 0 %}
+      <h3 class="mt-3">There are no posts</h3>
+      {% else %}
+      <h3 class="mt-3"> Posts </h3>
+      {% for post, creator in posts %}
+      <main class="d-flex justify-content-center flex-column">
+        <div class="container bg-secondary p-3 mb-3 rounded w-75" style="color: white;">
+      <div class="d-inline-flex align-items-center justify-content-between w-100">
+        <h3>{{ post.title }}</h3>
+        {% if session.get('username') == user.username %}
+        <!-- TODO: Add edit and delete buttons -->
+        <!-- <a href="/posts/edit/{{ post.post_id }}"><button>Edit</button></a>
+        <a href="/posts/delete/{{ post.post_id }}"><button>Delete</button></a> -->
+        <h6>Posted by you, {{ post.date_posted|time_ago }}</h6>
+        {% else %}
+        <h6>Posted by<a href = /profile/{{creator.username}}> {{ creator.username }}</a>, {{ post.date_posted|time_ago }}</h6>
+        {% endif %}
+    </div>
+    
+    <div class="container p-0">
+        <p>{{ post.content }}</p>
+        <p class="like-count">{{ post.likes }}</p>
+        <div>
+            {% if user.is_authenticated %}
+            {% if post in user.liked_posts %}
+            <button class="like-button liked" data-post-id="{{ post.post_id }}" data-user-id="{{ user.user_id }}">Liked</button>
+            {% else %}
+            <button class="like-button" data-post-id="{{ post.post_id }}" data-user-id="{{ user.user_id }}">Like</button>
+            {% endif %}
+            {% else %}
+            <a href="/login"><button>Like</button></a>
+            {% endif %}
+            <button>Comment</button>
+        </div>
+    </div>
+    <div class="comments-container container p-0">
+        <p>ID: {{ post.post_id }}</p>
+        {% for comment in post.comments %}
+        <div class="comment-container container p-0">
+            <h6>{{ comment.comment_creator.username }}</h6>
+            <div class="d-inline-flex align-items-center w-100 ps-3 border-start">
+                <p class="m-0 p-2">{{ comment.content }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('.like-button').click(function (event) {
+                event.stopPropagation();
+                var postId = $(this).data('post-id');
+                var userId = $(this).data('user-id');
+    
+                $.ajax({
+                    type: 'POST',
+                    url: '/posts/like',
+                    data: { post_id: postId, user_id: userId },
+                    success: function (data) {
+                        console.log('Like added successfully');
+                    },
+                    error: function (error) {
+                        console.error('Error adding like:', error);
+                    }
+                });
+            });
+        });
+    </script>
+    <script>
+        function liked_or_not() {
+            const like_button = document.getElementsByClassName("like-button");
+            const like_count = document.getElementsByClassName("like-count");
+            for (let i = 0; i < like_button.length; i++) {
+                like_button[i].addEventListener("click", function () {
+                    if (like_button[i].classList.contains("liked")) {
+                        like_count[i].innerHTML = parseInt(like_count[i].innerHTML) - 1;
+                        like_button[i].innerHTML = "Like";
+                    } else {
+                        like_button[i].innerHTML = "Liked";
+                        like_count[i].innerHTML = parseInt(like_count[i].innerHTML) + 1;
+                    }
+                    like_button[i].classList.toggle("liked");
+                });
+            }
+        }
+        liked_or_not();
+
+        // display reply area when reply button is clicked
+        function reply() {
+            const reply_button = document.getElementsByClassName("reply-button");
+            const reply_area = document.getElementsByClassName("reply-area");
+            for (let i = 0; i < reply_button.length; i++) {
+                reply_button[i].addEventListener("click", function () {
+                    reply_area[i].classList.toggle("d-none");
+                });
+            }
+        }
+        reply();
+    </script>
+</div>
+</main>
+
+{% endfor %}
+{% endif %}
+
 {% endblock %}

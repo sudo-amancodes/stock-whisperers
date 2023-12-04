@@ -41,6 +41,9 @@ class PostRepository:
         db.session.add(new_comment)
         db.session.commit()
         return new_comment
+    # get all posts by a user
+    def get_user_posts(self, user_id):
+        return db.session.query(Post, users).join(users, users.user_id == Post.user_id).filter(Post.user_id==user_id).order_by(Post.date_posted.desc()).all()
 
 # Singleton to be used in other modules
 post_repository_singleton = PostRepository()

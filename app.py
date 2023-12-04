@@ -1,4 +1,3 @@
-import secrets
 import uuid
 from flask import Flask, abort, redirect, render_template, request, url_for, flash, jsonify, session
 from flask_wtf.file import FileField, FileAllowed
@@ -373,10 +372,11 @@ def profile(username: str):
     
 
     user = user_repository_singleton.get_user_by_username(username)
-    
+
+    posts = post_repository_singleton.get_user_posts(user.user_id)
 
     profile_picture = url_for('static', filename = 'profile_pics/' + user.profile_picture)
-    return render_template('profile.html', user=user, profile_picture=profile_picture)
+    return render_template('profile.html', user=user, profile_picture=profile_picture, posts=posts)
 
 #TODO: Create a get request for live comments.
 @app.get('/comment')
@@ -424,10 +424,13 @@ def update_profile(username: str):
         return redirect(f'/profile/{username}/edit')
     
     profile_picture = request.files['profile_picture']
-    if profile_picture and FileAllowed(profile_picture.filename):
+    if profile_picture:
+
         filename = secure_filename(profile_picture.filename)
-        profile_picture.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        user_to_edit.profile_picture = filename
+        # Set UUID to prevent same file names
+        pic_name = str(uuid.uuid1()) + "_" + filename
+        profile_picture.save(os.path.join(app.config['UPLOAD_FOLDER'], pic_name))
+        user_to_edit.profile_picture = pic_name
     
     user_to_edit.email = new_email
     user_to_edit.username = new_username
