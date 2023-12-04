@@ -54,5 +54,48 @@ Stock whisperers
           .modebar {
             display: none !important;
             }
-    </style>
+    </style>  
+
+    <!----- - -  Live Comment Code- - - - - - --  - - - - -- - - - - - -- - - - - - - -- - - - -  - -->  
+
+  <script>  
+
+    // append new comments  
+    socket.on('new_comment', function(commentData) {   
+
+       let commentElement = document.createElement("div"); 
+       commentElement.innerHTML = `<strong>User ${commentData.user_id}:</strong> ${commentData.content}`; 
+       document.getElementById("comments-container").appendChild(commentElement); 
+    });
+
+    function submitComment() { 
+        let commentContent =document.getElementById("comment-input").value; 
+        socket.emit('send_comment', { comment: commentContent}); 
+        document.getElementById("comment-input").value = ' '; 
+    } 
+
+    fetch('/comment')
+    .then(response => response.json())
+    .then(comments => { 
+        comments.forEach(comment => { 
+            let commentElement = document.createElement("div") 
+            commentElement.innerHTML = `<strong>User ${comment.user_id}:</strong> ${comment.content}`;
+            document.getElementById("comments-container").appendChild(commentElement); 
+        }); 
+    }); 
+
+        </script> 
+
+    <div class = "comments-section"> 
+        <h3> Live Comments</h3> 
+        <div id = "comments-container"> 
+
+        </div> 
+        {% if current_user.is_authenticated %}
+        <div class = "comment-form"> 
+            <textarea id="comment-input" placeholder="Enter comment"></textarea>
+            <button onclick="submitComment()"> Comment </button>
+        </div> 
+        {% endif % }
+     </div>
 {% endblock %}

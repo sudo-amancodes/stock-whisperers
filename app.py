@@ -424,7 +424,32 @@ def profile(user_id):
 #TODO: Create a get request for live comments.
 @app.get('/comment')
 def live_comment():
-    pass
+    comments = live_posts.query.order_by(live_posts.date.desc()).all()
+    comments_data = [ 
+        {'post_id': comment.post_id, 
+         'content': comment.content, 
+         'user_id': comment.user_id, 
+         'date': comment.date.strftime("%Y/%m/%d %H:%M:%S")}
+        for comment in comments
+    ] 
+    return jsonify(comments_data)  
+
+# sokcetIO to handle comments: 
+@socketio.on('send_comment') 
+def handle_send_comment (data): 
+    if 'user_id' not in session:
+        emit('error', {'message': 'Not logged in, please log in to comment :)'})
+        return 
+    user_id = session['user_id']
+    content = data['comment']  
+
+    # store comments
+    new_comment = live_posts(content=content, user_id=user_id) 
+    db.session.add(new_comment)
+    db.session.commit()
+
+    # emitting  new comments: 
+    emit('new_comment', {'user_id': user_id, 'content': content, 'post_id': new_comment.post_id}, broadcast=True)  
 
 # TODO: Implement the 'Post Discussions' feature
 @app.get('/post discussions')
