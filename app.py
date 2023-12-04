@@ -24,6 +24,9 @@ from src.models import db, users, live_posts, Post
 from datetime import datetime, timedelta
 from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
 
+#Bleach to prevent cross-site scripting (XSS) attacks, possible when user is posting a comment
+import bleach
+
 thread = None
 thread_lock = Lock()
 load_dotenv()
@@ -162,6 +165,14 @@ def like_post():
     return jsonify({'status': 'success'})
 
 # when a user comments on a post
+# Function to sanitize HTML content
+def sanitize_html(content):
+    allowed_tags = ['p', 'div', 'em', 'strong', 'del', 'a', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'ul', 'ol', 'li', 'hr', 'br', 'pre']
+    allowed_attributes = {'*': ['class', 'style'], 'a': ['href', 'target']}
+    
+    sanitized_content = bleach.clean(content, tags=allowed_tags, attributes=allowed_attributes)
+    return sanitized_content
+
 @app.post('/posts/<int:post_id>/comment')
 def comment_post(post_id):
     user_id = user_repository_singleton.get_user_by_username(session.get('username')).user_id
@@ -198,7 +209,7 @@ def posts():
         user = None
     else:
         user = user_repository_singleton.get_user_by_username(session.get('username'))
-    return render_template('posts.html', list_posts_active=True, posts=all_posts, user=user)
+    return render_template('posts.html', list_posts_active=True, posts=all_posts, user=user, sanitize_html=sanitize_html)
 
 @app.get('/posts/<int:post_id>')
 def post(post_id):
@@ -206,7 +217,7 @@ def post(post_id):
         abort(401)
     post = post_repository_singleton.get_post_by_id(post_id)
     user = user_repository_singleton.get_user_by_username(session.get('username'))
-    return render_template('single_post.html', post=post, user=user)
+    return render_template('single_post.html', post=post, user=user, sanitize_html=sanitize_html)
 
 #TODO: Create a get request for the user login page.
 @app.get('/login')
