@@ -7,6 +7,16 @@
         /* style the like button here to show that it is liked */
         background-color: red;
     }
+
+    trix-editor:empty:not(:focus)::before {
+        color: white;
+        opacity: 0.4;
+    }
+
+    .sanitized-html > *{
+        margin: 0;
+        padding: 0;
+    }
 </style>
 
 <main class="d-flex justify-content-center flex-column">
@@ -24,7 +34,8 @@
         </div>
 
         <div class="container p-0">
-            <p>{{ post.content }}</p>
+            <div class="m-0 p-0">{{ sanitize_html(post.content)|safe }}</div>
+            <br>
             <div>
                 {% if user.is_authenticated %}
                 {% if post in user.liked_posts %}
@@ -38,16 +49,19 @@
                 <a href="/login"><button>Like</button></a>
                 {% endif %}
                 <p class="like-count d-inline-block">{{ post.likes }}</p>
-                <button class="ms-3">Comments</button>
-                <p class="d-inline-block">{{ post.comments|length }}</p>
+                {% if post.comments|length == 1 %}
+                <button class="ms-3">{{ post.comments|length }} Comment</button>
+                {% else %}
+                <button class="ms-3">{{ post.comments|length }} Comments</button>
+                {% endif %}
             </div>
         </div>
     </div>
     <div class="container bg-secondary p-3 mb-5 rounded w-75" style="color: white;">
         <p>Add a comment as {{user.username}}</p>
         <form class="w-100 d-flex flex-column" action="/posts/{{ post.post_id }}/comment" method="post">
-            <textarea class="w-100 border bg-secondary mb-2 p-2" style="color: white;" name="content" id="content" cols="30"
-                rows="5" placeholder="What are your thoughts?" required></textarea>
+            <input id="content" type="hidden" name="content" required>
+            <trix-editor style="color: white;" input="content" placeholder="What are your thoughts?"></trix-editor>
             <input class="w-25 align-self-end" type="submit" value="Comment">
         </form>
 
@@ -55,13 +69,18 @@
             <p>ID: {{ post.post_id }}</p>
             {% for comment in post.comments %}
             <div class="comment-container container pt-3 ps-0 pe-0">
-                <h6>{{ comment.comment_creator.username }}</h6>
+                {% if user.username == comment.comment_creator.username %}
+                <h6>{{ comment.comment_creator.username }} (you), {{ comment.date_posted|time_ago }}</h6>
+                {% else %}
+                <h6>{{ comment.comment_creator.username }}, {{ comment.date_posted|time_ago }}</h6>
+                {% endif %}
                 <div class="d-inline-flex align-items-center w-100 ps-3 border-start justify-content-between flex-wrap">
-                    <p class="m-0 p-0">{{ comment.content }}</p>
+                    <div class="m-0 p-0 sanitized-html">{{ sanitize_html(comment.content)|safe }}</div>
                     <input type="submit" class="reply-button" value="Reply">
                     <!-- REPLY TEXT AREA -->
                     <div class="d-none d-inline-flex w-100 ps-3 pt-3 border-start flex-column reply-area">
-                        <textarea style="color: white;" class="w-100 border bg-secondary" name="reply" id="reply" cols="30" rows="5" placeholder="What are your thoughts?" required></textarea>
+                        <textarea style="color: white;" class="w-100 border bg-secondary" name="reply" id="reply"
+                            cols="30" rows="5" placeholder="What are your thoughts?" required></textarea>
                         <input class="w-100 align-self-end" type="submit" value="Reply">
                     </div>
                 </div>
@@ -76,7 +95,7 @@
                 event.stopPropagation();
                 var postId = $(this).data('post-id');
                 var userId = $(this).data('user-id');
-    
+
                 $.ajax({
                     type: 'POST',
                     url: '/posts/like',
@@ -121,6 +140,17 @@
             }
         }
         reply();
+    </script>
+    <script type="text/javascript">
+        (function () {
+            addEventListener("trix-initialize", function (e) {
+                const file_tools = document.querySelector(".trix-button-group--file-tools");
+                file_tools.remove();
+            })
+            addEventListener("trix-file-accept", function (e) {
+                e.preventDefault();
+            })
+        })();
     </script>
 </main>
 
