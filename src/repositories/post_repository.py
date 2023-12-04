@@ -36,8 +36,8 @@ class PostRepository:
         return Post.query.get(post_id).user_id
     
     # add a comment to a post
-    def add_comment(self, user_id, post_id, content):
-        new_comment = Comment(user_id, post_id, content)
+    def add_comment(self, user_id, post_id, content, parent_comment_id=None):
+        new_comment = Comment(user_id, post_id, content, parent_comment_id)
         db.session.add(new_comment)
         db.session.commit()
         return new_comment

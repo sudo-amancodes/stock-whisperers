@@ -173,13 +173,23 @@ def sanitize_html(content):
     sanitized_content = bleach.clean(content, tags=allowed_tags, attributes=allowed_attributes)
     return sanitized_content
 
+# for comments and replies 
 @app.post('/posts/<int:post_id>/comment')
-def comment_post(post_id):
+@app.post('/posts/<int:post_id>/comment/<int:parent_comment_id>')
+def comment_reply(post_id, parent_comment_id=0):
+    print('parent comment id: ', parent_comment_id)
     user_id = user_repository_singleton.get_user_by_username(session.get('username')).user_id
     content = request.form.get('content')
+    reply = request.form.get('reply')
+    if reply is not None:
+        content = reply
     if post_id == '' or post_id is None or content == '' or content is None:
         abort(400)
-    post_repository_singleton.add_comment(user_id, post_id, content)
+    if parent_comment_id == 0:
+        post_repository_singleton.add_comment(user_id, post_id, content)
+    else:
+        print('parent comment id: ', parent_comment_id)
+        post_repository_singleton.add_comment(user_id, post_id, content, parent_comment_id)
 
     return redirect(f'/posts/{post_id}')
 

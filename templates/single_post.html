@@ -10,12 +10,7 @@
 
     trix-editor:empty:not(:focus)::before {
         color: white;
-        opacity: 0.4;
-    }
-
-    .sanitized-html > *{
-        margin: 0;
-        padding: 0;
+        opacity: 0.5;
     }
 </style>
 
@@ -62,29 +57,47 @@
         <form class="w-100 d-flex flex-column" action="/posts/{{ post.post_id }}/comment" method="post">
             <input id="content" type="hidden" name="content" required>
             <trix-editor style="color: white;" input="content" placeholder="What are your thoughts?"></trix-editor>
-            <input class="w-25 align-self-end" type="submit" value="Comment">
+            <input class="w-25 align-self-end mt-2" type="submit" value="Comment">
         </form>
 
         <div class="comments-container container p-0">
             <p>ID: {{ post.post_id }}</p>
             {% for comment in post.comments %}
+            {% if comment.parent_comment_id is none%}
             <div class="comment-container container pt-3 ps-0 pe-0">
                 {% if user.username == comment.comment_creator.username %}
-                <h6>{{ comment.comment_creator.username }} (you), {{ comment.date_posted|time_ago }}</h6>
+                <h6>{{ comment.comment_creator.username }} (you) -<span class="badge badge-secondary">{{ comment.date_posted|time_ago }}</span></h6>
                 {% else %}
-                <h6>{{ comment.comment_creator.username }}, {{ comment.date_posted|time_ago }}</h6>
+                <h6>{{ comment.comment_creator.username }} -<span class="badge badge-secondary">{{ comment.date_posted|time_ago }}</span></h6>
                 {% endif %}
                 <div class="d-inline-flex align-items-center w-100 ps-3 border-start justify-content-between flex-wrap">
                     <div class="m-0 p-0 sanitized-html">{{ sanitize_html(comment.content)|safe }}</div>
                     <input type="submit" class="reply-button" value="Reply">
                     <!-- REPLY TEXT AREA -->
-                    <div class="d-none d-inline-flex w-100 ps-3 pt-3 border-start flex-column reply-area">
-                        <textarea style="color: white;" class="w-100 border bg-secondary" name="reply" id="reply"
-                            cols="30" rows="5" placeholder="What are your thoughts?" required></textarea>
-                        <input class="w-100 align-self-end" type="submit" value="Reply">
+                    <form class="w-100 d-flex flex-column" action="/posts/{{ post.post_id }}/comment/{{ comment.comment_id }}" method="post">
+                        <div class="d-none d-inline-flex w-100 ps-3 pt-3 border-start flex-column reply-area">
+                            <input id="reply" type="hidden" name="reply" required>
+                            <trix-editor style="color: white;" input="reply" placeholder="What are your thoughts?"></trix-editor>
+                            <input class="w-100 align-self-end" type="submit" value="Reply">
+                        </div>
+                    </form>
+                    {% for reply in post.comments %}
+                    {% if reply.parent_comment_id == comment.comment_id %}
+                    <div class="reply-container container pt-3 ps-0 pe-0">
+                        {% if user.username == reply.comment_creator.username %}
+                        <h6>{{ reply.comment_creator.username }} (you) -<span class="badge badge-secondary">{{ reply.date_posted|time_ago }}</span></h6>
+                        {% else %}
+                        <h6>{{ reply.comment_creator.username }}, {{ reply.date_posted|time_ago }}</h6>
+                        {% endif %}
+                        <div class="d-inline-flex align-items-center w-100 ps-3 border-start justify-content-between flex-wrap">
+                            <div class="m-0 p-0">{{ sanitize_html(reply.content)|safe }}</div>
+                        </div>
                     </div>
+                    {% endif %}
+                    {% endfor %}
                 </div>
             </div>
+            {% endif %}
             {% endfor %}
         </div>
     </div>

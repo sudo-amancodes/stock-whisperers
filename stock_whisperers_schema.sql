@@ -37,7 +37,9 @@ CREATE TABLE IF NOT EXISTS comment (
     date_posted TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     likes INT NOT NULL DEFAULT 0,
     user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
-    post_id INT REFERENCES post(post_id) ON DELETE CASCADE
+    post_id INT REFERENCES post(post_id) ON DELETE CASCADE,
+    parent_comment_id INT,
+    FOREIGN KEY (parent_comment_id) REFERENCES comment(comment_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS likes (
@@ -45,5 +47,13 @@ CREATE TABLE IF NOT EXISTS likes (
     user_id INT,
     PRIMARY KEY (post_id, user_id),
     FOREIGN KEY (post_id) REFERENCES post(post_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS comment_likes (
+    comment_id INT,
+    user_id INT,
+    PRIMARY KEY (comment_id, user_id),
+    FOREIGN KEY (comment_id) REFERENCES comment(comment_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
