@@ -1,4 +1,7 @@
+import secrets
+import uuid
 from flask import Flask, abort, redirect, render_template, request, url_for, flash, jsonify, session
+from flask_wtf.file import FileField, FileAllowed
 
 # from flask_wtf import FileField
 #Market Data
@@ -23,6 +26,7 @@ from flask_mail import Mail, Message
 from src.models import db, users, live_posts, Post
 from datetime import datetime, timedelta
 from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
+from werkzeug.utils import secure_filename
 
 thread = None
 thread_lock = Lock()
@@ -45,6 +49,10 @@ app.debug = True
 
 # DB connection
 app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{os.getenv("DB_USER")}:{os.getenv("DB_PASS")}@{os.getenv("DB_HOST")}:{os.getenv("DB_PORT")}/{os.getenv("DB_NAME")}'
+
+UPLOAD_FOLDER = 'static/profile_pics/'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 
 db.init_app(app)
 
@@ -263,7 +271,7 @@ def create_user():
     password = request.form.get('password')
     
     # temp path until we switch to storing pp as a blob
-    profile_picture = 'static/profile_pics/default-profile-pic.jpg'
+    profile_picture = 'default-profile-pic.jpg'
 
     if not username or not password or not first_name or not last_name or not email:
         flash('Please fill out all of the fields') 
@@ -359,13 +367,15 @@ def password_reset(token):
 @app.get('/profile/<string:username>')
 def profile(username: str):
     
-    if 'username' not in session:
-        return redirect('/login')
+    if 'username' not in session:    
+        user = user_repository_singleton.get_user_by_username(username)
+        profile_picture = url_for('static', filename = 'profile_pics/' + user.profile_picture)
+    
 
     user = user_repository_singleton.get_user_by_username(username)
     
 
-    profile_picture = url_for('static', filename = 'profile_pics/default-profile-pic.jpg')
+    profile_picture = url_for('static', filename = 'profile_pics/' + user.profile_picture)
     return render_template('profile.html', user=user, profile_picture=profile_picture)
 
 #TODO: Create a get request for live comments.
@@ -412,6 +422,12 @@ def update_profile(username: str):
     if existing_email and existing_email != user_to_edit:
         flash('Email already in use', 'error')
         return redirect(f'/profile/{username}/edit')
+    
+    profile_picture = request.files['profile_picture']
+    if profile_picture and FileAllowed(profile_picture.filename):
+        filename = secure_filename(profile_picture.filename)
+        profile_picture.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        user_to_edit.profile_picture = filename
     
     user_to_edit.email = new_email
     user_to_edit.username = new_username

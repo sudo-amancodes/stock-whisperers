@@ -2,14 +2,29 @@
 
 {% block body %}
 <style>
- 
+  .rounded-circle {
+    border: 2px solid #808080;
+    border-radius: 50%;
+    object-fit: cover;
+  }
 </style>
+{% if session.get('username') != user.username %}
+<div class="content-section">
+  <div class="mt3">
+    <h2>{{ user.first_name }} {{user.last_name}}!</h2>
+    <div class="media">
+    <img class="rounded-circle" src="{{ profile_picture }}" width = "150" height = "150" style="float: right;">
+    </div>
+    <p>Username: {{ user.username }}</p>
+    <p>Email: {{ user.email }}</p>
+  </div>
+</div>
+{% else %}
 <div class="content-section">
       <div class="mt3">
         <h2>Hello {{ user.first_name }} {{user.last_name}}!</h2>
         <div class="media">
-        <img class="rounded-circle account-img" src="{{ profile_picture }}" width = "75" height = "75
-        ">
+        <img class="rounded-circle" src="{{ profile_picture }}" width = "150" height = "150" style="float: right;">
         </div>
         <p>Username: {{ user.username }}</p>
         <p>Email: {{ user.email }}</p>
@@ -18,4 +33,5 @@
         </form>
       </div>
     </div>
+    {% endif %}
 {% endblock %}
