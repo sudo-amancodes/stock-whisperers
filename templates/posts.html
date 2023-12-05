@@ -35,7 +35,7 @@
             <a href="/posts/delete/{{ post.post_id }}"><button>Delete</button></a> -->
             <h6>Posted by you, {{ post.date_posted|time_ago }}</h6>
             {% else %}
-            <h6>Posted by {{ creator.username }}, {{ post.date_posted|time_ago }}</h6>
+            <h6>Posted by<a href = /profile/{{creator.username}}> {{ creator.username }}</a>, {{ post.date_posted|time_ago }}</h6>
             {% endif %}
         </div>
         

@@ -5,14 +5,22 @@
 <div class="mb-3">
     <h1>Edit Profile</h1>
 </div>
-<form method="POST" action="/users/{{user.user_id}}" enctype="multipart/form-data">
+<form method="POST" action="/profile/{{session.get('username')}}" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label for="first_name" class="form-label">First Name:</label>
+        <input class="form-control" type="text" id="first_name" name="first_name" placeholder="Default input" aria-label="default input example" value="{{user.first_name}}">
+    </div>
+    <div class="mb-3">
+        <label for="last_name" class="form-label">Last Name:</label>
+        <input class="form-control" type="text" id="last_name" name="last_name" placeholder="Default input" aria-label="default input example" value="{{user.last_name}}">
+    </div>
 <div class="mb-3">
-        <label for="email" class="form-label">Email address</label>
-        <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" value="{{user.email}}">
+    <label for="username" class="form-label">Username:</label>
+    <input class="form-control" type="text" id="username" name="username" placeholder="Default input" aria-label="default input example" value="{{user.username}}">
 </div>
 <div class="mb-3">
-    <label for="username" class="form-label">Username</label>
-    <input class="form-control" type="text" id="username" name="username" placeholder="Default input" aria-label="default input example" value="{{user.username}}">
+    <label for="email" class="form-label">Email address:</label>
+    <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" value="{{user.email}}">
 </div>
     <div class="input-group mb-3">
         <input type="file" class="form-control" id="profile_picture" name="profile_picture">
