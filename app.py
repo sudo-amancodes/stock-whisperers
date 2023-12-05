@@ -437,7 +437,7 @@ def live_comment():
 # sokcetIO to handle comments: 
 @socketio.on('send_comment') 
 def handle_send_comment (data): 
-    if 'user_id' not in session:
+    if user_repository_singleton.is_logged_in():
         emit('error', {'message': 'Not logged in, please log in to comment :)'})
         return 
     user_id = session['user_id']

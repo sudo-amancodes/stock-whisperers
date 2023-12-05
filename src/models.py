@@ -40,20 +40,28 @@ class users(db.Model, UserMixin):
         self.profile_picture = profile_picture
 
     def get_reset_token(self, expires_sec=900):
-        s = Serializer(os.getenv('APP_SECRET_KEY'))
-        token = s.dumps({'user_id' : self.user_id})
-        if isinstance(token, bytes):
-            token = token.decode()
-        return token
+        # must have app_secret key variable in env file
+        app_secret_key = os.getenv('APP_SECRET_KEY')
+        if app_secret_key:
+            s = Serializer(app_secret_key)
+            token = s.dumps({'user_id' : self.user_id})
+            if isinstance(token, bytes):
+                token = token.decode()
+            return token
+        return None
     
     @staticmethod
     def verify_reset_token(token):
-        s = Serializer(os.getenv('APP_SECRET_KEY'))
-        try:
-            user_id = s.loads(token)['user_id']
-        except:
-            return None
-        return users.query.get(user_id)
+        # must have app_secret key variable in env file
+        app_secret_key = os.getenv('APP_SECRET_KEY')
+        if app_secret_key:
+            s = Serializer(app_secret_key)
+            try:
+                user_id = s.loads(token)['user_id']
+            except:
+                return None
+            return users.query.get(user_id)
+        return None
 
     def __repr__(self) -> str:
         return f'users({self.first_name}, {self.last_name})'
