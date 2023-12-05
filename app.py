@@ -171,6 +171,17 @@ def like_post():
 
     return jsonify({'status': 'success'})
 
+# when a user likes a comment
+@app.post('/posts/like_comment')
+def like_comment():
+    comment_id = request.form.get('comment_id')
+    user_id = request.form.get('user_id')
+    if comment_id == '' or comment_id is None or user_id == '' or user_id is None:
+        abort(400)
+    post_repository_singleton.add_like_to_comment(comment_id, user_id)
+
+    return jsonify({'status': 'success'})
+
 # when a user comments on a post
 # Function to sanitize HTML content
 def sanitize_html(content):

@@ -148,6 +148,8 @@ class Comment(db.Model):
 
     parent_comment_id = db.Column(db.Integer, db.ForeignKey('comment.comment_id'))
 
+    liked_by = db.relationship('users', secondary='comment_likes', backref='liked_comments')
+
     # each user's comments
     comment_creator = db.relationship('users', backref='comment_creator', foreign_keys=[user_id])
 

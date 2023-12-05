@@ -71,8 +71,18 @@
                 <h6>{{ comment.comment_creator.username }} -<span class="badge badge-secondary">{{ comment.date_posted|time_ago }}</span></h6>
                 {% endif %}
                 <div class="d-inline-flex align-items-center w-100 ps-3 border-start justify-content-between flex-wrap">
-                    <div class="m-0 p-0 sanitized-html">{{ sanitize_html(comment.content)|safe }}</div>
-                    <input type="submit" class="reply-button" value="Reply">
+                    <div class="m-0 p-0">{{ sanitize_html(comment.content)|safe }}</div>
+                    <div>
+                        {% if comment in user.liked_comments %}
+                        <button class="d-inline-block like-comment liked" data-comment-id="{{ comment.comment_id }}"
+                        data-user-id="{{ user.user_id }}">Liked</button>
+                        {% else %}
+                        <button class="d-inline-block like-comment" data-comment-id="{{ comment.comment_id }}"
+                        data-user-id="{{ user.user_id }}">Like</button>
+                        {% endif %}
+                        <p class="like-comment-count d-inline-block">{{ comment.likes }}</p>
+                        <input type="submit" class="reply-button" value="Reply">
+                    </div>
                     <!-- REPLY TEXT AREA -->
                     <form class="w-100 d-flex flex-column" action="/posts/{{ post.post_id }}/comment/{{ comment.comment_id }}" method="post">
                         <div class="d-none d-inline-flex w-100 ps-3 pt-3 border-start flex-column reply-area">
@@ -91,6 +101,16 @@
                         {% endif %}
                         <div class="d-inline-flex align-items-center w-100 ps-3 border-start justify-content-between flex-wrap">
                             <div class="m-0 p-0">{{ sanitize_html(reply.content)|safe }}</div>
+                            <div>
+                                {% if reply in user.liked_comments %}
+                                <button class="d-inline-block like-comment liked" data-comment-id="{{ reply.comment_id }}"
+                                data-user-id="{{ user.user_id }}">Liked</button>
+                                {% else %}
+                                <button class="d-inline-block like-comment" data-comment-id="{{ reply.comment_id }}"
+                                data-user-id="{{ user.user_id }}">Like</button>
+                                {% endif %}
+                                <p class="like-comment-count d-inline-block">{{ reply.likes }}</p>
+                            </div>
                         </div>
                     </div>
                     {% endif %}
@@ -124,6 +144,27 @@
         });
     </script>
     <script>
+        $(document).ready(function () {
+            $('.like-comment').click(function (event) {
+                event.stopPropagation();
+                var commentId = $(this).data('comment-id');
+                var userId = $(this).data('user-id');
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/posts/like_comment',
+                    data: { comment_id: commentId, user_id: userId },
+                    success: function (data) {
+                        console.log('Like added successfully');
+                    },
+                    error: function (error) {
+                        console.error('Error adding like:', error);
+                    }
+                });
+            });
+        });
+    </script>
+    <script>
         function liked_or_not() {
             const like_button = document.getElementsByClassName("like-button");
             const like_count = document.getElementsByClassName("like-count");
@@ -141,6 +182,24 @@
             }
         }
         liked_or_not();
+
+        function liked_comment_or_not() {
+            const like_button = document.getElementsByClassName("like-comment");
+            const like_count = document.getElementsByClassName("like-comment-count");
+            for (let i = 0; i < like_button.length; i++) {
+                like_button[i].addEventListener("click", function () {
+                    if (like_button[i].classList.contains("liked")) {
+                        like_count[i].innerHTML = parseInt(like_count[i].innerHTML) - 1;
+                        like_button[i].innerHTML = "Like";
+                    } else {
+                        like_button[i].innerHTML = "Liked";
+                        like_count[i].innerHTML = parseInt(like_count[i].innerHTML) + 1;
+                    }
+                    like_button[i].classList.toggle("liked");
+                });
+            }
+        }
+        liked_comment_or_not();
 
         // display reply area when reply button is clicked
         function reply() {
