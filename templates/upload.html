@@ -14,12 +14,26 @@
         </div>
 
         <div class="w-75 mt-3 d-flex justify-content-between">
-            <input class="form-control w-50" type="file" id="image_upload" name="image_upload">
+            <input class="form-control w-50" type="file" id="image_upload" name="image_upload" accept="image/*">
             <input type="submit" class="btn btn-primary w-25" value="Post">
         </div>
     </form>
 </main>
 <script type="text/javascript">
+
+    function validateForm() {
+        // Validate image file if selected
+        var imageUpload = document.getElementById('image_upload');
+        if (imageUpload.files.length > 0) {
+            var allowedExtensions = /(\.jpg|\.jpeg|\.png|\.gif)$/i;
+            if (!allowedExtensions.exec(imageUpload.value)) {
+                alert('Invalid file type. Please upload a valid image file (jpg, jpeg, png, gif).');
+                return false;
+            }
+        }
+        return true;
+    }
+
     (function () {
         addEventListener("trix-initialize", function (e) {
             const file_tools = document.querySelector(".trix-button-group--file-tools");

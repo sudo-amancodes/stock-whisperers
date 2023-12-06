@@ -30,6 +30,11 @@ from werkzeug.utils import secure_filename
 #Bleach to prevent cross-site scripting (XSS) attacks, possible when user is posting a comment
 import bleach
 
+# Pillow for image processing
+from PIL import Image
+#Allowed file extensions for uploading
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
 thread = None
 thread_lock = Lock()
 load_dotenv()
@@ -150,6 +155,10 @@ def upload():
         abort(401)
     return render_template('upload.html', user=session.get('username'))
 
+# Function to check if a file has an allowed extension
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 #TODO: Create a post request for the upload page.
 @app.post('/upload')
 def upload_post():
@@ -168,10 +177,21 @@ def upload_post():
 
     if image_upload is not None:
         filename = secure_filename(image_upload.filename) if image_upload.filename else ''
-        if filename:
+        if filename and allowed_file(filename):
             # Set UUID to prevent same file names
             pic_name = str(uuid.uuid1()) + "_" + filename
+
+            # Save the file
             image_upload.save(os.path.join(app.config['POST_UPLOAD_FOLDER'], pic_name))
+
+            # Verify the file is an image using Pillow
+            try:
+                img = Image.open(os.path.join(app.config['POST_UPLOAD_FOLDER'], pic_name))
+                img.verify()  # This will raise an exception if the file is not a valid image
+            except Exception as e:
+                os.remove(os.path.join(app.config['POST_UPLOAD_FOLDER'], pic_name))  # Remove the invalid file
+                abort(400, description="Uploaded file is not a valid image.")
+
             created_post.file_upload = pic_name
             db.session.commit()
     
