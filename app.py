@@ -1,4 +1,6 @@
+import uuid
 from flask import Flask, abort, redirect, render_template, request, url_for, flash, jsonify, session
+from flask_wtf.file import FileField, FileAllowed
 
 # from flask_wtf import FileField
 #Market Data
@@ -23,6 +25,9 @@ from src.models import db, users, live_posts, Post
 from datetime import datetime, timedelta
 from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
 import random
+from werkzeug.utils import secure_filename
+#Bleach to prevent cross-site scripting (XSS) attacks, possible when user is posting a comment
+import bleach
 
 thread = None
 thread_lock = Lock()
@@ -36,7 +41,7 @@ bcrypt = Bcrypt(app)
 app.config['SECRET_KEY'] = os.getenv('APP_SECRET_KEY', 'default')
 
 # If bugs occur with sockets then try: 
-# app.config['SECRET_KEY'] = 'ABC'
+app.config['SECRET_KEY'] = 'ABC'
 
 #Sockets Initialization
 socketio = SocketIO(app, cors_allowed_origins='*')
@@ -45,6 +50,10 @@ app.debug = True
 
 # DB connection
 app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{os.getenv("DB_USER")}:{os.getenv("DB_PASS")}@{os.getenv("DB_HOST")}:{os.getenv("DB_PORT")}/{os.getenv("DB_NAME")}'
+
+UPLOAD_FOLDER = 'static/profile_pics/'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 
 db.init_app(app)
 
@@ -155,14 +164,42 @@ def like_post():
 
     return jsonify({'status': 'success'})
 
+# when a user likes a comment
+@app.post('/posts/like_comment')
+def like_comment():
+    comment_id = request.form.get('comment_id')
+    user_id = request.form.get('user_id')
+    if comment_id == '' or comment_id is None or user_id == '' or user_id is None:
+        abort(400)
+    post_repository_singleton.add_like_to_comment(comment_id, user_id)
+
+    return jsonify({'status': 'success'})
+
 # when a user comments on a post
-@app.post('/posts/<int:post_id>/comment')
-def comment_post(post_id):
+# Function to sanitize HTML content
+def sanitize_html(content):
+    allowed_tags = ['p', 'div', 'em', 'strong', 'del', 'a', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'ul', 'ol', 'li', 'hr', 'br', 'pre']
+    allowed_attributes = {'*': ['class', 'style'], 'a': ['href', 'target']}
+    
+    sanitized_content = bleach.clean(content, tags=allowed_tags, attributes=allowed_attributes)
+    return sanitized_content
+
+# for comments and replies 
+@app.post('/posts/<int:post_id>/comment/<int:parent_comment_id>')
+def comment_reply(post_id, parent_comment_id=0):
+    print('parent comment id: ', parent_comment_id)
     user_id = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username()).user_id
     content = request.form.get('content')
+    reply = request.form.get('reply')
+    if reply is not None:
+        content = reply
     if post_id == '' or post_id is None or content == '' or content is None:
         abort(400)
-    post_repository_singleton.add_comment(user_id, post_id, content)
+    if parent_comment_id == 0:
+        post_repository_singleton.add_comment(user_id, post_id, content)
+    else:
+        print('parent comment id: ', parent_comment_id)
+        post_repository_singleton.add_comment(user_id, post_id, content, parent_comment_id)
 
     return redirect(f'/posts/{post_id}')
 
@@ -192,7 +229,7 @@ def posts():
         user = None
     else:
         user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
-    return render_template('posts.html', list_posts_active=True, posts=all_posts, user=user)
+    return render_template('posts.html', list_posts_active=True, posts=all_posts, user=user, sanitize_html=sanitize_html)
 
 @app.get('/posts/<int:post_id>')
 def post(post_id):
@@ -200,7 +237,7 @@ def post(post_id):
         abort(401)
     post = post_repository_singleton.get_post_by_id(post_id)
     user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
-    return render_template('single_post.html', post=post, user=user)
+    return render_template('single_post.html', post=post, user=user, sanitize_html=sanitize_html)
 
 #TODO: Create a get request for the user login page.
 @app.get('/login')
@@ -266,7 +303,6 @@ def verify_login():
         return redirect('/login')
 
     temp_username = users.query.filter((func.lower(users.username) == username.lower()) | (func.lower(users.email) == username.lower())).first()
-
     if temp_username is not None:
         if bcrypt.check_password_hash(temp_username.password, password):
             time_difference = datetime.utcnow() - temp_username.last_login
@@ -309,7 +345,7 @@ def create_user():
     password = request.form.get('password')
     
     # temp path until we switch to storing pp as a blob
-    profile_picture = 'static/profile_pics/default-profile-pic.jpg'
+    profile_picture = 'default-profile-pic.jpg'
 
     if not username or not password or not first_name or not last_name or not email:
         flash('Please fill out all of the fields') 
@@ -397,20 +433,23 @@ def password_reset(token):
     return redirect(f'/password_reset/{token}')
 
 #TODO: Create a get request for the profile page.
-@app.get('/profile/<int:user_id>')
-def profile(user_id):
-    if not user_repository_singleton.is_logged_in():
-        abort(401)
+
+@app.get('/profile/<string:username>')
+def profile(username: str):
     
-    user = users.query.get(user_id)
-
-    if user.profile_picture:
+    if not user_repository_singleton.is_logged_in():    
+        user = user_repository_singleton.get_user_by_username(username)
         profile_picture = url_for('static', filename = 'profile_pics/' + user.profile_picture)
-    else:
-        profile_picture = url_for('static', filename = 'profile_pics/default-profile-pic.jpg')
-    return render_template('profile.html', user=user, profile_picture=profile_picture)
 
-#TODO: Create a get request for live comments.
+    user = user_repository_singleton.get_user_by_username(username)
+
+    posts = post_repository_singleton.get_user_posts(user.user_id)
+
+    profile_picture = url_for('static', filename = 'profile_pics/' + user.profile_picture)
+    return render_template('profile.html', user=user, profile_picture=profile_picture, posts=posts)
+
+#TODO: Create a get request for live comments. 
+# add user_id to session dictionary. 
 @app.get('/comment')
 def live_comment():
     comments = live_posts.query.order_by(live_posts.date.desc()).all()
@@ -426,9 +465,11 @@ def live_comment():
 # sokcetIO to handle comments: 
 @socketio.on('send_comment') 
 def handle_send_comment (data): 
-    if user_repository_singleton.is_logged_in():
-        emit('error', {'message': 'Not logged in, please log in to comment :)'})
-        return 
+    # if 'user_id' not in session:
+    if not user_repository_singleton.is_logged_in():
+        # emit('error', {'message': 'Not logged in, please log in to comment :)'})
+        # return  
+        abort (401)
     user_id = user_repository_singleton.get_user_user_id()
     content = data['comment']  
 
@@ -445,22 +486,61 @@ def handle_send_comment (data):
 def Post_discussions():
     pass
 
-@app.post('/users/<int:user_id>')
-def edit_profile(user_id: int):
+@app.get('/profile/<string:username>/edit')
+def get_edit_profile_page(username: str):
     if not user_repository_singleton.is_logged_in():
         abort(401)
 
-    user = users.query.get(user_id)
+    user_to_edit = users.query.filter_by(username=username).first()
+    if user_to_edit is None:
+        redirect(f'/profile/{username}')
+    return render_template('edit_profile.html', user = user_to_edit)
+    
+
+@app.post('/profile/<string:username>')
+def update_profile(username: str):
+    if 'username' not in session:
+        abort(401)
+    
+    user_to_edit = users.query.filter_by(username=username).first()
+
+    new_email = request.form.get('email')
+    new_username = request.form.get('username')
+    new_fname = request.form.get('first_name')
+    new_lname = request.form.get('last_name')
 
 
-    user.email = request.form.get('email')
-    user.username = request.form.get('username')
+    existing_user = users.query.filter_by(username=new_username).first()
+    existing_email = users.query.filter_by(email=new_email).first()
 
-    profile_pic = request.files['profile_picture']
-    db.session.add(user)
+    
+    if existing_user and existing_user != user_to_edit:
+        flash('Username already in use', 'error')
+        return redirect(f'/profile/{username}/edit')
+    if existing_email and existing_email != user_to_edit:
+        flash('Email already in use', 'error')
+        return redirect(f'/profile/{username}/edit')
+    
+    profile_picture = request.files['profile_picture']
+    if profile_picture:
+
+        filename = secure_filename(profile_picture.filename)
+        # Set UUID to prevent same file names
+        pic_name = str(uuid.uuid1()) + "_" + filename
+        profile_picture.save(os.path.join(app.config['UPLOAD_FOLDER'], pic_name))
+        user_to_edit.profile_picture = pic_name
+    
+    user_to_edit.email = new_email
+    user_to_edit.username = new_username
+    user_to_edit.first_name = new_fname
+    user_to_edit.last_name = new_lname
+
+    session['username'] = new_username
+
+    db.session.add(user_to_edit)
     db.session.commit()
 
-    return redirect(f'/profile/{user_id}', user_id=user_id)
+    return redirect(f'/profile/{new_username}')
 
 # # TODO: Implement the 'Post Discussions' feature
 # @app.get('post discussions')
