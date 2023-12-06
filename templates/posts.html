@@ -40,7 +40,7 @@
         </div>
         
         <div class="container p-0">
-            <p>{{ post.content }}</p>
+            <div class="m-0 p-0">{{ sanitize_html(post.content)|safe }}</div>
             <p class="like-count">{{ post.likes }}</p>
             <div>
                 {% if user.is_authenticated %}
@@ -52,19 +52,12 @@
                 {% else %}
                 <a href="/login"><button>Like</button></a>
                 {% endif %}
-                <button>Comment</button>
+                {% if post.comments|length == 1 %}
+                <button>{{ post.comments|length }} Comment</button>
+                {% else %}
+                <button>{{ post.comments|length }} Comments</button>
+                {% endif %}
             </div>
-        </div>
-        <div class="comments-container container p-0">
-            <p>ID: {{ post.post_id }}</p>
-            {% for comment in post.comments %}
-            <div class="comment-container container p-0">
-                <h6>{{ comment.comment_creator.username }}</h6>
-                <div class="d-inline-flex align-items-center w-100 ps-3 border-start">
-                    <p class="m-0 p-2">{{ comment.content }}</p>
-                </div>
-            </div>
-            {% endfor %}
         </div>
     </div>
 

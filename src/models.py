@@ -146,13 +146,20 @@ class Comment(db.Model):
     # FOREIGN KEY (post_id) references posts(post_id)
     post_id = db.Column(db.Integer, db.ForeignKey('post.post_id'), nullable = False)
 
+    parent_comment_id = db.Column(db.Integer, db.ForeignKey('comment.comment_id'))
+
+    liked_by = db.relationship('users', secondary='comment_likes', backref='liked_comments')
+
     # each user's comments
     comment_creator = db.relationship('users', backref='comment_creator', foreign_keys=[user_id])
 
-    def __init__(self, user_id: int, post_id: int, content: str):
+    parent_comment = db.relationship('Comment', remote_side=[comment_id], backref=db.backref('replies', lazy=True))
+
+    def __init__(self, user_id: int, post_id: int, content: str, parent_comment_id=None):
         self.user_id = user_id
         self.post_id = post_id
         self.content = content
+        self.parent_comment_id = parent_comment_id
 
     def __repr__(self) -> str:
         return f'{self.content}'
@@ -161,4 +168,10 @@ likes = db.Table(
     'likes',
     db.Column('user_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True),
     db.Column('post_id', db.Integer, db.ForeignKey('post.post_id'), primary_key=True)
+)
+
+comment_likes = db.Table(
+    'comment_likes',
+    db.Column('user_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True),
+    db.Column('comment_id', db.Integer, db.ForeignKey('comment.comment_id'), primary_key=True)
 )
