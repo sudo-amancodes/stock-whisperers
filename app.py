@@ -185,6 +185,7 @@ def sanitize_html(content):
     return sanitized_content
 
 # for comments and replies 
+@app.post('/posts/<int:post_id>/comment')
 @app.post('/posts/<int:post_id>/comment/<int:parent_comment_id>')
 def comment_reply(post_id, parent_comment_id=0):
     print('parent comment id: ', parent_comment_id)
