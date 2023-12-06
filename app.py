@@ -39,7 +39,7 @@ bcrypt = Bcrypt(app)
 app.secret_key = os.getenv('APP_SECRET_KEY', 'default')
 
 # If bugs occur with sockets then try: 
-# app.config['SECRET_KEY'] = 'ABC'
+app.config['SECRET_KEY'] = 'ABC'
 
 #Sockets Initialization
 socketio = SocketIO(app, cors_allowed_origins='*')
@@ -378,7 +378,8 @@ def profile(username: str):
     profile_picture = url_for('static', filename = 'profile_pics/' + user.profile_picture)
     return render_template('profile.html', user=user, profile_picture=profile_picture, posts=posts)
 
-#TODO: Create a get request for live comments.
+#TODO: Create a get request for live comments. 
+# add user_id to session dictionary. 
 @app.get('/comment')
 def live_comment():
     comments = live_posts.query.order_by(live_posts.date.desc()).all()
@@ -394,9 +395,11 @@ def live_comment():
 # sokcetIO to handle comments: 
 @socketio.on('send_comment') 
 def handle_send_comment (data): 
-    if 'user_id' not in session:
-        emit('error', {'message': 'Not logged in, please log in to comment :)'})
-        return 
+    # if 'user_id' not in session:
+    if not user_repository_singleton.is_logged_in():
+        # emit('error', {'message': 'Not logged in, please log in to comment :)'})
+        # return  
+        abort (401)
     user_id = session['user_id']
     content = data['comment']  
 

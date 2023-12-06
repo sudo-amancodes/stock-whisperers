@@ -19,6 +19,19 @@ Stock whisperers
     </div>
     <div id="bargraph"></div>
     </div>
+
+    <div class = "comments-section"> 
+        <h3> Live Comments</h3> 
+        <div id = "comments-container"> 
+
+        </div> 
+      
+        <div class = "comment-form"> 
+            <textarea id="comment-input" placeholder="Enter comment"></textarea>
+            <button onclick="submitComment()"> Submit Comment </button>
+        </div> 
+        
+    </div>
     <script>        
         var socket = io.connect('http://' + document.domain + ':' + location.port);
 
@@ -58,7 +71,7 @@ Stock whisperers
 
     <!----- - -  Live Comment Code- - - - - - --  - - - - -- - - - - - -- - - - - - - -- - - - -  - -->  
 
-  <script>  
+    <script>  
 
     // append new comments  
     socket.on('new_comment', function(commentData) {   
@@ -84,18 +97,7 @@ Stock whisperers
         }); 
     }); 
 
-        </script> 
+    </script> 
 
-    <div class = "comments-section"> 
-        <h3> Live Comments</h3> 
-        <div id = "comments-container"> 
-
-        </div> 
-        {% if current_user.is_authenticated %}
-        <div class = "comment-form"> 
-            <textarea id="comment-input" placeholder="Enter comment"></textarea>
-            <button onclick="submitComment()"> Comment </button>
-        </div> 
-        {% endif % }
-     </div>
+    
 {% endblock %}
