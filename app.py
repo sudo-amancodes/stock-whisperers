@@ -209,7 +209,6 @@ def sanitize_html(content):
 @app.post('/posts/<int:post_id>/comment')
 @app.post('/posts/<int:post_id>/comment/<int:parent_comment_id>')
 def comment_reply(post_id, parent_comment_id=0):
-    print('parent comment id: ', parent_comment_id)
     user_id = user_repository_singleton.get_user_by_username(session.get('username')).user_id
     content = request.form.get('content')
     reply = request.form.get('reply')
