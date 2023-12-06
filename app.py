@@ -428,14 +428,14 @@ def live_comment():
 @socketio.on('send_comment') 
 def handle_send_comment (data): 
     # if 'user_id' not in session:
-    if not user_repository_singleton.is_logged_in():
+    # if not user_repository_singleton.is_logged_in():
         # emit('error', {'message': 'Not logged in, please log in to comment :)'})
         # return  
-        abort (401)
+        # abort (401)
     user_id = session['user_id']
     content = data['comment']  
 
-    # store comments
+    # store commentsç
     new_comment = live_posts(content=content, user_id=user_id) 
     db.session.add(new_comment)
     db.session.commit()
