@@ -5,7 +5,7 @@
 <div class="mb-3">
     <h1>Edit Profile</h1>
 </div>
-<form method="POST" action="/profile/{{session.get('username')}}" enctype="multipart/form-data">
+<form method="POST" action="/profile/{{session['user']['username']}}" enctype="multipart/form-data">
     <div class="mb-3">
         <label for="first_name" class="form-label">First Name:</label>
         <input class="form-control" type="text" id="first_name" name="first_name" placeholder="Default input" aria-label="default input example" value="{{user.first_name}}">

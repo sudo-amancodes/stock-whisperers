@@ -88,6 +88,8 @@ Stock whisperers
        
         // emitting comments with socketio 
         socket.emit('send_comment', { comment: commentContent}); 
+        // document.getElementById("comment-input").value = ' '; 
+    // }  
         document.querySelector("#comment-input").value = ' '; // clear text box after hitting submit. 
     } 
 
@@ -116,5 +118,17 @@ Stock whisperers
 
     </script> 
 
-    
+    <div class = "comments-section"> 
+        <h3> Live Comments</h3> 
+        <div id = "comments-container"> 
+
+        </div> 
+    {% if user %}
+    <div class="comment-form"> 
+    <textarea id="comment-input" placeholder="Enter comment"></textarea>
+    <button onclick="submitComment()"> Comment </button>
+    </div> 
+    {% endif %}
+    </div> 
+
 {% endblock %}
