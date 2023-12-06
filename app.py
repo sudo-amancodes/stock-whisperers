@@ -15,7 +15,6 @@ from threading import Lock
 from flask_bcrypt import Bcrypt 
 import os
 from dotenv import load_dotenv
-from flask_login import login_user, login_required, logout_user, current_user, LoginManager
 from src.repositories.post_repository import post_repository_singleton
 from src.repositories.user_repository import user_repository_singleton
 from sqlalchemy import or_, func
@@ -49,9 +48,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{os.getenv("DB_USER")}:{o
 
 db.init_app(app)
 
-# Login Initialization
-login_manager = LoginManager(app)
-
 # Make sure you are not on school wifi when trying to send emails, it will not work.
 # Mail Initialization
 app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
@@ -66,10 +62,6 @@ mail = Mail(app)
 # Variables to use for email verification
 code = 0
 temp_user_info = []
-
-@login_manager.user_loader
-def load_user(user_id):
-    return users.query.get(int(user_id))
 
 #Override Yahoo Finance
 yf.pdr_override()
@@ -406,7 +398,6 @@ def password_reset(token):
 
 #TODO: Create a get request for the profile page.
 @app.get('/profile/<int:user_id>')
-@login_required
 def profile(user_id):
     if not user_repository_singleton.is_logged_in():
         abort(401)
