@@ -41,7 +41,11 @@
         
         <div class="container p-0">
             <div class="m-0 p-0">{{ sanitize_html(post.content)|safe }}</div>
-            <p class="like-count">{{ post.likes }}</p>
+            {% if post.file_upload %}
+            <img src="./../static/post_pics/{{post.file_upload }}" class="mt-2" style="max-width: 300px;" alt="Post Image" width="100%">
+            {% endif %}
+            <br>
+            <br>    
             <div>
                 {% if user.is_authenticated %}
                 {% if post in user.liked_posts %}
@@ -52,6 +56,7 @@
                 {% else %}
                 <a href="/login"><button>Like</button></a>
                 {% endif %}
+                <p class="like-count d-inline-block">{{ post.likes }}</p>
                 {% if post.comments|length == 1 %}
                 <button>{{ post.comments|length }} Comment</button>
                 {% else %}

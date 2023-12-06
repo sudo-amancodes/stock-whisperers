@@ -5,7 +5,7 @@
 
 <main>
     <h1>Create a Post</h1>
-    <form action="/upload" method="post">
+    <form action="/upload" method="post" enctype="multipart/form-data">
         <div class="w-75 mt-4">
             <input type="text" name="title" id="title" class="form-control" placeholder="Title" required>
             <br>
@@ -14,7 +14,7 @@
         </div>
 
         <div class="w-75 mt-3 d-flex justify-content-between">
-            <input class="form-control w-50" type="file" id="formFile">
+            <input class="form-control w-50" type="file" id="image_upload" name="image_upload">
             <input type="submit" class="btn btn-primary w-25" value="Post">
         </div>
     </form>

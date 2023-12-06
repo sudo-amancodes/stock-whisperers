@@ -54,6 +54,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{os.getenv("DB_USER")}:{o
 
 UPLOAD_FOLDER = 'static/profile_pics/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['POST_UPLOAD_FOLDER'] = 'static/post_pics/'
 
 
 db.init_app(app)
@@ -157,7 +158,20 @@ def upload_post():
     if title == '' or title is None:
         abort(400)
     user = user_repository_singleton.get_user_by_username(session.get('username'))
+
     created_post = post_repository_singleton.create_post(title, description, user.user_id)
+
+    image_upload = request.files['image_upload']
+
+    if image_upload:
+        filename = secure_filename(image_upload.filename)
+        # Set UUID to prevent same file names
+        pic_name = str(uuid.uuid1()) + "_" + filename
+        image_upload.save(os.path.join(app.config['POST_UPLOAD_FOLDER'], pic_name))
+        created_post.file_upload = pic_name
+        db.session.commit()
+    
+    
     return redirect('/posts')
 
 # when a user likes a post
