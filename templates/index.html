@@ -91,11 +91,11 @@ Stock whisperers
         <div id = "comments-container"> 
 
         </div> 
-    <!-- {% if current_user.is_authenticated %} -->
+    {% if user %}
     <div class="comment-form"> 
     <textarea id="comment-input" placeholder="Enter comment"></textarea>
     <button onclick="submitComment()"> Comment </button>
     </div> 
-    <!-- {% endif %} -->
+    {% endif %}
     </div> 
 {% endblock %}

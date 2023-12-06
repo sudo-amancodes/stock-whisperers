@@ -30,22 +30,42 @@ class UserRepository:
             db.session.delete(user)
             db.session.commit()
 
-    def login_user(self, username):
-        session['username'] = username
-        user = users.query.filter_by(username=username).first()
+    def login_user(self, user):
+        session['user'] = {
+            'username' : user.username,
+            'user_id' : user.user_id,
+            'email' : user.email,
+            'first_name' : user.first_name,
+            'last_name' : user.last_name
+        }
+        # user = users.query.filter_by(username=username).first()
         if user:
             user.last_login = datetime.utcnow()
-            user.num_of_attempts = 0
 
     def logout_user(self):
-        del session['username']
+        del session['user']
 
     def is_logged_in(self):
-        return 'username' in session
+        return 'user' in session
 
     # get user by username
     def get_user_by_username(self, username):
         return users.query.filter_by(username=username).first()
+    
+    def get_user_username(self):
+        return session['user']['username']
+    
+    def get_user_user_id(self):
+        return session['user']['user_id']
+    
+    def get_user_email(self):
+        return session['user']['email']
+    
+    def get_user_first_name(self):
+        return session['user']['first_name']
+    
+    def get_user_last_name(self):
+        return session['user']['last_name']
 
 
 # Singleton to be used in other modules

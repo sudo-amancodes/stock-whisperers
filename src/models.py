@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
-from sqlalchemy import text
+from sqlalchemy import CheckConstraint, text
 from sqlalchemy.sql import func
 from flask_login import UserMixin
 import os
@@ -172,3 +172,16 @@ likes = db.Table(
     db.Column('user_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True),
     db.Column('post_id', db.Integer, db.ForeignKey('post.post_id'), primary_key=True)
 )
+
+# friendships table
+# class friendships(db.Model):
+#     friendship_id = db.Column(db.Integer, primary_key = True)
+
+#     user1_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable = False)
+
+#     user2_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable = False)
+
+#     user1 = db.relationship('User', foreign_keys=[user1_id])
+#     user2 = db.relationship('User', foreign_keys=[user2_id])
+
+#     __table_args__ = (CheckConstraint('user1_id < user2_id'))

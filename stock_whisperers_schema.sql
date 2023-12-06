@@ -50,3 +50,12 @@ CREATE TABLE IF NOT EXISTS likes (
     FOREIGN KEY (post_id) REFERENCES post(post_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
+
+CREATE TABLE IF NOT EXISTS friendships (
+    friendship_id SERIAL,
+    user1_id INT NOT NULL ,
+    user2_id INT NOT NULL ,
+    FOREIGN KEY (user1_id) REFERENCES users(user_id),
+    FOREIGN KEY (user2_id) REFERENCES users(user_id),
+    CHECK (user1_id < user2_id)
+);
