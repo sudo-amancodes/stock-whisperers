@@ -8,7 +8,7 @@
     object-fit: cover;
   }
 </style>
-{% if session.get('username') != user.username %}
+{% if session['user']['username'] != user.username %}
 <div class="content-section">
   <div class="mt3">
     <div class="card">
