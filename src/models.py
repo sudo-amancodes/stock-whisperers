@@ -62,21 +62,26 @@ class users(db.Model, UserMixin):
             return users.query.get(user_id)
         return None
     
+    # Method to check if a user(self) is following another user (other_user)
+    # returns boolean 
     def is_following(self, other_user):
         # Check if self is following other_user
         return friendships.query.filter(
             (friendships.user1_username == self.username) & (friendships.user2_username == other_user.username)
         ).first() is not None
     
+
+    # Method to get all of a users followers
+    # returns set of followers usernames 
     def get_all_followers(self):
-        # temp = friendships.query.filter(friendships.user2_username == self.username).all() 
-        # self.followers.all()
         followers = []
-        for follower in self.followers.all():
+        for follower in self.followers.all(): 
             followers.append(follower.user1_username)
         return followers
     
-    def get_all_followings(self):
+    # Method to get all users a user follows
+    # returns set of users followings
+    def get_all_following(self):
         # temp = friendships.query.filter(friendships.user1_username == self.username).all() 
         followings = []
         for following in self.following.all():

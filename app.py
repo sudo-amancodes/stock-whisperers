@@ -509,7 +509,6 @@ def update_profile(username: str):
     new_fname = request.form.get('first_name')
     new_lname = request.form.get('last_name')
 
-
     existing_user = users.query.filter_by(username=new_username).first()
     existing_email = users.query.filter_by(email=new_email).first()
     
