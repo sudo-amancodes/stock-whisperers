@@ -21,7 +21,7 @@ from src.repositories.post_repository import post_repository_singleton
 from src.repositories.user_repository import user_repository_singleton
 from sqlalchemy import or_, func
 from flask_mail import Mail, Message
-from src.models import db, users, live_posts, Post
+from src.models import db, users, live_posts, Post, friendships
 from datetime import datetime, timedelta
 from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
 import random
@@ -446,7 +446,7 @@ def profile(username: str):
     posts = post_repository_singleton.get_user_posts(user.user_id)
 
     profile_picture = url_for('static', filename = 'profile_pics/' + user.profile_picture)
-    return render_template('profile.html', user=user, profile_picture=profile_picture, posts=posts)
+    return render_template('profile.html', user = user, profile_picture=profile_picture, posts=posts)
 
 #TODO: Create a get request for live comments. 
 # add user_id to session dictionary. 

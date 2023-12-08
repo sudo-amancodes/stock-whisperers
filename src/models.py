@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
-from sqlalchemy import CheckConstraint, text
+from sqlalchemy import CheckConstraint, UniqueConstraint, text
 from sqlalchemy.sql import func
 from flask_login import UserMixin
 import os
@@ -29,7 +29,6 @@ class users(db.Model, UserMixin):
     last_login = db.Column(db.DateTime, nullable=True, default=func.now())
 
     profile_picture = db.Column(db.String(255), nullable = True)
-
 
     def __init__(self, first_name: str, last_name: str, username: str, email:str , password: str, profile_picture: str):
         self.first_name = first_name
@@ -62,6 +61,30 @@ class users(db.Model, UserMixin):
                 return None
             return users.query.get(user_id)
         return None
+    
+    def is_following(self, other_user):
+        # Check if self is following other_user
+        return friendships.query.filter(
+            (friendships.user1_username == self.username) & (friendships.user2_username == other_user.username)
+        ).first() is not None
+    
+    def get_all_followers(self):
+        # temp = friendships.query.filter(friendships.user2_username == self.username).all() 
+        # self.followers.all()
+        followers = []
+        for follower in self.followers.all():
+            followers.append(follower.user1_username)
+        return followers
+    
+    def get_all_followings(self):
+        # temp = friendships.query.filter(friendships.user1_username == self.username).all() 
+        followings = []
+        for following in self.following.all():
+            followings.append(following.user2_username)
+        return followings
+    
+    # def get_all_followers(self):
+    #     return self.followers().all
 
     def __repr__(self) -> str:
         return f'users({self.first_name}, {self.last_name})'
@@ -181,17 +204,33 @@ likes = db.Table(
 )
 
 # friendships table
-# class friendships(db.Model):
-#     friendship_id = db.Column(db.Integer, primary_key = True)
+class friendships(db.Model):
+    friendship_id = db.Column(db.Integer, primary_key = True)
 
-#     user1_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable = False)
+    user1_username = db.Column(db.String(255), db.ForeignKey('users.username'), nullable=False)
+    
+    user2_username = db.Column(db.String(255), db.ForeignKey('users.username'), nullable=False)
 
-#     user2_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable = False)
+    followers = db.relationship('users', foreign_keys=[user1_username], backref=db.backref('following', lazy='dynamic'))
 
-#     user1 = db.relationship('User', foreign_keys=[user1_id])
-#     user2 = db.relationship('User', foreign_keys=[user2_id])
+    following = db.relationship('users', foreign_keys=[user2_username], backref=db.backref('followers', lazy='dynamic'))
 
-#     __table_args__ = (CheckConstraint('user1_id < user2_id'))
+    def __init__(self, user1_username: str, user2_username: str):
+        self.user1_username = user1_username
+        self.user2_username = user2_username
+
+    def friendship_exists(self, user1, user2):
+        existing_friendship = friendships.query.filter(
+            (friendships.user1_username == user1) & (friendships.user2_username == user2) |
+            (friendships.user1_username == user2) & (friendships.user2_username == user1)
+        ).first()
+
+        return existing_friendship is not None
+
+    __table_args__ = (
+        UniqueConstraint('user1_username', 'user2_username', name='unique_user_follow'),
+        CheckConstraint('user1_username != user2_username', name='check_user_follow'),
+    )
 
 comment_likes = db.Table(
     'comment_likes',
