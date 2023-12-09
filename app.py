@@ -17,7 +17,6 @@ from threading import Lock
 from flask_bcrypt import Bcrypt 
 import os
 from dotenv import load_dotenv
-from flask_login import login_user, login_required, logout_user, current_user, LoginManager
 from src.repositories.post_repository import post_repository_singleton
 from src.repositories.user_repository import user_repository_singleton
 from sqlalchemy import or_, func
@@ -25,7 +24,15 @@ from flask_mail import Mail, Message
 from src.models import db, users, live_posts, Post
 from datetime import datetime, timedelta
 from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
+import random
 from werkzeug.utils import secure_filename
+#Bleach to prevent cross-site scripting (XSS) attacks, possible when user is posting a comment
+import bleach
+
+# Pillow for image processing
+from PIL import Image
+#Allowed file extensions for uploading
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 thread = None
 thread_lock = Lock()
@@ -36,7 +43,7 @@ app = Flask(__name__)
 
 #Bcrypt Initialization
 bcrypt = Bcrypt(app) 
-app.secret_key = os.getenv('APP_SECRET_KEY', 'default')
+app.config['SECRET_KEY'] = os.getenv('APP_SECRET_KEY', 'default')
 
 # If bugs occur with sockets then try: 
 app.config['SECRET_KEY'] = 'ABC'
@@ -51,29 +58,25 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{os.getenv("DB_USER")}:{o
 
 UPLOAD_FOLDER = 'static/profile_pics/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['POST_UPLOAD_FOLDER'] = 'static/post_pics/'
 
 
 db.init_app(app)
 
-# Login Initialization
-login_manager = LoginManager(app)
-# login_manager.login_view = '/login'
-
+# Make sure you are not on school wifi when trying to send emails, it will not work.
 # Mail Initialization
 app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-# To use, Must be a valid gmail account. EMAIL_USER is your username, password must be a generated "app password", not your actual password
-# To create app password, go to google account settings, enable two step verification, click on two step verfication and scroll to bottom 
-# click on app password and geenrate one, copy 16 digit password and set it as EMAIL_PASS
-app.config['MAIL_USERNAME'] = os.getenv("EMAIL_USER")
-app.config['MAIL_PASSWORD'] = os.getenv("EMAIL_PASS")
+# app.config['MAIL_USERNAME'] = os.getenv('EMAIL_USER')
+# app.config['MAIL_PASSWORD'] = os.getenv('EMAIL_PASS')
+app.config['MAIL_USERNAME'] = 'the.stock.whisperers@gmail.com'
+app.config['MAIL_PASSWORD'] = 'spwlegjkdfjabdhx'
 mail = Mail(app)
 
-
-@login_manager.user_loader
-def load_user(user_id):
-    return users.query.get(int(user_id))
+# Variables to use for email verification
+code = 0
+temp_user_info = []
 
 #Override Yahoo Finance
 yf.pdr_override()
@@ -127,8 +130,7 @@ def previous_graph():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
-
+    return render_template('index.html', user = session.get('user'))
 
 @app.route('/data')
 def data():
@@ -141,13 +143,16 @@ def data():
 #def testing():
 #    pass
 
-
 #TODO: Create a get request for the upload page.
 @app.get('/upload')
 def upload():
-    if 'username' not in session:
+    if not user_repository_singleton.is_logged_in():
         abort(401)
-    return render_template('upload.html', user=session.get('username'))
+    return render_template('upload.html', user=session.get('user'))
+
+# Function to check if a file has an allowed extension
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 #TODO: Create a post request for the upload page.
 @app.post('/upload')
@@ -156,8 +161,36 @@ def upload_post():
     description = request.form.get('text')
     if title == '' or title is None:
         abort(400)
+    user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
     user = user_repository_singleton.get_user_by_username(session.get('username'))
+
+    if user is None:
+        abort(400)
+
     created_post = post_repository_singleton.create_post(title, description, user.user_id)
+
+    image_upload = request.files.get('image_upload')
+
+    if image_upload is not None:
+        filename = secure_filename(image_upload.filename) if image_upload.filename else ''
+        if filename and allowed_file(filename):
+            # Set UUID to prevent same file names
+            pic_name = str(uuid.uuid1()) + "_" + filename
+
+            # Save the file
+            image_upload.save(os.path.join(app.config['POST_UPLOAD_FOLDER'], pic_name))
+
+            # Verify the file is an image using Pillow
+            try:
+                img = Image.open(os.path.join(app.config['POST_UPLOAD_FOLDER'], pic_name))
+                img.verify()  # This will raise an exception if the file is not a valid image
+            except Exception as e:
+                os.remove(os.path.join(app.config['POST_UPLOAD_FOLDER'], pic_name))  # Remove the invalid file
+                abort(400, description="Uploaded file is not a valid image.")
+
+            created_post.file_upload = pic_name
+            db.session.commit()
+    
     return redirect('/posts')
 
 # when a user likes a post
@@ -171,14 +204,45 @@ def like_post():
 
     return jsonify({'status': 'success'})
 
+# when a user likes a comment
+@app.post('/posts/like_comment')
+def like_comment():
+    comment_id = request.form.get('comment_id')
+    user_id = request.form.get('user_id')
+    if comment_id == '' or comment_id is None or user_id == '' or user_id is None:
+        abort(400)
+    post_repository_singleton.add_like_to_comment(comment_id, user_id)
+
+    return jsonify({'status': 'success'})
+
 # when a user comments on a post
+# Function to sanitize HTML content
+def sanitize_html(content):
+    allowed_tags = ['p', 'div', 'em', 'strong', 'del', 'a', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'ul', 'ol', 'li', 'hr', 'br', 'pre']
+    allowed_attributes = {'*': ['class', 'style'], 'a': ['href', 'target']}
+    
+    sanitized_content = bleach.clean(content, tags=allowed_tags, attributes=allowed_attributes)
+    return sanitized_content
+
+# for comments and replies 
 @app.post('/posts/<int:post_id>/comment')
-def comment_post(post_id):
-    user_id = user_repository_singleton.get_user_by_username(session.get('username')).user_id
+@app.post('/posts/<int:post_id>/comment/<int:parent_comment_id>')
+def comment_reply(post_id, parent_comment_id=0):
+    user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
+    if user is None:
+        abort(401)
+    user_id = user.user_id
     content = request.form.get('content')
+    reply = request.form.get('reply')
+    if reply is not None:
+        content = reply
     if post_id == '' or post_id is None or content == '' or content is None:
         abort(400)
-    post_repository_singleton.add_comment(user_id, post_id, content)
+    if parent_comment_id == 0:
+        post_repository_singleton.add_comment(user_id, post_id, content)
+    else:
+        print('parent comment id: ', parent_comment_id)
+        post_repository_singleton.add_comment(user_id, post_id, content, parent_comment_id)
 
     return redirect(f'/posts/{post_id}')
 
@@ -204,30 +268,75 @@ def time_ago_filter(timestamp):
 @app.get('/posts')
 def posts():
     all_posts = post_repository_singleton.get_all_posts_with_users()
-    if 'username' not in session:
+    if not user_repository_singleton.is_logged_in():
         user = None
     else:
-        user = user_repository_singleton.get_user_by_username(session.get('username'))
-    return render_template('posts.html', list_posts_active=True, posts=all_posts, user=user)
+        user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
+    return render_template('posts.html', list_posts_active=True, posts=all_posts, user=user, sanitize_html=sanitize_html)
 
 @app.get('/posts/<int:post_id>')
 def post(post_id):
-    if 'username' not in session:
+    if not user_repository_singleton.is_logged_in():
         abort(401)
     post = post_repository_singleton.get_post_by_id(post_id)
-    user = user_repository_singleton.get_user_by_username(session.get('username'))
-    return render_template('single_post.html', post=post, user=user)
+    user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
+    return render_template('single_post.html', post=post, user=user, sanitize_html=sanitize_html)
 
 #TODO: Create a get request for the user login page.
 @app.get('/login')
 def login():
-    if 'username' in session:
+    if user_repository_singleton.is_logged_in():
         return redirect('/')
-    return render_template('login.html', user = session.get('username'))
+    return render_template('login.html', user = session.get('user'))
 
+def send_verification_email(email):
+    if not email:
+        abort(400)
+    global code   
+    code = random.randint(100000, 999999)
+    msg = Message('Verification code', sender='noreply@stock-whisperers.com', recipients=[email])
+    msg.body = f'''Enter the 6-digit code below to verify your identity.
+
+{code}
+
+If you did not make this request, please ignore this email
+'''
+    mail.send(msg)
+
+# to-do: when user inputs invalid code email resends, move to post route. fix invalid code error
+@app.get('/verify_user/<username>/<method>')
+def verify_user(username, method):
+    return render_template('verify_user.html', username = username, method = method)
+
+@app.post('/verify_user/<username>/<method>')
+def verify_code(username, method):
+    global code
+    user_code = request.form.get('user-code')
+    if not user_code:
+        abort(400)
+    if str(code) != str(user_code):
+        flash('Incorrect code. Try Again', category='error')
+        return redirect(f'/verify_user/{username}/{method}')
+
+    if method == "signup":
+        user_repository_singleton.add_user(temp_user_info[0], temp_user_info[1], temp_user_info[2], temp_user_info[3], temp_user_info[4], temp_user_info[5])
+        user = user_repository_singleton.get_user_by_username(temp_user_info[2])
+        if not user:
+            abort(401)
+        user_repository_singleton.login_user(user)
+        flash('Successfully created an account. Welcome, ' + user.first_name + '!', category= 'success') 
+        return redirect('/')
+
+    user = user_repository_singleton.get_user_by_username(username)
+    if not user:
+        abort(401)
+    flash('Successfully logged in, ' + user.first_name + '!', category= 'success') 
+    user_repository_singleton.login_user(user)
+    return redirect('/')
+    
 @app.post('/login')
 def verify_login():
-    if 'username' in session:
+    if user_repository_singleton.is_logged_in():
         return abort(400)
     username = request.form.get('username')
     password = request.form.get('password')
@@ -239,9 +348,15 @@ def verify_login():
     temp_username = users.query.filter((func.lower(users.username) == username.lower()) | (func.lower(users.email) == username.lower())).first()
     if temp_username is not None:
         if bcrypt.check_password_hash(temp_username.password, password):
-            flash('Successfully logged in, ' + temp_username.first_name + '!', category= 'success') 
-            session['username'] = username
-            return redirect('/')
+            time_difference = datetime.utcnow() - temp_username.last_login
+
+            if time_difference > timedelta(days=14):
+                send_verification_email(temp_username.email)
+                return redirect(f'/verify_user/{temp_username.username}/login')
+            else:
+                flash('Successfully logged in, ' + temp_username.first_name + '!', category= 'success') 
+                user_repository_singleton.login_user(temp_username)
+                return redirect('/')
         else:
             flash('Incorrect username or password', category='error')
     else:
@@ -251,20 +366,20 @@ def verify_login():
 
 @app.get('/logout')
 def logout():
-    if 'username' not in session:
+    if not user_repository_singleton.is_logged_in():
         abort(401)
-    del session['username']
+    user_repository_singleton.logout_user()
     return redirect('/login')
 
 @app.get('/register')
 def register():
-    if 'username' in session:
+    if user_repository_singleton.is_logged_in():
         return redirect('/')
-    return render_template('register.html', user = session.get('username'))
+    return render_template('register.html', user = session.get('user'))
 
 @app.post('/register')
 def create_user():
-    if 'username' in session:
+    if user_repository_singleton.is_logged_in():
         return abort(400)
     first_name = request.form.get('first-name')
     last_name = request.form.get('last-name')
@@ -288,21 +403,11 @@ def create_user():
             
         return redirect('/register')
     
-    if len(first_name) <= 1:
-        flash('First name must be greater than 1 character', category='error')
-    elif len(last_name) <= 1:
-        flash('Last name must be greater than 1 character', category='error')
-    elif len(username) < 4:
-        flash('Username name must be at least 4 characters', category='error')
-    elif user_repository_singleton.validate_password(password) == False:
-        flash('Password must contain at least 6 characters, a letter, a number, a special character, and no spaces', category='error')
-    else:
-        temp_user = users(first_name, last_name, username, email, bcrypt.generate_password_hash(password).decode('utf-8'), profile_picture)
-        db.session.add(temp_user)
-        db.session.commit()
-        session['username'] = username
-        flash('account successfully created!', category = 'success')
-        return redirect('/')
+    if user_repository_singleton.validate_input(first_name, last_name, username, password):
+        global temp_user_info
+        temp_user_info = [first_name, last_name, username, email, bcrypt.generate_password_hash(password).decode(), profile_picture]
+        send_verification_email(email)
+        return redirect(f'/verify_user/{username}/signup')
 
     return redirect('/register')
 
@@ -313,7 +418,7 @@ def request_password_form():
 
 @app.post('/request_password_reset')
 def request_password_reset():
-    if 'username' in session:
+    if user_repository_singleton.is_logged_in():
         return redirect(url_for('index.html'))
     email = request.form.get('email')
     if not email:
@@ -336,7 +441,7 @@ If you did not make this request, please ignore this email
     
 @app.get('/password_reset/<token>')
 def password_reset_form(token):
-    if 'username' in session:
+    if user_repository_singleton.is_logged_in():
         return redirect('/')
     user = users.verify_reset_token(token)
     if user is None:
@@ -347,7 +452,7 @@ def password_reset_form(token):
 # Route for resetting a password
 @app.post('/password_reset/<token>')
 def password_reset(token):
-    if 'username' in session:
+    if user_repository_singleton.is_logged_in():
         return redirect('/')
     user = users.verify_reset_token(token)
     if user is None:
@@ -356,23 +461,27 @@ def password_reset(token):
     
     password = request.form.get('password')
     confirm_password = request.form.get('confirm-password')
-    if password != confirm_password:
+    if not password or not confirm_password:
+        flash('Please fill out all of the fileds',  category='error')
+    elif password != confirm_password:
         flash('Passwords do not match',  category='error')
-        return redirect(f'/password_reset/{token}')
-    user.password = bcrypt.generate_password_hash(password).decode('utf-8')
-    db.session.commit()
-    flash('your password has been updated!', category = 'success')
-    return redirect('/login')
+    elif (len(password) < 6) or not any(char.isdigit() for char in password) or not any(char.isalpha() for char in password) or any(char.isspace() for char in password):
+        flash('Password must contain at least 6 characters, a letter, a number, and no spaces', category='error')
+    else:
+        user.password = bcrypt.generate_password_hash(password).decode()
+        db.session.commit()
+        flash('your password has been updated!', category = 'success')
+        return redirect('/login')
     
+    return redirect(f'/password_reset/{token}')
 
 #TODO: Create a get request for the profile page.
+
 @app.get('/profile/<string:username>')
 def profile(username: str):
-    
-    if 'username' not in session:    
+    if not user_repository_singleton.is_logged_in():    
         user = user_repository_singleton.get_user_by_username(username)
         profile_picture = url_for('static', filename = 'profile_pics/' + user.profile_picture)
-    
 
     user = user_repository_singleton.get_user_by_username(username)
 
@@ -388,9 +497,9 @@ def live_comment():
     comments = live_posts.query.order_by(live_posts.date.desc()).all()
     comments_data = [ 
         {'post_id': comment.post_id, 
-         'content': comment.content, 
-         'user_id': comment.user_id, 
-         'date': comment.date.strftime("%Y/%m/%d %H:%M:%S")}
+        'content': comment.content, 
+        'user_id': comment.user_id, 
+        'date': comment.date.strftime("%Y/%m/%d %H:%M:%S")}
         for comment in comments
     ] 
     return jsonify(comments_data)  
@@ -399,14 +508,14 @@ def live_comment():
 @socketio.on('send_comment') 
 def handle_send_comment (data): 
     # if 'user_id' not in session:
-    if not user_repository_singleton.is_logged_in():
+    # if not user_repository_singleton.is_logged_in():
         # emit('error', {'message': 'Not logged in, please log in to comment :)'})
         # return  
-        abort (401)
-    user_id = session['user_id']
+        # abort (401)
+    user_id = user_repository_singleton.get_user_user_id()
     content = data['comment']  
 
-    # store comments
+    # store commentsç
     new_comment = live_posts(content=content, user_id=user_id) 
     db.session.add(new_comment)
     db.session.commit()
@@ -421,7 +530,7 @@ def Post_discussions():
 
 @app.get('/profile/<string:username>/edit')
 def get_edit_profile_page(username: str):
-    if 'username' not in session:
+    if not user_repository_singleton.is_logged_in():
         abort(401)
 
     user_to_edit = users.query.filter_by(username=username).first()
@@ -432,7 +541,7 @@ def get_edit_profile_page(username: str):
 
 @app.post('/profile/<string:username>')
 def update_profile(username: str):
-    if 'username' not in session:
+    if 'user' not in session:
         abort(401)
     
     user_to_edit = users.query.filter_by(username=username).first()
@@ -445,7 +554,6 @@ def update_profile(username: str):
 
     existing_user = users.query.filter_by(username=new_username).first()
     existing_email = users.query.filter_by(email=new_email).first()
-
     
     if existing_user and existing_user != user_to_edit:
         flash('Username already in use', 'error')
@@ -468,7 +576,7 @@ def update_profile(username: str):
     user_to_edit.first_name = new_fname
     user_to_edit.last_name = new_lname
 
-    session['username'] = new_username
+    user_repository_singleton.login_user(user_to_edit)
 
     db.session.add(user_to_edit)
     db.session.commit()

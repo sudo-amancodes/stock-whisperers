@@ -1,0 +1,44 @@
+{% extends '_layout.html' %}
+
+{% block styles %}
+<link rel="stylesheet" href="/static/styles.css"> 
+{% endblock %}
+
+{% block title %}Login Page{% endblock %}
+
+{% block body %}
+
+<form action="/verify_user/{{ username }}/{{ method }}" method="post">
+
+<div class="wrapper">
+    <div class="container main">
+        <div class="row one">
+            <div class="col-md-6 side-image">
+                <div class="text">
+                    <p>Almost There!</p>
+                </div>
+            </div>
+
+                <div class="col-md-6 right">
+                    
+                    <div class="input-box">
+                    
+                    <div class="medium">
+                        <span>A code has been sent to your email address. Please Enter the code below to login.</span>
+                    </div>
+                    <div class="input-field mt-3">
+                            <input type="text" class="input" name="user-code" id="user-code" class="form-control" required>
+                            <label for="user-code">Code</label> 
+                    </div> 
+                    <div class="input-field">
+                        <button type="submit" class="btn btn-primary btn-block mb-4">Verify</button>
+                    </div> 
+                    
+                    </div>  
+                </div>
+
+        </div>
+    </div>
+</div>
+</form>
+{% endblock %}

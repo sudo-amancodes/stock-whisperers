@@ -79,6 +79,7 @@ Stock whisperers
         <div id = "comments-container"> 
 
         </div> 
+      <!-- if user is logged in --> 
       
         <div class = "comment-form"> 
             <textarea id="comment-input" placeholder="Enter comment"></textarea>
@@ -210,6 +211,50 @@ Stock whisperers
                 volume: candlestick.volume
             })
 
+    <script>  
+      var socket = io.connect('http://' + document.domain + ':' + location.port); 
+
+    // using QuerySelectors to get value of comment. 
+    function getVal() { 
+        const commentContent = document.querySelector('#comment-input').value; 
+        return commentContent;  
+    } 
+
+    // submit comment function 
+    function submitComment() { 
+        let commentContent = getVal(); 
+        console.log(commentContent); 
+       
+        // emitting comments with socketio 
+        socket.emit('send_comment', { comment: commentContent}); 
+    // }  
+        document.querySelector("#comment-input").value = ' '; // clear text box after hitting submit. 
+    } 
+
+
+    // append new comments  
+    socket.on('new_comment', function(commentData) {    
+        let commentsContainer = document.querySelector("#comments-container"); 
+        let commentElement = document.createElement("div"); 
+        commentElement.innerHTML = `<strong>User ${commentData.user_id}:</strong> ${commentData.content}`;
+        commentsContainer.appendChild(commentElement); 
+    });
+
+   
+    fetch('/comment')
+    .then(response => response.json())
+    .then(comments => {
+        let commentsContainer = document.querySelector("#comments-container"); 
+        comments.forEach(comment => { 
+            let commentElement = document.createElement("div");
+            commentElement.innerHTML = `<strong>User ${comment.user_id}:</strong> ${comment.content}`; 
+            commentsContainer.appendChild(commentElement); 
+
+        });  
+
+     }); 
+
+
         };
         
         binanceSocket.onclose = function (event) {
@@ -220,6 +265,21 @@ Stock whisperers
             console.error("WebSocket error:", error);
         }; 
 
+
          */
     </script>
+
+    <!-- <div class = "comments-section"> 
+        <h3> Live Comments</h3> 
+        <div id = "comments-container"> 
+
+        </div>  -->
+    {% if user %}
+    <div class="comment-form"> 
+    <textarea id="comment-input" placeholder="Enter comment"></textarea>
+    <button onclick="submitComment()"> Comment </button>
+    </div> 
+    {% endif %}
+    </div> 
+
 {% endblock %}
