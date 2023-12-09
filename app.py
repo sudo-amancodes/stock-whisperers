@@ -477,7 +477,6 @@ def password_reset(token):
 
 @app.get('/profile/<string:username>')
 def profile(username: str):
-    
     if not user_repository_singleton.is_logged_in():    
         user = user_repository_singleton.get_user_by_username(username)
         profile_picture = url_for('static', filename = 'profile_pics/' + user.profile_picture)
@@ -540,7 +539,7 @@ def get_edit_profile_page(username: str):
 
 @app.post('/profile/<string:username>')
 def update_profile(username: str):
-    if 'username' not in session:
+    if 'user' not in session:
         abort(401)
     
     user_to_edit = users.query.filter_by(username=username).first()
@@ -553,7 +552,6 @@ def update_profile(username: str):
 
     existing_user = users.query.filter_by(username=new_username).first()
     existing_email = users.query.filter_by(email=new_email).first()
-
     
     if existing_user and existing_user != user_to_edit:
         flash('Username already in use', 'error')
@@ -576,7 +574,7 @@ def update_profile(username: str):
     user_to_edit.first_name = new_fname
     user_to_edit.last_name = new_lname
 
-    session['username'] = new_username
+    user_repository_singleton.login_user(user_to_edit)
 
     db.session.add(user_to_edit)
     db.session.commit()
