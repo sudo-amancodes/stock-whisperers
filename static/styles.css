@@ -9,7 +9,7 @@ body {
     background-color: #ececec;
 }
 
-.wrapper{
+.wrapper {
     background: #ececec;
     padding: 0 20px 0 20px;
 }
@@ -21,7 +21,7 @@ body {
     min-height: 90vh;
 }
 
-h1{
+h1 :not(.logo){
     margin-bottom: 30px;
 }
 
@@ -59,7 +59,7 @@ h1{
     transform: translate(-50%, -50%);
 }
 
-.text p{
+.text p {
     color: #fff;
     font-size: 20px; 
 }
@@ -81,7 +81,7 @@ i{
     box-sizing: border-box;
 }
 
-img{
+img > :not(.logo){
     width: 35px;
     position: absolute;
     top: 30px;
