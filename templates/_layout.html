@@ -55,6 +55,19 @@
     {% endif %}
   {% endwith %}
 
+  <script>
+    const button = document.querySelector('.close')
+    if (button !== null) {
+      button.addEventListener('click', hideMsg)
+    }
+
+    function hideMsg() {
+      const message = button.parentElement;
+      message.classList.remove('show')
+      message.style.display = 'none';
+    }
+  </script>
+
   <div class="container pt-4">
     {% block body %}{% endblock %}
   </div>
