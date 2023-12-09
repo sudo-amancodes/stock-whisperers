@@ -2,6 +2,7 @@ appdirs==1.4.4
 bcrypt==4.0.1
 beautifulsoup4==4.12.2
 bidict==0.22.1
+bleach==6.1.0
 blinker==1.7.0
 bottle==0.12.25
 certifi==2023.7.22
