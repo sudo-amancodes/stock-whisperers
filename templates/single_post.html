@@ -42,7 +42,7 @@
             {% if post.file_upload %}
             <img src="./../static/post_pics/{{post.file_upload }}" class="mt-2" style="max-width: 300px;" width="100%">
             {% endif %}
-            
+
             <div class="mt-3">
                 {% if user.is_authenticated %}
                 {% if post in user.liked_posts %}
@@ -75,7 +75,7 @@
         <div class="comments-container container p-0">
             <p>ID: {{ post.post_id }}</p>
             {% for comment in post.comments %}
-            {% if comment.parent_comment_id is none%}
+            {% if comment.parent_comment_id is none %}
             <div class="comment-container container pt-3 ps-0 pe-0">
                 {% if user.username == comment.comment_creator.username %}
                 <h6 class="d-flex">{{ comment.comment_creator.username }} (you) -<span class="badge badge-secondary">{{ comment.date_posted|time_ago }}</span></h6>
@@ -98,8 +98,8 @@
                     <!-- REPLY TEXT AREA -->
                     <form class="w-100 d-flex flex-column" action="/posts/{{ post.post_id }}/comment/{{ comment.comment_id }}" method="post">
                         <div class="d-none d-inline-flex w-100 ps-3 pt-3 border-start flex-column reply-area">
-                            <input id="reply" style="opacity: 0; width: 0; float: left;" name="reply" required>
-                            <trix-editor style="color: white;" input="reply" placeholder="What are your thoughts?"></trix-editor>
+                            <input id="reply{{ comment.comment_id }}" style="opacity: 0; width: 0; height: 0; float: left;" name="reply" required>
+                            <trix-editor style="color: white;" input="reply{{ comment.comment_id }}" placeholder="What are your thoughts?"></trix-editor>
                             <input class="w-100 align-self-end" type="submit" value="Reply">
                         </div>
                     </form>
@@ -195,6 +195,22 @@
             });
         });
     </script>
+    {% if post.creator == user %}
+    <script>
+        function follow_or_not() {
+            const follow_button = document.getElementById("follow-button");
+            follow_button.addEventListener("click", function () {
+                if (follow_button.classList.contains("followed")) {
+                    follow_button.innerHTML = "Follow";
+                } else {
+                    follow_button.innerHTML = "Following";
+                }
+                follow_button.classList.toggle("followed");
+            });
+        }
+        follow_or_not();
+    </script>
+    {% endif %}
     <script>
         function liked_or_not() {
             const like_button = document.getElementsByClassName("like-button");
@@ -232,25 +248,14 @@
         }
         liked_comment_or_not();
 
-        function follow_or_not() {
-            const follow_button = document.getElementById("follow-button");
-            follow_button.addEventListener("click", function () {
-                if (follow_button.classList.contains("followed")) {
-                    follow_button.innerHTML = "Follow";
-                } else {
-                    follow_button.innerHTML = "Following";
-                }
-                follow_button.classList.toggle("followed");
-            });
-        }
-        follow_or_not();
-
         // display reply area when reply button is clicked
         function reply() {
             const reply_button = document.getElementsByClassName("reply-button");
             const reply_area = document.getElementsByClassName("reply-area");
             for (let i = 0; i < reply_button.length; i++) {
                 reply_button[i].addEventListener("click", function () {
+                    console.log("Button clicked:", i);
+                    console.log("Reply area:", reply_area[i]);
                     reply_area[i].classList.toggle("d-none");
                 });
             }
