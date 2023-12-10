@@ -188,7 +188,6 @@ def sanitize_html(content):
 @app.post('/posts/<int:post_id>/comment')
 @app.post('/posts/<int:post_id>/comment/<int:parent_comment_id>')
 def comment_reply(post_id, parent_comment_id=0):
-    print('parent comment id: ', parent_comment_id)
     user_id = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username()).user_id
     content = request.form.get('content')
     reply = request.form.get('reply')
@@ -203,6 +202,16 @@ def comment_reply(post_id, parent_comment_id=0):
         post_repository_singleton.add_comment(user_id, post_id, content, parent_comment_id)
 
     return redirect(f'/posts/{post_id}')
+
+# when a user follows another user
+@app.post('/follow/<int:user_to_follow_id>')
+def follow_user(user_to_follow_id):
+    user_id = user_repository_singleton.get_user_user_id()
+    if user_id == '' or user_id is None or user_to_follow_id == '' or user_to_follow_id is None or user_id == user_to_follow_id:
+        abort(400)
+    user_repository_singleton.follow_user(user_id, user_to_follow_id)
+
+    return jsonify({'status': 'success'})
 
 # format timestamp to display how long ago a post was made
 @app.template_filter('time_ago')
@@ -240,7 +249,14 @@ def post(post_id):
         abort(401)
     post = post_repository_singleton.get_post_by_id(post_id)
     user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
-    return render_template('single_post.html', post=post, user=user, sanitize_html=sanitize_html)
+    if not post or not user:
+        abort(404)
+
+    following = False
+    
+    if user.is_following(post.creator):
+        following = True
+    return render_template('single_post.html', post=post, user=user, sanitize_html=sanitize_html, following=following)
 
 #TODO: Create a get request for the user login page.
 @app.get('/login')

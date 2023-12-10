@@ -139,7 +139,7 @@ class Post(db.Model):
     likes = db.Column(db.Integer, nullable = True, default = 0)
 
     # image BLOB,
-    file_upload = db.Column(db.String(255), nullable = True, default = 'default.jpg')
+    file_upload = db.Column(db.String(255), nullable = True)
 
     # user_id INT,
     # FOREIGN KEY (user_id) references users(user_id)

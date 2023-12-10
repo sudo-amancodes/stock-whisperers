@@ -17,14 +17,23 @@
 <main class="d-flex justify-content-center flex-column">
     <div class="container bg-secondary p-3 mb-3 rounded w-75" style="color: white;">
         <div class="d-inline-flex align-items-center justify-content-between w-100">
-            <h3>{{ post.title }}</h3>
             {% if user.is_authenticated and user.user_id == post.creator.user_id %}
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <h2 class="d-flex align-items-center">{{ post.title }}</h2>
+                <h6 class="d-inline-block">Posted by you {{ post.date_posted|time_ago }}</h6>
+            </div>
             <!-- TODO: Add edit and delete buttons -->
             <!-- <a href="/posts/edit/{{ post.post_id }}"><button>Edit</button></a>
             <a href="/posts/delete/{{ post.post_id }}"><button>Delete</button></a> -->
-            <h6>Posted by you, {{ post.date_posted|time_ago }}</h6>
             {% else %}
-            <h6>Posted by <a href = /profile/{{post.creator.username}}>{{ post.creator.username }}</a>, {{ post.date_posted|time_ago }}</h6>
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <h2 class="d-flex align-items-center">{{ post.title }}</h2>
+                {% if following %}
+                <h6 class="d-inline-block">Posted by <a href = /profile/{{post.creator.username}} class="link-warning">{{ post.creator.username }}</a> {{ post.date_posted|time_ago }} <form class="d-inline-block" action="/follow/{{ post.creator.user_id }}" method="post"><button type="submit" id="follow-button" class="btn btn-warning ms-2 followed">Following</button></form></h6>
+                {% else %}
+                <h6 class="d-inline-block">Posted by <a href = /profile/{{post.creator.username}} class="link-warning">{{ post.creator.username }}</a> {{ post.date_posted|time_ago }} <form class="d-inline-block" action="/follow/{{ post.creator.user_id }}" method="post"><button type="submit" id="follow-button" class="btn btn-warning ms-2">Follow</button></form></h6>
+                {% endif %}
+            </div>
             {% endif %}
         </div>
 
@@ -66,9 +75,9 @@
             {% if comment.parent_comment_id is none%}
             <div class="comment-container container pt-3 ps-0 pe-0">
                 {% if user.username == comment.comment_creator.username %}
-                <h6>{{ comment.comment_creator.username }} (you) -<span class="badge badge-secondary">{{ comment.date_posted|time_ago }}</span></h6>
+                <h6 class="d-flex">{{ comment.comment_creator.username }} (you) -<span class="badge badge-secondary">{{ comment.date_posted|time_ago }}</span></h6>
                 {% else %}
-                <h6>{{ comment.comment_creator.username }} -<span class="badge badge-secondary">{{ comment.date_posted|time_ago }}</span></h6>
+                <h6 class="d-flex">{{ comment.comment_creator.username }} -<span class="badge badge-secondary">{{ comment.date_posted|time_ago }}</span></h6>
                 {% endif %}
                 <div class="d-inline-flex align-items-center w-100 ps-3 border-start justify-content-between flex-wrap">
                     <div class="m-0 p-0">{{ sanitize_html(comment.content)|safe }}</div>
@@ -155,10 +164,29 @@
                     url: '/posts/like_comment',
                     data: { comment_id: commentId, user_id: userId },
                     success: function (data) {
-                        console.log('Like added successfully');
+                        console.log('Comment added successfully');
                     },
                     error: function (error) {
-                        console.error('Error adding like:', error);
+                        console.error('Error adding Comment:', error);
+                    }
+                });
+            });
+        });
+    </script>
+    <script>
+        // follow button
+        $(document).ready(function () {
+            $('#follow-button').click(function (event) {
+                event.stopPropagation();
+                event.preventDefault();
+                $.ajax({
+                    type: 'POST',
+                    url: '/follow/{{ post.creator.user_id }}',
+                    success: function (data) {
+                        console.log('Followed successfully');
+                    },
+                    error: function (error) {
+                        console.error('Error following:', error);
                     }
                 });
             });
@@ -200,6 +228,19 @@
             }
         }
         liked_comment_or_not();
+
+        function follow_or_not() {
+            const follow_button = document.getElementById("follow-button");
+            follow_button.addEventListener("click", function () {
+                if (follow_button.classList.contains("followed")) {
+                    follow_button.innerHTML = "Follow";
+                } else {
+                    follow_button.innerHTML = "Following";
+                }
+                follow_button.classList.toggle("followed");
+            });
+        }
+        follow_or_not();
 
         // display reply area when reply button is clicked
         function reply() {
