@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from src.models import Post, db, users
+from src.models import Post, db, friendships, users
 from flask import flash, session
 
 class UserRepository:
@@ -66,7 +66,20 @@ class UserRepository:
     
     def get_user_last_name(self):
         return session['user']['last_name']
-
+    
+    # follow a user
+    def follow_user(self, user_id, user_to_follow_id):
+        user = users.query.get(user_id)
+        user_to_follow = users.query.get(user_to_follow_id)
+        if user and user_to_follow:
+            friendship = friendships.query.filter_by(user1_username=user.username, user2_username=user_to_follow.username).first()
+            if friendship:
+                db.session.delete(friendship)
+                db.session.commit()
+            else:
+                friendship = friendships(user.username, user_to_follow.username)
+                db.session.add(friendship)
+                db.session.commit()
 
 # Singleton to be used in other modules
 user_repository_singleton = UserRepository()

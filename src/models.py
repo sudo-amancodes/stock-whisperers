@@ -30,6 +30,9 @@ class users(db.Model, UserMixin):
 
     profile_picture = db.Column(db.String(255), nullable = True)
 
+    followers = db.relationship('friendships', foreign_keys='friendships.user2_username', backref='following', lazy='dynamic')
+    following = db.relationship('friendships', foreign_keys='friendships.user1_username', backref='followers', lazy='dynamic')
+
     def __init__(self, first_name: str, last_name: str, username: str, email:str , password: str, profile_picture: str):
         self.first_name = first_name
         self.last_name = last_name
@@ -136,7 +139,7 @@ class Post(db.Model):
     likes = db.Column(db.Integer, nullable = True, default = 0)
 
     # image BLOB,
-    file_upload = db.Column(db.String(255), nullable = True, default = 'default.jpg')
+    file_upload = db.Column(db.String(255), nullable = True)
 
     # user_id INT,
     # FOREIGN KEY (user_id) references users(user_id)
@@ -210,15 +213,13 @@ likes = db.Table(
 
 # friendships table
 class friendships(db.Model):
-    friendship_id = db.Column(db.Integer, primary_key = True)
-
+    friendship_id = db.Column(db.Integer, primary_key=True)
     user1_username = db.Column(db.String(255), db.ForeignKey('users.username'), nullable=False)
-    
     user2_username = db.Column(db.String(255), db.ForeignKey('users.username'), nullable=False)
 
-    followers = db.relationship('users', foreign_keys=[user1_username], backref=db.backref('following', lazy='dynamic'))
-
-    following = db.relationship('users', foreign_keys=[user2_username], backref=db.backref('followers', lazy='dynamic'))
+    # Define relationships back to the 'users' table
+    user1 = db.relationship('users', foreign_keys=[user1_username], back_populates='following')
+    user2 = db.relationship('users', foreign_keys=[user2_username], back_populates='followers')
 
     def __init__(self, user1_username: str, user2_username: str):
         self.user1_username = user1_username
@@ -236,7 +237,6 @@ class friendships(db.Model):
         UniqueConstraint('user1_username', 'user2_username', name='unique_user_follow'),
         CheckConstraint('user1_username != user2_username', name='check_user_follow'),
     )
-
 comment_likes = db.Table(
     'comment_likes',
     db.Column('user_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True),
