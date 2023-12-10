@@ -231,6 +231,7 @@ def posts():
         user = None
     else:
         user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
+    
     return render_template('posts.html', list_posts_active=True, all_posts=all_posts, following_posts=following_posts, user=user, sanitize_html=sanitize_html)
 
 @app.get('/posts/<int:post_id>')

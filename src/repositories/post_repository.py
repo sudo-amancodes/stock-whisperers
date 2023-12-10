@@ -15,13 +15,17 @@ class PostRepository:
     def get_all_posts_of_followed_users(self, user_id):
         user = users.query.get(user_id)
         if user:
-            followed_users = user.following.all()
-            all_followed_posts = []
-            for followed_user in followed_users:
-                followed_user_posts = Post.query.filter_by(user_id=followed_user.user_id).all()
-                all_followed_posts.extend(followed_user_posts)
-
-            return all_followed_posts
+            followed = user.get_all_following()
+            followed_user_posts = []
+            for username in followed:
+                posts = (
+                    db.session.query(Post, users)
+                    .join(users, users.user_id == Post.user_id)
+                    .filter(users.username == username)
+                    .all()
+                )
+                followed_user_posts += posts
+            return followed_user_posts
         return []
 
 
