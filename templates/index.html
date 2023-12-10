@@ -4,22 +4,126 @@
 Stock whisperers
 {% endblock %}
 {% block body %}
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://unpkg.com/lightweight-charts@3.4.0/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+    .container{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 5px;
+    }
+    .container .coin-price{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 10px 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 3px #ccc;
+        margin: 7px;
+    }
     
-    <div class="hero-section">
-    <div class="graph-title">
-        <form>
-            
-        </form>
-        <h2>
-            Stock Prices
-        </h2>
-    </div>
-    <div id="bargraph"></div>
-    </div>
+    .container .coin-price .logo{
+        width: 70px;
+        margin-right: 10px;
+    }
+    .container .coin-price .logo img{
+        width: 100%;
+    }
+    .container .coin-price div{
+        display: block;
+    }
+    .container .coin-price div h1{
+        font-size: 20px;
+    }
+    .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+    }
 
+    /* New styles for hero section */
+    .hero-section {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 30px;
+    }
+
+    .hero-section .row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-start;
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .hero-section .col {
+        flex: 0 0 calc(50% - 10px);
+        margin-bottom: 20px;
+    }
+
+    .hero-section #chart-container {
+        width: 100%;
+        height: 400px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .comments-section {
+        background-color: #f9f9f9;
+        padding: 20px;
+        border-radius: 5px;
+    }
+
+    .comments-section h3 {
+        margin-top: 0;
+        font-size: 22px;
+    }
+
+    .comments-section #comments-container {
+        margin-top: 15px;
+        border-top: 1px solid #ddd;
+        padding-top: 10px;
+    }
+
+    .comments-section .comment-form {
+        margin-top: 20px;
+    }
+
+    .comments-section .comment-form textarea {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        resize: vertical;
+    }
+
+    .comments-section .comment-form button {
+        padding: 10px 20px;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .comments-section .comment-form button:hover {
+        background-color: #0056b3;
+    }
+    
+</style>
+<div class="hero-section">
+    <div class="row">
+    <div class ='col'>
+    <div id="chart-container" style="width: 100%; height: 100%;"></div>
+    </div>
+    <div class="col">
     <div class = "comments-section"> 
         <h3> Live Comments</h3> 
         <div id = "comments-container"> 
@@ -31,46 +135,168 @@ Stock whisperers
             <textarea id="comment-input" placeholder="Enter comment"></textarea>
             <button onclick="submitComment()"> Submit Comment </button>
         </div> 
-        
     </div>
-    <script>        
-        var socket = io.connect('http://' + document.domain + ':' + location.port);
+    </div>
+</div>
+</div>
+    <div class="container">
+        <div class="coin-price">
+            <div class="logo"><img src="https://blogger.googleusercontent.com/img/a/AVvXsEi32rDKQR2Swi7YfHjDzyZUBGEmxTz77OClnm24SZl7kWuls7fsVCIfAObY_JRJIReQnBWZIPSVfDLSqDvqeu4CCXCoNQIoUGK-OSDUGMtDJFxh9vmU6WGajIgXH4CsR_-sXU0qWbyJTJl7N0BSTB8HcAGSpCJ54G1daZPnU6h2oANo2CTGsbHCoaGJHQ" ></div>
+            <div>
+                <h1>$<span id="bitcoin"></span></h1>
+                <h1>Bitcoin</h1>
+            </div>
+        </div>
+        <div class="coin-price">
+            <div class="logo"><img src="https://blogger.googleusercontent.com/img/a/AVvXsEhrUFoHC68rLHQYMV41awqGtoeU6qI-CkSVmcYK-KBCrOvL-jzwLOx8pN-5B8aALsHh1Zc9mmDm8LVQSSpdpsw0v6vrJsv4r9_lv0ic5aYbogc3i3h9mG6ZGMc7g9_cGSRh_soaKmXtpMEOxBFIsmiTa_wticu9T07MbqQ42J9NwowHp8tn8OUIBlhjqA" ></div>
+            <div>
+                <h1>$<span id="litecoin"></span></h1>
+                <h1>Litecoin</h1>
+            </div>
+        </div>
+       
+        <div class="coin-price">
+            <div class="logo"><img src="https://blogger.googleusercontent.com/img/a/AVvXsEgfcodOJm7ZIXw2kiqdo5abN4cUvFYgyqpKt91zHI8710ltPK5Ny_S5X93w9LSDsF5jW61frn3C8a_8w2GXu4bf0clzxuJljoQ8n6az5EI5zQOcl5W2LScP-1-41NQwPW5A3JWT9EwejtOnHsd3q2-llUsJJQ3Z74v_2FOPn0TrI2529NS9_hmFbvModw" ></div>
+            <div>
+                <h1>$<span id="ethereum"></span></h1>
+                <h1>Ethereum</h1>
+            </div>
+        </div>
+        <div class="coin-price">
+            <div class="logo"><img src="https://blogger.googleusercontent.com/img/a/AVvXsEj9YzGIFUSMpRoWE4IjGl_o2zpdPkvtUS6jzIgZWEWl7ztYyV20oXu80A52v0R_nXpt_qXVBzxnfse2_pfeIbVHwQSR3oLqqAyMqVqnzJpdbSCBHA2b_zlheiLY3Bb0PYCEXQny7q-FnGE01ZtxVFVC8DbLWW-ZC1PC-gaqL7IC7ZfRxFOZufcv8lcY1g" ></div>
+            <div>
+                <h1>$<span id="dogecoin"></span></h1>
+                <h1>Dogecoin</h1>
+            </div>
+        </div>
 
-        socket.on('connect', function () {
-            console.log('Connected');
+    </div>
+    </div>
+
+    
+    <script>
+        
+        var chart = LightweightCharts.createChart(document.getElementById('chart-container'), {
+            width: document.getElementById('chart-container').clientWidth,
+            height: 550
         });
-        //var myPlot = document.getElementById('myDiv');
 
-        socket.on('updateGraph', function (msg) {
+        var candleSeries = chart.addCandlestickSeries();
 
-            var graphData = JSON.parse(msg.value);
-
-            graphData.layout.xaxis.autorange = true;
-
-            Plotly.react('bargraph', graphData.data, graphData.layout); // Update the existing graph
-
-            //Plotly.on()
-        });
-
-
-
-        socket.on('disconnect', function () {
-            console.log('Disconnected');
-        });
-    </script>
-    <style>
-        #bargraph {
-            height: 50vh;
-            width: 50%;
-            margin: auto;
-            padding: 10px;
-          }
-          .modebar {
-            display: none !important;
+        chart.applyOptions({
+            timeScale: {
+                timeVisible:true,
+                secondsVisible:true
+            },
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Normal,
             }
-    </style>  
+    //<!-- --- - -  Live Comment Code- - - - - - --  - - - - -- - - - - - -- - - - - - - -- - - - -  -   -->
 
-    <!----- - -  Live Comment Code- - - - - - --  - - - - -- - - - - - -- - - - - - - -- - - - -  - -->  
+
+    //append new comments 
+        });
+
+        var btc = document.getElementById("bitcoin");
+        var ltc = document.getElementById("litecoin");
+        var eth = document.getElementById("ethereum");
+        var doge = document.getElementById("dogecoin");
+
+        var liveprice = {
+            "async": true,
+            "scroosDomain": true,
+            "url": "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin%2Clitecoin%2Cethereum%2Cdogecoin&vs_currencies=usd",
+
+            "method": "GET",
+            "headers": {}
+        }
+
+        $.ajax(liveprice).done(function (response){
+            console.log(response)
+            btc.innerHTML = response.bitcoin.usd;
+            ltc.innerHTML = response.litecoin.usd;
+            eth.innerHTML = response.ethereum.usd;
+            doge.innerHTML = response.dogecoin.usd;
+
+        });
+        fetch('/data')
+            .then(response => response.json())
+            .then(data => {
+                
+                const formattedData = data.map(item => ({
+                    time: ((new Date(item.date).getTime() / 1000) - (5 * 60 * 60)), // Convert UTC to EST (Standard Time)
+                    open: item.open,
+                    high: item.high,
+                    low: item.low,
+                    close: item.close,
+                    volume: item.volume
+                }));
+
+                candleSeries.setData(formattedData);
+                //console.log((new Date(item.date).getTime() / 1000))
+            })
+            .catch(error => console.error('Error fetching data:', error));
+        
+            
+            
+        var socket = io.connect();
+        socket.on('updateSensorData', (new_value)=>{
+            data = JSON.parse(new_value['value']);
+
+            const updatedData = {
+                time: ((new Date(data.date['0']).getTime() / 1000) - (5 * 60 * 60)),
+                open: data.open['0'],
+                high: data.high['0'],
+                low: data.low['0'],
+                close: data.close['0']
+            };
+            console.log(updatedData);
+            candleSeries.update(updatedData);
+
+            
+        });
+        socket.on('new_comment', function(commentData) {   
+    
+            let commentElement = document.createElement("div"); 
+            commentElement.innerHTML = `<strong>User ${commentData.user_id}:</strong> ${commentData.content}`; 
+            document.getElementById("comments-container").appendChild(commentElement); 
+        });
+    
+        function submitComment() { 
+            let commentContent =document.getElementById("comment-input").value; 
+            socket.emit('send_comment', { comment: commentContent}); 
+            document.getElementById("comment-input").value = ' '; 
+        } 
+    
+        fetch('/comment')
+        .then(response => response.json())
+        .then(comments => { 
+            comments.forEach(comment => { 
+                let commentElement = document.createElement("div") 
+                commentElement.innerHTML = `<strong>User ${comment.user_id}:</strong> ${comment.content}`;
+                document.getElementById("comments-container").appendChild(commentElement); 
+            }); 
+        }); 
+
+        /* const binanceSocket = new WebSocket('wss://stream.binance.com:9443/ws/bnbusdt@kline_1m');
+
+        binanceSocket.onopen = function (event) {
+            console.log("WebSocket opened");
+        };
+        
+        binanceSocket.onmessage = function (event) {
+            var message = JSON.parse(event.data);
+
+            var candlestick = message.k;
+
+            candleSeries.update({
+                time: ((new Date(candlestick.t).getTime() / 1000) - (5 * 60 * 60)), // Convert UTC to EST (Standard Time)
+                open: candlestick.o,
+                high: candlestick.h,
+                low: candlestick.l,
+                close: candlestick.c,
+                volume: candlestick.volume
+            })
 
     <script>  
       var socket = io.connect('http://' + document.domain + ':' + location.port); 
@@ -88,7 +314,6 @@ Stock whisperers
        
         // emitting comments with socketio 
         socket.emit('send_comment', { comment: commentContent}); 
-        // document.getElementById("comment-input").value = ' '; 
     // }  
         document.querySelector("#comment-input").value = ' '; // clear text box after hitting submit. 
     } 
@@ -116,13 +341,26 @@ Stock whisperers
 
      }); 
 
-    </script> 
 
-    <div class = "comments-section"> 
+        };
+        
+        binanceSocket.onclose = function (event) {
+            console.log("WebSocket closed:", event);
+        };
+        
+        binanceSocket.onerror = function (error) {
+            console.error("WebSocket error:", error);
+        }; 
+
+
+         */
+    </script>
+
+    <!-- <div class = "comments-section"> 
         <h3> Live Comments</h3> 
         <div id = "comments-container"> 
 
-        </div> 
+        </div>  -->
     {% if user %}
     <div class="comment-form"> 
     <textarea id="comment-input" placeholder="Enter comment"></textarea>

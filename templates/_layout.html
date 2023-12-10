@@ -26,6 +26,7 @@
         <a class="nav-item nav-link" id="profile" href="/profile/{{ session['user']['username'] }}" >Profile</a>
         <a class="nav-item nav-link" id="logout" href="/logout">Logout</a>
         {% else %}
+        <a class="nav-item nav-link" id="posts" href="/posts">Posts</a>
         <a class="nav-item nav-link" id="login" href="/login">Login</a>
         <a class="nav-item nav-link" id="signUp" href="/register">Sign Up</a>
         {% endif %}

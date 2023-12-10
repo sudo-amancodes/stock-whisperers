@@ -39,6 +39,10 @@
 
         <div class="container p-0">
             <div class="m-0 p-0">{{ sanitize_html(post.content)|safe }}</div>
+            {% if post.file_upload %}
+            <img src="./../static/post_pics/{{post.file_upload }}" class="mt-2" style="max-width: 300px;" width="100%">
+            {% endif %}
+            <br>
             <br>
             <div>
                 {% if user.is_authenticated %}
@@ -64,7 +68,7 @@
     <div class="container bg-secondary p-3 mb-5 rounded w-75" style="color: white;">
         <p>Add a comment as {{user.username}}</p>
         <form class="w-100 d-flex flex-column" action="/posts/{{ post.post_id }}/comment" method="post">
-            <input id="content" type="hidden" name="content" required>
+            <input id="content" style="opacity: 0; width: 0; float: left;" name="content" required>
             <trix-editor style="color: white;" input="content" placeholder="What are your thoughts?"></trix-editor>
             <input class="w-25 align-self-end mt-2" type="submit" value="Comment">
         </form>
@@ -95,7 +99,7 @@
                     <!-- REPLY TEXT AREA -->
                     <form class="w-100 d-flex flex-column" action="/posts/{{ post.post_id }}/comment/{{ comment.comment_id }}" method="post">
                         <div class="d-none d-inline-flex w-100 ps-3 pt-3 border-start flex-column reply-area">
-                            <input id="reply" type="hidden" name="reply" required>
+                            <input id="reply" style="opacity: 0; width: 0; float: left;" name="reply" required>
                             <trix-editor style="color: white;" input="reply" placeholder="What are your thoughts?"></trix-editor>
                             <input class="w-100 align-self-end" type="submit" value="Reply">
                         </div>

@@ -70,4 +70,4 @@ CREATE TABLE IF NOT EXISTS comment_likes (
     PRIMARY KEY (comment_id, user_id),
     FOREIGN KEY (comment_id) REFERENCES comment(comment_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id)
-);
+); 
