@@ -162,7 +162,6 @@ def upload_post():
     if title == '' or title is None:
         abort(400)
     user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
-    user = user_repository_singleton.get_user_by_username(session.get('username'))
 
     if user is None:
         abort(401)

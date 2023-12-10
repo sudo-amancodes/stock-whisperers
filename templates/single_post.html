@@ -26,7 +26,7 @@
             <!-- <a href="/posts/edit/{{ post.post_id }}"><button>Edit</button></a>
             <a href="/posts/delete/{{ post.post_id }}"><button>Delete</button></a> -->
             {% else %}
-            <div class="d-flex align-items-center justify-content-between w-100">
+            <div class="d-flex align-items-center justify-content-between w-100 flex-wrap">
                 <h2 class="d-flex align-items-center">{{ post.title }}</h2>
                 {% if following %}
                 <h6 class="d-inline-block">Posted by <a href = /profile/{{post.creator.username}} class="link-warning">{{ post.creator.username }}</a> {{ post.date_posted|time_ago }} <form class="d-inline-block" action="/follow/{{ post.creator.user_id }}" method="post"><button type="submit" id="follow-button" class="btn btn-warning ms-2 followed">Following</button></form></h6>
@@ -42,9 +42,8 @@
             {% if post.file_upload %}
             <img src="./../static/post_pics/{{post.file_upload }}" class="mt-2" style="max-width: 300px;" width="100%">
             {% endif %}
-            <br>
-            <br>
-            <div>
+            
+            <div class="mt-3">
                 {% if user.is_authenticated %}
                 {% if post in user.liked_posts %}
                 <button class="d-inline-block like-button liked" data-post-id="{{ post.post_id }}"

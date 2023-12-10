@@ -22,6 +22,7 @@ class PostRepository:
                     db.session.query(Post, users)
                     .join(users, users.user_id == Post.user_id)
                     .filter(users.username == username)
+                    .order_by(Post.date_posted.desc())
                     .all()
                 )
                 followed_user_posts += posts
