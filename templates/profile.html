@@ -79,7 +79,7 @@
         <p>{{ post.content }}</p>
         <p class="like-count">{{ post.likes }}</p>
         <div>
-            {% if user in session %}
+            {% if user.is_authenticated %}
             {% if post in user.liked_posts %}
             <button class="like-button liked" data-post-id="{{ post.post_id }}" data-user-id="{{ user.user_id }}">Liked</button>
             {% else %}

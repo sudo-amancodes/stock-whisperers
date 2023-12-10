@@ -21,7 +21,7 @@ from src.repositories.post_repository import post_repository_singleton
 from src.repositories.user_repository import user_repository_singleton
 from sqlalchemy import or_, func
 from flask_mail import Mail, Message
-from src.models import db, users, live_posts, Post
+from src.models import db, users, live_posts, Post, friendships
 from datetime import datetime, timedelta
 from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
 import random
@@ -147,7 +147,7 @@ def data():
 @app.get('/upload')
 def upload():
     if not user_repository_singleton.is_logged_in():
-        abort(401)
+        return redirect('/login')
     return render_template('upload.html', user=session.get('user'))
 
 # Function to check if a file has an allowed extension
@@ -162,10 +162,9 @@ def upload_post():
     if title == '' or title is None:
         abort(400)
     user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
-    user = user_repository_singleton.get_user_by_username(session.get('username'))
 
     if user is None:
-        abort(400)
+        abort(401)
 
     created_post = post_repository_singleton.create_post(title, description, user.user_id)
 
@@ -246,6 +245,16 @@ def comment_reply(post_id, parent_comment_id=0):
 
     return redirect(f'/posts/{post_id}')
 
+# when a user follows another user
+@app.post('/follow/<int:user_to_follow_id>')
+def follow_user(user_to_follow_id):
+    user_id = user_repository_singleton.get_user_user_id()
+    if user_id == '' or user_id is None or user_to_follow_id == '' or user_to_follow_id is None or user_id == user_to_follow_id:
+        abort(400)
+    user_repository_singleton.follow_user(user_id, user_to_follow_id)
+
+    return jsonify({'status': 'success'})
+
 # format timestamp to display how long ago a post was made
 @app.template_filter('time_ago')
 def time_ago_filter(timestamp):
@@ -267,20 +276,30 @@ def time_ago_filter(timestamp):
 #TODO: Create a get request for the posts page.
 @app.get('/posts')
 def posts():
-    all_posts = post_repository_singleton.get_all_posts_with_users()
     if not user_repository_singleton.is_logged_in():
-        user = None
-    else:
-        user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
-    return render_template('posts.html', list_posts_active=True, posts=all_posts, user=user, sanitize_html=sanitize_html)
+        redirect('/login')
+    all_posts = post_repository_singleton.get_all_posts_with_users()
+    user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
+    if not user:
+        abort(401)
+    following_posts = post_repository_singleton.get_all_posts_of_followed_users(user.user_id)
+    
+    return render_template('posts.html', list_posts_active=True, all_posts=all_posts, following_posts=following_posts, user=user, sanitize_html=sanitize_html)
 
 @app.get('/posts/<int:post_id>')
 def post(post_id):
     if not user_repository_singleton.is_logged_in():
-        abort(401)
+        redirect('/login')
     post = post_repository_singleton.get_post_by_id(post_id)
     user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
-    return render_template('single_post.html', post=post, user=user, sanitize_html=sanitize_html)
+    if not post or not user:
+        abort(400)
+
+    following = False
+    
+    if user.is_following(post.creator):
+        following = True
+    return render_template('single_post.html', post=post, user=user, sanitize_html=sanitize_html, following=following)
 
 #TODO: Create a get request for the user login page.
 @app.get('/login')
@@ -488,7 +507,7 @@ def profile(username: str):
     posts = post_repository_singleton.get_user_posts(user.user_id)
 
     profile_picture = url_for('static', filename = 'profile_pics/' + user.profile_picture)
-    return render_template('profile.html', user=user, profile_picture=profile_picture, posts=posts)
+    return render_template('profile.html', user = user, profile_picture=profile_picture, posts=posts)
 
 #TODO: Create a get request for live comments. 
 # add user_id to session dictionary. 
@@ -550,7 +569,6 @@ def update_profile(username: str):
     new_username = request.form.get('username')
     new_fname = request.form.get('first_name')
     new_lname = request.form.get('last_name')
-
 
     existing_user = users.query.filter_by(username=new_username).first()
     existing_email = users.query.filter_by(email=new_email).first()
