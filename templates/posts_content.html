@@ -1,0 +1,41 @@
+{% if posts|length == 0 %}
+    <h3 style="text-align: center;">No posts yet</h3>
+{% endif %}
+{% for post, creator in posts %}
+
+    <div id="post" class="container bg-secondary p-3 mb-5 w-50 rounded border border-secondary" onclick="location.href='posts/{{post.post_id}}';" style="color: white;">
+        <div class="d-inline-flex align-items-center justify-content-between w-100">
+            <h3>{{ post.title }}</h3>
+            {% if user.is_authenticated and user.user_id == creator.user_id %}
+            <!-- TODO: Add edit and delete buttons -->
+            <!-- <a href="/posts/edit/{{ post.post_id }}"><button>Edit</button></a>
+            <a href="/posts/delete/{{ post.post_id }}"><button>Delete</button></a> -->
+            <h6>Posted by you, {{ post.date_posted|time_ago }}</h6>
+            {% else %}
+            <h6>Posted by<a href = /profile/{{creator.username}}> {{ creator.username }}</a>, {{ post.date_posted|time_ago }}</h6>
+            {% endif %}
+        </div>
+        
+        <div class="container p-0">
+            <div class="m-0 p-0">{{ sanitize_html(post.content)|safe }}</div>
+            <p class="like-count">{{ post.likes }}</p>
+            <div>
+                {% if user.is_authenticated %}
+                {% if post in user.liked_posts %}
+                <button class="like-button liked" data-post-id="{{ post.post_id }}" data-user-id="{{ user.user_id }}">Liked</button>
+                {% else %}
+                <button class="like-button" data-post-id="{{ post.post_id }}" data-user-id="{{ user.user_id }}">Like</button>
+                {% endif %}
+                {% else %}
+                <a href="/login"><button>Like</button></a>
+                {% endif %}
+                {% if post.comments|length == 1 %}
+                <button>{{ post.comments|length }} Comment</button>
+                {% else %}
+                <button>{{ post.comments|length }} Comments</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+{% endfor %}

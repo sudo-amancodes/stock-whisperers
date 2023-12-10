@@ -10,6 +10,20 @@ class PostRepository:
     def get_all_posts_with_users(self):
         #filter by date
         return db.session.query(Post, users).join(users, users.user_id == Post.user_id).order_by(Post.date_posted.desc()).all()
+    
+    # get all posts of users that are followed by the logged in user
+    def get_all_posts_of_followed_users(self, user_id):
+        user = users.query.get(user_id)
+        if user:
+            followed_users = user.following.all()
+            all_followed_posts = []
+            for followed_user in followed_users:
+                followed_user_posts = Post.query.filter_by(user_id=followed_user.user_id).all()
+                all_followed_posts.extend(followed_user_posts)
+
+            return all_followed_posts
+        return []
+
 
     # create a new post in the DB
     def create_post(self, title, content, user_id):
@@ -22,39 +36,43 @@ class PostRepository:
     def add_like(self, post_id, user_id):
         post = Post.query.get(post_id)
         user = users.query.get(user_id)
-        if user in post.liked_by:
-            post.liked_by.remove(user)
-            post.likes -= 1
-            db.session.commit()
-        elif user not in post.liked_by:
-            post.liked_by.append(user)
-            post.likes += 1
-            db.session.commit()
+        if post and user:
+            if user in post.liked_by:
+                post.liked_by.remove(user)
+                post.likes -= 1
+                db.session.commit()
+            elif user not in post.liked_by:
+                post.liked_by.append(user)
+                post.likes += 1
+                db.session.commit()
 
     # add a like to a comment
     def add_like_to_comment(self, comment_id, user_id):
         comment = Comment.query.get(comment_id)
         user = users.query.get(user_id)
-        if user in comment.liked_by:
-            comment.liked_by.remove(user)
-            comment.likes -= 1
-            db.session.commit()
-        elif user not in comment.liked_by:
-            comment.liked_by.append(user)
-            comment.likes += 1
-            db.session.commit()
+        if comment and user:
+            if user in comment.liked_by:
+                comment.liked_by.remove(user)
+                comment.likes -= 1
+                db.session.commit()
+            elif user not in comment.liked_by:
+                comment.liked_by.append(user)
+                comment.likes += 1
+                db.session.commit()
     
-
     # get the user who created the post
     def get_post_creator_id(self, post_id):
-        return Post.query.get(post_id).user_id
-    
+        post = Post.query.get(post_id)
+        if post:
+            return post.user_id
+
     # add a comment to a post
     def add_comment(self, user_id, post_id, content, parent_comment_id=None):
         new_comment = Comment(user_id, post_id, content, parent_comment_id)
         db.session.add(new_comment)
         db.session.commit()
         return new_comment
+    
     # get all posts by a user
     def get_user_posts(self, user_id):
         return db.session.query(Post, users).join(users, users.user_id == Post.user_id).filter(Post.user_id==user_id).order_by(Post.date_posted.desc()).all()
