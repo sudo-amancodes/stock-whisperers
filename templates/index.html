@@ -37,9 +37,108 @@ Stock whisperers
     .container .coin-price div h1{
         font-size: 20px;
     }
-</style>
-    <div id="chart-container" style="width: 100%; height: 400px;"></div>
+    .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+    }
 
+    /* New styles for hero section */
+    .hero-section {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 30px;
+    }
+
+    .hero-section .row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-start;
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .hero-section .col {
+        flex: 0 0 calc(50% - 10px);
+        margin-bottom: 20px;
+    }
+
+    .hero-section #chart-container {
+        width: 100%;
+        height: 400px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .comments-section {
+        background-color: #f9f9f9;
+        padding: 20px;
+        border-radius: 5px;
+    }
+
+    .comments-section h3 {
+        margin-top: 0;
+        font-size: 22px;
+    }
+
+    .comments-section #comments-container {
+        margin-top: 15px;
+        border-top: 1px solid #ddd;
+        padding-top: 10px;
+    }
+
+    .comments-section .comment-form {
+        margin-top: 20px;
+    }
+
+    .comments-section .comment-form textarea {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        resize: vertical;
+    }
+
+    .comments-section .comment-form button {
+        padding: 10px 20px;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .comments-section .comment-form button:hover {
+        background-color: #0056b3;
+    }
+    
+</style>
+<div class="hero-section">
+    <div class="row">
+    <div class ='col'>
+    <div id="chart-container" style="width: 100%; height: 100%;"></div>
+    </div>
+    <div class="col">
+    <div class = "comments-section"> 
+        <h3> Live Comments</h3> 
+        <div id = "comments-container"> 
+
+        </div> 
+      <!-- if user is logged in --> 
+      
+        <div class = "comment-form"> 
+            <textarea id="comment-input" placeholder="Enter comment"></textarea>
+            <button onclick="submitComment()"> Submit Comment </button>
+        </div> 
+    </div>
+    </div>
+</div>
+</div>
     <div class="container">
         <div class="coin-price">
             <div class="logo"><img src="https://blogger.googleusercontent.com/img/a/AVvXsEi32rDKQR2Swi7YfHjDzyZUBGEmxTz77OClnm24SZl7kWuls7fsVCIfAObY_JRJIReQnBWZIPSVfDLSqDvqeu4CCXCoNQIoUGK-OSDUGMtDJFxh9vmU6WGajIgXH4CsR_-sXU0qWbyJTJl7N0BSTB8HcAGSpCJ54G1daZPnU6h2oANo2CTGsbHCoaGJHQ" ></div>
@@ -74,24 +173,12 @@ Stock whisperers
     </div>
     </div>
 
-    <div class = "comments-section"> 
-        <h3> Live Comments</h3> 
-        <div id = "comments-container"> 
-
-        </div> 
-      <!-- if user is logged in --> 
-      
-        <div class = "comment-form"> 
-            <textarea id="comment-input" placeholder="Enter comment"></textarea>
-            <button onclick="submitComment()"> Submit Comment </button>
-        </div> 
-        
-    </div>
+    
     <script>
         
         var chart = LightweightCharts.createChart(document.getElementById('chart-container'), {
             width: document.getElementById('chart-container').clientWidth,
-            height: 400
+            height: 550
         });
 
         var candleSeries = chart.addCandlestickSeries();
