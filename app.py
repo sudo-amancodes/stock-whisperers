@@ -147,7 +147,7 @@ def data():
 @app.get('/upload')
 def upload():
     if not user_repository_singleton.is_logged_in():
-        abort(401)
+        return redirect('/login')
     return render_template('upload.html', user=session.get('user'))
 
 # Function to check if a file has an allowed extension
@@ -165,7 +165,7 @@ def upload_post():
     user = user_repository_singleton.get_user_by_username(session.get('username'))
 
     if user is None:
-        abort(400)
+        abort(401)
 
     created_post = post_repository_singleton.create_post(title, description, user.user_id)
 
@@ -277,23 +277,24 @@ def time_ago_filter(timestamp):
 #TODO: Create a get request for the posts page.
 @app.get('/posts')
 def posts():
-    all_posts = post_repository_singleton.get_all_posts_with_users()
-    following_posts = post_repository_singleton.get_all_posts_of_followed_users(user_repository_singleton.get_user_user_id())
     if not user_repository_singleton.is_logged_in():
-        user = None
-    else:
-        user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
+        redirect('/login')
+    all_posts = post_repository_singleton.get_all_posts_with_users()
+    user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
+    if not user:
+        abort(401)
+    following_posts = post_repository_singleton.get_all_posts_of_followed_users(user.user_id)
     
     return render_template('posts.html', list_posts_active=True, all_posts=all_posts, following_posts=following_posts, user=user, sanitize_html=sanitize_html)
 
 @app.get('/posts/<int:post_id>')
 def post(post_id):
     if not user_repository_singleton.is_logged_in():
-        abort(401)
+        redirect('/login')
     post = post_repository_singleton.get_post_by_id(post_id)
     user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
     if not post or not user:
-        abort(404)
+        abort(400)
 
     following = False
     
