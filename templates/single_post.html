@@ -8,6 +8,7 @@
         background-color: red;
     }
 
+    /* Placeholder color */
     trix-editor:empty:not(:focus)::before {
         color: white;
         opacity: 0.5;
@@ -15,32 +16,50 @@
 </style>
 
 <main class="d-flex justify-content-center flex-column">
+
+    <!--  Post Container  -->
     <div class="container bg-secondary p-3 mb-3 rounded w-75" style="color: white;">
+
+        <!--  Post Header Container  -->
         <div class="d-inline-flex align-items-center justify-content-between w-100">
+
+            <!--  Post Title  -->
             {% if user.is_authenticated and user.user_id == post.creator.user_id %}
+            <!--  if user is post creator  -->
             <div class="d-flex align-items-center justify-content-between w-100">
                 <h2 class="d-flex align-items-center">{{ post.title }}</h2>
                 <h6 class="d-inline-block">Posted by you {{ post.date_posted|time_ago }}</h6>
             </div>
-            <!-- TODO: Add edit and delete buttons -->
-            <!-- <a href="/posts/edit/{{ post.post_id }}"><button>Edit</button></a>
-            <a href="/posts/delete/{{ post.post_id }}"><button>Delete</button></a> -->
+
             {% else %}
-            <div class="d-flex align-items-center justify-content-between w-100">
+            <!--  if user is not post creator  -->
+            <div class="d-flex align-items-center justify-content-between w-100 flex-wrap">
                 <h2 class="d-flex align-items-center">{{ post.title }}</h2>
                 {% if following %}
+                <!--  if user is following post creator  -->
                 <h6 class="d-inline-block">Posted by <a href = /profile/{{post.creator.username}} class="link-warning">{{ post.creator.username }}</a> {{ post.date_posted|time_ago }} <form class="d-inline-block" action="/follow/{{ post.creator.user_id }}" method="post"><button type="submit" id="follow-button" class="btn btn-warning ms-2 followed">Following</button></form></h6>
                 {% else %}
+                <!--  if user is not following post creator  -->
                 <h6 class="d-inline-block">Posted by <a href = /profile/{{post.creator.username}} class="link-warning">{{ post.creator.username }}</a> {{ post.date_posted|time_ago }} <form class="d-inline-block" action="/follow/{{ post.creator.user_id }}" method="post"><button type="submit" id="follow-button" class="btn btn-warning ms-2">Follow</button></form></h6>
                 {% endif %}
             </div>
             {% endif %}
+            <!-- END Post Title  -->
         </div>
+        <!-- END Post Header Container  -->
 
+        <!--  Post Body Container  -->
         <div class="container p-0">
+
+            <!--  Post Content  -->
             <div class="m-0 p-0">{{ sanitize_html(post.content)|safe }}</div>
-            <br>
-            <div>
+
+            {% if post.file_upload %}
+            <img src="./../static/post_pics/{{post.file_upload }}" class="mt-2" style="max-width: 300px;" width="100%">
+            {% endif %}
+
+            <!--  Like and Comment Buttons  -->
+            <div class="mt-3">
                 {% if user.is_authenticated %}
                 {% if post in user.liked_posts %}
                 <button class="d-inline-block like-button liked" data-post-id="{{ post.post_id }}"
@@ -59,28 +78,46 @@
                 <button class="ms-3">{{ post.comments|length }} Comments</button>
                 {% endif %}
             </div>
+            <!-- END Like and Comment Buttons  -->
         </div>
+        <!-- END Post Body  -->
     </div>
+    <!-- END Post Container  -->
+
+    <!--  Comments Container  -->
     <div class="container bg-secondary p-3 mb-5 rounded w-75" style="color: white;">
+
+        <!--  Add Comment Form  -->
         <p>Add a comment as {{user.username}}</p>
         <form class="w-100 d-flex flex-column" action="/posts/{{ post.post_id }}/comment" method="post">
-            <input id="content" type="hidden" name="content" required>
+            <input id="content" style="opacity: 0; width: 0; float: left;" name="content" required>
             <trix-editor style="color: white;" input="content" placeholder="What are your thoughts?"></trix-editor>
             <input class="w-25 align-self-end mt-2" type="submit" value="Comment">
         </form>
 
+        <!--  All Post Comments  -->
         <div class="comments-container container p-0">
+
+            <!-- TODO: Remove POST ID -->
             <p>ID: {{ post.post_id }}</p>
+
+            <!--  All Top Level Comments  -->
             {% for comment in post.comments %}
-            {% if comment.parent_comment_id is none%}
+            {% if comment.parent_comment_id is none %}
             <div class="comment-container container pt-3 ps-0 pe-0">
+
                 {% if user.username == comment.comment_creator.username %}
                 <h6 class="d-flex">{{ comment.comment_creator.username }} (you) -<span class="badge badge-secondary">{{ comment.date_posted|time_ago }}</span></h6>
                 {% else %}
                 <h6 class="d-flex">{{ comment.comment_creator.username }} -<span class="badge badge-secondary">{{ comment.date_posted|time_ago }}</span></h6>
                 {% endif %}
+
+                <!--  Top Level Comment Content -->
                 <div class="d-inline-flex align-items-center w-100 ps-3 border-start justify-content-between flex-wrap">
+
                     <div class="m-0 p-0">{{ sanitize_html(comment.content)|safe }}</div>
+
+                    <!--  Like and Reply Buttons  -->
                     <div>
                         {% if comment in user.liked_comments %}
                         <button class="d-inline-block like-comment liked" data-comment-id="{{ comment.comment_id }}"
@@ -92,24 +129,32 @@
                         <p class="like-comment-count d-inline-block">{{ comment.likes }}</p>
                         <input type="submit" class="reply-button" value="Reply">
                     </div>
+
                     <!-- REPLY TEXT AREA -->
                     <form class="w-100 d-flex flex-column" action="/posts/{{ post.post_id }}/comment/{{ comment.comment_id }}" method="post">
                         <div class="d-none d-inline-flex w-100 ps-3 pt-3 border-start flex-column reply-area">
-                            <input id="reply" type="hidden" name="reply" required>
-                            <trix-editor style="color: white;" input="reply" placeholder="What are your thoughts?"></trix-editor>
+                            <input id="reply{{ comment.comment_id }}" style="opacity: 0; width: 0; height: 0; float: left;" name="reply" required>
+                            <trix-editor style="color: white;" input="reply{{ comment.comment_id }}" placeholder="What are your thoughts?"></trix-editor>
                             <input class="w-100 align-self-end" type="submit" value="Reply">
                         </div>
                     </form>
+
+                    <!-- Replies of top Comment Content -->
                     {% for reply in post.comments %}
                     {% if reply.parent_comment_id == comment.comment_id %}
                     <div class="reply-container container pt-3 ps-0 pe-0">
+
                         {% if user.username == reply.comment_creator.username %}
                         <h6>{{ reply.comment_creator.username }} (you) -<span class="badge badge-secondary">{{ reply.date_posted|time_ago }}</span></h6>
                         {% else %}
                         <h6>{{ reply.comment_creator.username }}, {{ reply.date_posted|time_ago }}</h6>
                         {% endif %}
+
                         <div class="d-inline-flex align-items-center w-100 ps-3 border-start justify-content-between flex-wrap">
+
                             <div class="m-0 p-0">{{ sanitize_html(reply.content)|safe }}</div>
+
+                            <!--  Like and Reply Buttons  -->
                             <div>
                                 {% if reply in user.liked_comments %}
                                 <button class="d-inline-block like-comment liked" data-comment-id="{{ reply.comment_id }}"
@@ -120,17 +165,30 @@
                                 {% endif %}
                                 <p class="like-comment-count d-inline-block">{{ reply.likes }}</p>
                             </div>
+
                         </div>
                     </div>
                     {% endif %}
                     {% endfor %}
                 </div>
+                <!-- END Top Level Comment Content -->
             </div>
             {% endif %}
             {% endfor %}
         </div>
+        <!-- END All Post Comments  -->
     </div>
+    <!-- END Comments Container  -->
+
+
+
+
+
+    <!--  Scripts  -->
+
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+    <!--  Likes and comments  -->
     <script>
         $(document).ready(function () {
             $('.like-button').click(function (event) {
@@ -173,8 +231,10 @@
             });
         });
     </script>
+
+
+    <!--  Follow  -->
     <script>
-        // follow button
         $(document).ready(function () {
             $('#follow-button').click(function (event) {
                 event.stopPropagation();
@@ -192,6 +252,27 @@
             });
         });
     </script>
+
+    <!--  Follow or Unfollow Dynamic UI  -->
+    {% if post.creator == user %}
+    <script>
+        function follow_or_not() {
+            const follow_button = document.getElementById("follow-button");
+            follow_button.addEventListener("click", function () {
+                if (follow_button.classList.contains("followed")) {
+                    follow_button.innerHTML = "Follow";
+                } else {
+                    follow_button.innerHTML = "Following";
+                }
+                follow_button.classList.toggle("followed");
+            });
+        }
+        follow_or_not();
+    </script>
+    {% endif %}
+
+
+    <!--  Like and Reply Dynamic UI  -->
     <script>
         function liked_or_not() {
             const like_button = document.getElementsByClassName("like-button");
@@ -229,31 +310,22 @@
         }
         liked_comment_or_not();
 
-        function follow_or_not() {
-            const follow_button = document.getElementById("follow-button");
-            follow_button.addEventListener("click", function () {
-                if (follow_button.classList.contains("followed")) {
-                    follow_button.innerHTML = "Follow";
-                } else {
-                    follow_button.innerHTML = "Following";
-                }
-                follow_button.classList.toggle("followed");
-            });
-        }
-        follow_or_not();
-
         // display reply area when reply button is clicked
         function reply() {
             const reply_button = document.getElementsByClassName("reply-button");
             const reply_area = document.getElementsByClassName("reply-area");
             for (let i = 0; i < reply_button.length; i++) {
                 reply_button[i].addEventListener("click", function () {
+                    console.log("Button clicked:", i);
+                    console.log("Reply area:", reply_area[i]);
                     reply_area[i].classList.toggle("d-none");
                 });
             }
         }
         reply();
     </script>
+
+    <!--  Trix  -->
     <script type="text/javascript">
         (function () {
             addEventListener("trix-initialize", function (e) {
@@ -265,6 +337,7 @@
             })
         })();
     </script>
+
 </main>
 
 {% endblock %}

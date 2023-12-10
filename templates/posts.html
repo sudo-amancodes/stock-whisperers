@@ -1,7 +1,9 @@
 {% extends '_layout.html' %}
 
 {% block title %}Upload to Stock Whisperers{% endblock %}
+
 {% block body %}
+
 <style>
     .liked {
         /* style the like button here to show that it is liked */
@@ -17,7 +19,11 @@
         border: 2px solid rgb(52, 53, 54) !important;
     }
 </style>
+
+
 <main class="d-flex justify-content-center flex-column">
+
+    <!-- TABS: Following / All Posts -->
     <ul class="nav nav-tabs align-self-center" id="postTabs">
         <li class="nav-item">
             <a class="nav-link active" id="followingTab" data-toggle="tab" href="#followingPosts">Following</a>
@@ -27,18 +33,30 @@
         </li>
     </ul>
 
+    <!-- TAB CONTENT -->
     <div class="tab-content mt-3">
+
+        <!-- Following Posts -->
         <div class="tab-pane fade show active" id="followingPosts">
             {% set posts = following_posts %}
             {% include 'posts_content.html' %}
         </div>
+
+        <!-- All Posts -->
         <div class="tab-pane fade" id="allPosts">
             {% set posts = all_posts %}
             {% include 'posts_content.html' %}
         </div>
     </div>
 
+
+
+
+    <!-- SCRIPTS -->
+
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+    <!-- Dynamic TABS -->
     <script>
         $(document).ready(function () {
             $('#postTabs a').on('click', function (e) {
@@ -47,6 +65,8 @@
             });
         });
     </script>
+
+    <!-- Like Button -->
     <script>
         $(document).ready(function () {
             $('.like-button').click(function (event) {
@@ -68,6 +88,8 @@
             });
         });
     </script>
+
+    <!-- Like Button Dynamic UI -->
     <script>
         function liked_or_not() {
             const like_button = document.getElementsByClassName("like-button");

@@ -29,6 +29,11 @@ from werkzeug.utils import secure_filename
 #Bleach to prevent cross-site scripting (XSS) attacks, possible when user is posting a comment
 import bleach
 
+# Pillow for image processing
+from PIL import Image
+#Allowed file extensions for uploading
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
 thread = None
 thread_lock = Lock()
 load_dotenv()
@@ -53,6 +58,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{os.getenv("DB_USER")}:{o
 
 UPLOAD_FOLDER = 'static/profile_pics/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['POST_UPLOAD_FOLDER'] = 'static/post_pics/'
 
 
 db.init_app(app)
@@ -75,59 +81,61 @@ temp_user_info = []
 #Override Yahoo Finance
 yf.pdr_override()
 
-#Create input field for our desired stock
-def get_plotly_json(stock):
-    #Retrieve stock data frame (df) from yfinance API at an interval of 1m
-    df = yf.download(tickers=stock,period='1d',interval='1m', threads = True)
-    #df['Regular time'] = df.index.strftime('%I:%M %p')
-
-    print(df)
-    #Declare plotly figure (go)
-    fig=go.Figure()
-
-    fig.add_trace(go.Candlestick(x=df.index,
-                    open=df['Open'],
-                    high=df['High'],
-                    low=df['Low'],
-                    close=df['Close'], name = 'market data'))
-
-    fig.update_layout(
-        #title= str(stock)+' Live Share Price:',
-        #template='plotly_dark',
-        autosize=True,
-        uirevision=True,
-        #yaxis_title='Stock Price (USD per Shares)'
-        )
-
-    fig.update_xaxes(
-        rangeslider_visible=True,
-        tickformat="%I:%M %p",
-        rangeselector=dict(
-            buttons=list([
-                dict(count=15, label="15m", step="minute", stepmode="backward"),
-                dict(count=45, label="45m", step="minute", stepmode="backward"),
-                dict(count=1, label="HTD", step="hour", stepmode="todate"),
-                dict(count=3, label="3h", step="hour", stepmode="backward"),
-                dict(step="all")
-            ])
-        )
-    )
-    
-    graph_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    return graph_json
-
 def background_thread():
-    print("Generating graph sensor values")
+    print("Generating random sensor values")
     while True:
-        value = get_plotly_json('AAPL')  # Corrected stock symbol
-        socketio.emit('updateGraph', {'value': value})  # Corrected event name
-        socketio.sleep(10)
+        symbol = yf.Ticker("AAPL")
+        df = symbol.history(period='1d', interval='1m')
 
+        last_close_price = correct_graph_cols(df.tail(2))
+        df = correct_graph_cols(df.tail(1))
+        
+        time = df.iloc[-1]['date']
 
-@app.get('/')
+        open = last_close_price.iloc[-2]['close']
+        print("SECOND LAST\n\n", last_close_price)
+        print("open\n", open)
+        if 'high' in locals() and high < df.iloc[-1]['high']:
+            high = df.iloc[-1]['high']
+        elif 'high' not in locals():
+            high = df.iloc[-1]['high']
+
+        if 'low' in locals() and low > df.iloc[-1]['low']:
+            low = df.iloc[-1]['low']
+        elif 'low' not in locals():
+            low = df.iloc[-1]['low']
+        
+        close = df.iloc[-1]['close']
+
+        df.loc[0,'open'] = open
+        df.loc[0,'high'] = high
+        df.loc[0,'low'] = low
+        df.loc[0,'close'] = close
+
+        print(df)
+
+        socketio.emit('updateSensorData', {'value': df.to_json()})
+        socketio.sleep(5)
+
+def correct_graph_cols(df):
+    df = df.reset_index()
+    df.columns = df.columns.str.lower() 
+    return df.rename(columns={"datetime":"date"})
+
+# Retrieve stock data frame (df) from yfinance API at an interval of 1m
+def previous_graph():
+    symbol = yf.Ticker("AAPL")
+    df = symbol.history(period='5d', interval='1m')
+    return correct_graph_cols(df)
+
+@app.route('/')
 def index():
-    graph = get_plotly_json('AAPL')
-    return render_template('index.html', user = session.get('user'), plot=graph)
+    return render_template('index.html', user = session.get('user'))
+
+@app.route('/data')
+def data():
+    df = previous_graph()
+    return df.to_json(orient='records')
 
 #Create Comments or add a temporary get/post request. That has a pass statement.
 #Example:
@@ -139,8 +147,12 @@ def index():
 @app.get('/upload')
 def upload():
     if not user_repository_singleton.is_logged_in():
-        abort(401)
-    return render_template('upload.html', user= session.get('user'))
+        return redirect('/login')
+    return render_template('upload.html', user=session.get('user'))
+
+# Function to check if a file has an allowed extension
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 #TODO: Create a post request for the upload page.
 @app.post('/upload')
@@ -150,7 +162,34 @@ def upload_post():
     if title == '' or title is None:
         abort(400)
     user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
+
+    if user is None:
+        abort(401)
+
     created_post = post_repository_singleton.create_post(title, description, user.user_id)
+
+    image_upload = request.files.get('image_upload')
+
+    if image_upload is not None:
+        filename = secure_filename(image_upload.filename) if image_upload.filename else ''
+        if filename and allowed_file(filename):
+            # Set UUID to prevent same file names
+            pic_name = str(uuid.uuid1()) + "_" + filename
+
+            # Save the file
+            image_upload.save(os.path.join(app.config['POST_UPLOAD_FOLDER'], pic_name))
+
+            # Verify the file is an image using Pillow
+            try:
+                img = Image.open(os.path.join(app.config['POST_UPLOAD_FOLDER'], pic_name))
+                img.verify()  # This will raise an exception if the file is not a valid image
+            except Exception as e:
+                os.remove(os.path.join(app.config['POST_UPLOAD_FOLDER'], pic_name))  # Remove the invalid file
+                abort(400, description="Uploaded file is not a valid image.")
+
+            created_post.file_upload = pic_name
+            db.session.commit()
+    
     return redirect('/posts')
 
 # when a user likes a post
@@ -188,7 +227,10 @@ def sanitize_html(content):
 @app.post('/posts/<int:post_id>/comment')
 @app.post('/posts/<int:post_id>/comment/<int:parent_comment_id>')
 def comment_reply(post_id, parent_comment_id=0):
-    user_id = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username()).user_id
+    user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
+    if user is None:
+        abort(401)
+    user_id = user.user_id
     content = request.form.get('content')
     reply = request.form.get('reply')
     if reply is not None:
@@ -234,23 +276,24 @@ def time_ago_filter(timestamp):
 #TODO: Create a get request for the posts page.
 @app.get('/posts')
 def posts():
-    all_posts = post_repository_singleton.get_all_posts_with_users()
-    following_posts = post_repository_singleton.get_all_posts_of_followed_users(user_repository_singleton.get_user_user_id())
     if not user_repository_singleton.is_logged_in():
-        user = None
-    else:
-        user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
+        redirect('/login')
+    all_posts = post_repository_singleton.get_all_posts_with_users()
+    user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
+    if not user:
+        abort(401)
+    following_posts = post_repository_singleton.get_all_posts_of_followed_users(user.user_id)
     
     return render_template('posts.html', list_posts_active=True, all_posts=all_posts, following_posts=following_posts, user=user, sanitize_html=sanitize_html)
 
 @app.get('/posts/<int:post_id>')
 def post(post_id):
     if not user_repository_singleton.is_logged_in():
-        abort(401)
+        redirect('/login')
     post = post_repository_singleton.get_post_by_id(post_id)
     user = user_repository_singleton.get_user_by_username(user_repository_singleton.get_user_username())
     if not post or not user:
-        abort(404)
+        abort(400)
 
     following = False
     
