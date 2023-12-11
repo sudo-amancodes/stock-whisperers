@@ -80,21 +80,23 @@ temp_user_info = []
 
 #Override Yahoo Finance
 yf.pdr_override()
+global current_symbol
 
 def background_thread():
     print("Generating random sensor values")
+    global current_symbol
+    ticker = current_symbol
     while True:
-        symbol = yf.Ticker("AAPL")
+        symbol = yf.Ticker(ticker)
         df = symbol.history(period='1d', interval='1m')
 
         last_close_price = correct_graph_cols(df.tail(2))
         df = correct_graph_cols(df.tail(1))
         
-        time = df.iloc[-1]['date']
+        # time = df.iloc[-1]['date']
 
         open = last_close_price.iloc[-2]['close']
-        print("SECOND LAST\n\n", last_close_price)
-        print("open\n", open)
+
         if 'high' in locals() and high < df.iloc[-1]['high']:
             high = df.iloc[-1]['high']
         elif 'high' not in locals():
@@ -111,10 +113,15 @@ def background_thread():
         df.loc[0,'high'] = high
         df.loc[0,'low'] = low
         df.loc[0,'close'] = close
-
-        print(df)
-
-        socketio.emit('updateSensorData', {'value': df.to_json()})
+        
+        if ticker == current_symbol:
+            socketio.emit('updateSensorData', {'value': df.to_json()})
+        else:
+            del open
+            del high
+            del low
+            del close
+        ticker = current_symbol
         socketio.sleep(5)
 
 def correct_graph_cols(df):
@@ -123,19 +130,42 @@ def correct_graph_cols(df):
     return df.rename(columns={"datetime":"date"})
 
 # Retrieve stock data frame (df) from yfinance API at an interval of 1m
-def previous_graph():
-    symbol = yf.Ticker("AAPL")
+def previous_graph(ticker):
+
+    global current_symbol
+    current_symbol = ticker
+    print(current_symbol)
+    symbol = yf.Ticker(ticker)
     df = symbol.history(period='5d', interval='1m')
     return correct_graph_cols(df)
 
-@app.route('/')
+@app.get('/')
 def index():
     return render_template('index.html', user = session.get('user'))
 
-@app.route('/data')
-def data():
-    df = previous_graph()
+@app.get('/data')
+def data(): 
+    ticker = 'SPY'
+    
+    df = previous_graph(ticker)
     return df.to_json(orient='records')
+
+@app.post('/data')
+def set_data():
+    jsonData = request.get_json()
+    if jsonData != None:
+        ticker = jsonData['Stock']
+
+    df = previous_graph(ticker)
+    return df.to_json(orient='records')
+
+@app.post('/watchlist')
+def get_watchlist():
+    ticker = request.get_json()['ticker']
+    data = yf.Ticker(ticker).history(period='1y')
+    print(data.iloc[-1].Open)
+    return jsonify({'currentPrice': data.iloc[-1].Close,
+                    'openPrice':data.iloc[-1].Open})
 
 #Create Comments or add a temporary get/post request. That has a pass statement.
 #Example:
@@ -610,6 +640,8 @@ def update_profile(username: str):
 def connect():
     global thread
     print('Client connected')
+    global current_symbol
+    current_symbol = 'SPY'
 
     global thread
     with thread_lock:
