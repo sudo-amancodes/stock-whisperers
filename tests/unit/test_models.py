@@ -24,3 +24,12 @@ def test_user_model():
     assert temp_user.email == 'John@yahoo.com'
     assert temp_user.password == 'John123'
     assert temp_user.profile_picture == 'new-profile-pic.jpg'
+
+def test_friendships_model():
+    user1 = users('Zaid', 'Jebril', "Zaid_J", 'Zaid@yahoo.com', 'Zaid123', 'default-profile-pic.jpg')
+    user2 = users('John', 'Doe', "John_D", 'John@yahoo.com', 'John123', 'default-profile-pic.jpg')
+
+    temp_freindship = friendships(user1.username, user2.username)
+    
+    assert temp_freindship.user1_username == 'Zaid_J'
+    assert temp_freindship.user2_username == 'John_D'

@@ -68,8 +68,6 @@ db.init_app(app)
 app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-# app.config['MAIL_USERNAME'] = os.getenv('EMAIL_USER')
-# app.config['MAIL_PASSWORD'] = os.getenv('EMAIL_PASS')
 app.config['MAIL_USERNAME'] = 'the.stock.whisperers@gmail.com'
 app.config['MAIL_PASSWORD'] = 'spwlegjkdfjabdhx'
 mail = Mail(app)
@@ -301,10 +299,10 @@ def post(post_id):
         following = True
     return render_template('single_post.html', post=post, user=user, sanitize_html=sanitize_html, following=following)
 
-#TODO: Create a get request for the user login page.
 @app.get('/login')
 def login():
     if user_repository_singleton.is_logged_in():
+        flash('You are already logged in', category='error')
         return redirect('/')
     return render_template('login.html', user = session.get('user'))
 
@@ -332,7 +330,8 @@ def verify_code(username, method):
     global code
     user_code = request.form.get('user-code')
     if not user_code:
-        abort(400)
+        flash('Please enter in a code.', category='error')
+        return redirect(f'/verify_user/{username}/{method}')
     if str(code) != str(user_code):
         flash('Incorrect code. Try Again', category='error')
         return redirect(f'/verify_user/{username}/{method}')
@@ -356,7 +355,8 @@ def verify_code(username, method):
 @app.post('/login')
 def verify_login():
     if user_repository_singleton.is_logged_in():
-        return abort(400)
+        flash('You are already logged in', category='error')
+        return redirect('/')
     username = request.form.get('username')
     password = request.form.get('password')
 
@@ -386,20 +386,23 @@ def verify_login():
 @app.get('/logout')
 def logout():
     if not user_repository_singleton.is_logged_in():
-        abort(401)
+        flash('Unable to logout because you are not logged in.', category='error')
+        return redirect('/')
     user_repository_singleton.logout_user()
     return redirect('/login')
 
 @app.get('/register')
 def register():
     if user_repository_singleton.is_logged_in():
+        flash('You are already logged in. Logout to make a new account', category='error')
         return redirect('/')
     return render_template('register.html', user = session.get('user'))
 
 @app.post('/register')
 def create_user():
     if user_repository_singleton.is_logged_in():
-        return abort(400)
+        flash('You are already logged in. Logout to make a new account', category='error')
+        return redirect('/')
     first_name = request.form.get('first-name')
     last_name = request.form.get('last-name')
     username = request.form.get('username')

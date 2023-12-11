@@ -90,9 +90,6 @@ class users(db.Model, UserMixin):
         for following in self.following.all():
             followings.append(following.user2_username)
         return followings
-    
-    # def get_all_followers(self):
-    #     return self.followers().all
 
     def __repr__(self) -> str:
         return f'users({self.first_name}, {self.last_name})'
@@ -237,6 +234,7 @@ class friendships(db.Model):
         UniqueConstraint('user1_username', 'user2_username', name='unique_user_follow'),
         CheckConstraint('user1_username != user2_username', name='check_user_follow'),
     )
+
 comment_likes = db.Table(
     'comment_likes',
     db.Column('user_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True),
