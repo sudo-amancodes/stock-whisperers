@@ -383,7 +383,7 @@ def verify_login():
 
     return redirect('/login')
 
-@app.get('/logout')
+@app.post('/logout')
 def logout():
     if not user_repository_singleton.is_logged_in():
         flash('Unable to logout because you are not logged in.', category='error')
