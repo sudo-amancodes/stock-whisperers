@@ -150,6 +150,8 @@ def data():
 #    pass
 
 # TODO: Create a get request for the upload page.
+
+
 @app.get('/upload')
 def upload():
     if not user_repository_singleton.is_logged_in():
@@ -157,10 +159,14 @@ def upload():
     return render_template('upload.html', user=session.get('user'))
 
 # Function to check if a file has an allowed extension
+
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # TODO: Create a post request for the upload page.
+
+
 @app.post('/upload')
 def upload_post():
     title = request.form.get('title')
@@ -205,7 +211,73 @@ def upload_post():
 
     return redirect('/posts')
 
+# edit a post
+
+
+@app.get('/posts/edit/<int:post_id>')
+def edit_post(post_id):
+    if not user_repository_singleton.is_logged_in():
+        return redirect('/login')
+    post = post_repository_singleton.get_post_by_id(post_id)
+    user = user_repository_singleton.get_user_by_username(
+        user_repository_singleton.get_user_username())
+    if not post or not user:
+        abort(401)
+    if post.user_id is not user.user_id:
+        abort(401)
+    return render_template('edit_post.html', post=post, user=user)
+
+# update a post
+
+
+@app.post('/posts/update/<int:post_id>')
+def update_post(post_id):
+    if post_id == '' or post_id is None:
+        abort(400)
+    post = post_repository_singleton.get_post_by_id(post_id)
+    user = user_repository_singleton.get_user_by_username(
+        user_repository_singleton.get_user_username())
+    if not post or not user:
+        abort(401)
+    if post.user_id is not user.user_id:
+        abort(401)
+    title = request.form.get('title')
+    description = request.form.get('text')
+    if title == '' or title is None:
+        abort(400)
+
+    image_upload = request.files.get('image_upload')
+
+    if image_upload is not None:
+        filename = secure_filename(
+            image_upload.filename) if image_upload.filename else ''
+        if filename and allowed_file(filename):
+            # Set UUID to prevent same file names
+            pic_name = str(uuid.uuid1()) + "_" + filename
+
+            # Save the file
+            image_upload.save(os.path.join(
+                app.config['POST_UPLOAD_FOLDER'], pic_name))
+
+            # Verify the file is an image using Pillow
+            try:
+                img = Image.open(os.path.join(
+                    app.config['POST_UPLOAD_FOLDER'], pic_name))
+                img.verify()  # This will raise an exception if the file is not a valid image
+            except Exception as e:
+                # Remove the invalid file
+                os.remove(os.path.join(
+                    app.config['POST_UPLOAD_FOLDER'], pic_name))
+                abort(400, description="Uploaded file is not a valid image.")
+            image_upload = pic_name
+
+    post_repository_singleton.update_post(
+        post_id, title, description, image_upload)
+    return redirect(f'/posts/{post_id}')
+
 # delete a post
+
+
 @app.post('/posts/delete/<int:post_id>')
 def delete_post(post_id):
     if post_id == '' or post_id is None:
@@ -223,6 +295,8 @@ def delete_post(post_id):
         abort(400)
 
 # when a user likes a post
+
+
 @app.post('/posts/like')
 def like_post():
     post_id = request.form.get('post_id')
@@ -234,6 +308,8 @@ def like_post():
     return jsonify({'status': 'success'})
 
 # when a user likes a comment
+
+
 @app.post('/posts/like_comment')
 def like_comment():
     comment_id = request.form.get('comment_id')
@@ -246,6 +322,8 @@ def like_comment():
 
 # when a user comments on a post
 # Function to sanitize HTML content
+
+
 def sanitize_html(content):
     allowed_tags = ['p', 'div', 'em', 'strong', 'del', 'a', 'img', 'h1', 'h2',
                     'h3', 'h4', 'h5', 'h6', 'blockquote', 'ul', 'ol', 'li', 'hr', 'br', 'pre']
@@ -256,6 +334,8 @@ def sanitize_html(content):
     return sanitized_content
 
 # for comments and replies
+
+
 @app.post('/posts/<int:post_id>/comment')
 @app.post('/posts/<int:post_id>/comment/<int:parent_comment_id>')
 def comment_reply(post_id, parent_comment_id=0):
@@ -312,6 +392,8 @@ def time_ago_filter(timestamp):
         return f'{days} day{"s" if days != 1 else ""} ago'
 
 # Create a get request for the posts page, all posts.
+
+
 @app.get('/posts')
 def posts():
     if not user_repository_singleton.is_logged_in():
@@ -327,6 +409,8 @@ def posts():
     return render_template('posts.html', list_posts_active=True, all_posts=all_posts, user=user, sanitize_html=sanitize_html)
 
 # Create a get request for the posts page, following posts.
+
+
 @app.get('/posts/following')
 def following_posts():
     if not user_repository_singleton.is_logged_in():

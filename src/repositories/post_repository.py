@@ -90,6 +90,20 @@ class PostRepository:
             db.session.commit()
             return True
         return False
+    
+    # update a post
+    def update_post(self, post_id, title, content, file_upload):
+        post = Post.query.get(post_id)
+        if post:
+            post.title = title
+            post.content = content
+            if post.file_upload:
+                post.file_upload = None
+            if file_upload:
+                post.file_upload = file_upload
+            db.session.commit()
+            return True
+        return False
 
 # Singleton to be used in other modules
 post_repository_singleton = PostRepository()
