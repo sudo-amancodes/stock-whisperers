@@ -150,8 +150,6 @@ def data():
 #    pass
 
 # TODO: Create a get request for the upload page.
-
-
 @app.get('/upload')
 def upload():
     if not user_repository_singleton.is_logged_in():
@@ -159,14 +157,10 @@ def upload():
     return render_template('upload.html', user=session.get('user'))
 
 # Function to check if a file has an allowed extension
-
-
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # TODO: Create a post request for the upload page.
-
-
 @app.post('/upload')
 def upload_post():
     title = request.form.get('title')
@@ -211,9 +205,24 @@ def upload_post():
 
     return redirect('/posts')
 
+# delete a post
+@app.post('/posts/delete/<int:post_id>')
+def delete_post(post_id):
+    if post_id == '' or post_id is None:
+        abort(400)
+    post = post_repository_singleton.get_post_by_id(post_id)
+    user = user_repository_singleton.get_user_by_username(
+        user_repository_singleton.get_user_username())
+    if not post or not user:
+        abort(401)
+    if post.user_id is not user.user_id:
+        abort(401)
+    if post_repository_singleton.delete_post(post_id):
+        return redirect('/posts')
+    else:
+        abort(400)
+
 # when a user likes a post
-
-
 @app.post('/posts/like')
 def like_post():
     post_id = request.form.get('post_id')
@@ -225,8 +234,6 @@ def like_post():
     return jsonify({'status': 'success'})
 
 # when a user likes a comment
-
-
 @app.post('/posts/like_comment')
 def like_comment():
     comment_id = request.form.get('comment_id')
@@ -239,8 +246,6 @@ def like_comment():
 
 # when a user comments on a post
 # Function to sanitize HTML content
-
-
 def sanitize_html(content):
     allowed_tags = ['p', 'div', 'em', 'strong', 'del', 'a', 'img', 'h1', 'h2',
                     'h3', 'h4', 'h5', 'h6', 'blockquote', 'ul', 'ol', 'li', 'hr', 'br', 'pre']
@@ -251,8 +256,6 @@ def sanitize_html(content):
     return sanitized_content
 
 # for comments and replies
-
-
 @app.post('/posts/<int:post_id>/comment')
 @app.post('/posts/<int:post_id>/comment/<int:parent_comment_id>')
 def comment_reply(post_id, parent_comment_id=0):
