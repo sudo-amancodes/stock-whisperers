@@ -26,10 +26,18 @@
     <!-- TABS: Following / All Posts -->
     <ul class="nav nav-tabs align-self-center" id="postTabs">
         <li class="nav-item">
-            <a class="nav-link active" id="followingTab" data-toggle="tab" href="#followingPosts">Following</a>
+            {% if 'following' in request.path %}
+            <a class="nav-link active" id="followingTab" data-toggle="tab" href="/posts/following">Following</a>
+            {% else %}
+            <a class="nav-link" id="followingTab" data-toggle="tab" href="/posts/following">Following</a>
+            {% endif %}
         </li>
         <li class="nav-item">
-            <a class="nav-link" id="allPostsTab" data-toggle="tab" href="#allPosts">All Posts</a>
+            {% if 'following' not in request.path %}
+            <a class="nav-link active" id="allPostsTab" data-toggle="tab" href="/posts">All Posts</a>
+            {% else %}
+            <a class="nav-link" id="allPostsTab" data-toggle="tab" href="/posts">All Posts</a>
+            {% endif %}
         </li>
     </ul>
 
@@ -37,19 +45,25 @@
     <div class="tab-content mt-3">
 
         <!-- Following Posts -->
+        {% if 'following' in request.path %}
         <div class="tab-pane fade show active" id="followingPosts">
+        {% else %}
+        <div class="tab-pane fade" id="followingPosts">
+        {% endif %}
             {% set posts = following_posts %}
             {% include 'posts_content.html' %}
         </div>
 
         <!-- All Posts -->
+        {% if 'following' not in request.path %}
+        <div class="tab-pane fade show active" id="allPosts">
+        {% else %}
         <div class="tab-pane fade" id="allPosts">
+        {% endif %}
             {% set posts = all_posts %}
             {% include 'posts_content.html' %}
         </div>
     </div>
-
-
 
 
     <!-- SCRIPTS -->
@@ -59,9 +73,18 @@
     <!-- Dynamic TABS -->
     <script>
         $(document).ready(function () {
-            $('#postTabs a').on('click', function (e) {
-                e.preventDefault();
-                $(this).tab('show');
+
+            // Reload the page when visibility changes
+            document.addEventListener("visibilitychange", function () {
+                if (document.visibilityState === "visible") {
+                    var scrollPosition = window.scrollY;
+
+                    // Reload the page
+                    location.reload();
+
+                    // Scroll back to the previous position after the reload
+                    window.scrollTo(0, scrollPosition);
+                }
             });
         });
     </script>
@@ -73,7 +96,7 @@
                 event.stopPropagation();
                 var postId = $(this).data('post-id');
                 var userId = $(this).data('user-id');
-    
+
                 $.ajax({
                     type: 'POST',
                     url: '/posts/like',
