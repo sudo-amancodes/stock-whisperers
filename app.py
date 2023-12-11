@@ -125,8 +125,6 @@ def correct_graph_cols(df):
     return df.rename(columns={"datetime": "date"})
 
 # Retrieve stock data frame (df) from yfinance API at an interval of 1m
-
-
 def previous_graph():
     symbol = yf.Ticker("AAPL")
     df = symbol.history(period='5d', interval='1m')
@@ -143,15 +141,8 @@ def data():
     df = previous_graph()
     return df.to_json(orient='records')
 
-# Create Comments or add a temporary get/post request. That has a pass statement.
-# Example:
-# @app.get('/test')
-# def testing():
-#    pass
 
-# TODO: Create a get request for the upload page.
-
-
+# Create a get request for the upload page.
 @app.get('/upload')
 def upload():
     if not user_repository_singleton.is_logged_in():
@@ -159,14 +150,10 @@ def upload():
     return render_template('upload.html', user=session.get('user'))
 
 # Function to check if a file has an allowed extension
-
-
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# TODO: Create a post request for the upload page.
-
-
+# Create a post request for the upload page.
 @app.post('/upload')
 def upload_post():
     title = request.form.get('title')
@@ -212,8 +199,6 @@ def upload_post():
     return redirect('/posts')
 
 # edit a post
-
-
 @app.get('/posts/edit/<int:post_id>')
 def edit_post(post_id):
     if not user_repository_singleton.is_logged_in():
@@ -228,8 +213,6 @@ def edit_post(post_id):
     return render_template('edit_post.html', post=post, user=user)
 
 # update a post
-
-
 @app.post('/posts/update/<int:post_id>')
 def update_post(post_id):
     if post_id == '' or post_id is None:
@@ -276,8 +259,6 @@ def update_post(post_id):
     return redirect(f'/posts/{post_id}')
 
 # delete a post
-
-
 @app.post('/posts/delete/<int:post_id>')
 def delete_post(post_id):
     if post_id == '' or post_id is None:
@@ -295,8 +276,6 @@ def delete_post(post_id):
         abort(400)
 
 # when a user likes a post
-
-
 @app.post('/posts/like')
 def like_post():
     post_id = request.form.get('post_id')
@@ -308,8 +287,6 @@ def like_post():
     return jsonify({'status': 'success'})
 
 # when a user likes a comment
-
-
 @app.post('/posts/like_comment')
 def like_comment():
     comment_id = request.form.get('comment_id')
@@ -320,10 +297,7 @@ def like_comment():
 
     return jsonify({'status': 'success'})
 
-# when a user comments on a post
 # Function to sanitize HTML content
-
-
 def sanitize_html(content):
     allowed_tags = ['p', 'div', 'em', 'strong', 'del', 'a', 'img', 'h1', 'h2',
                     'h3', 'h4', 'h5', 'h6', 'blockquote', 'ul', 'ol', 'li', 'hr', 'br', 'pre']
@@ -334,8 +308,6 @@ def sanitize_html(content):
     return sanitized_content
 
 # for comments and replies
-
-
 @app.post('/posts/<int:post_id>/comment')
 @app.post('/posts/<int:post_id>/comment/<int:parent_comment_id>')
 def comment_reply(post_id, parent_comment_id=0):
@@ -360,8 +332,6 @@ def comment_reply(post_id, parent_comment_id=0):
     return redirect(f'/posts/{post_id}')
 
 # when a user follows another user
-
-
 @app.post('/follow/<int:user_to_follow_id>')
 def follow_user(user_to_follow_id):
     user_id = user_repository_singleton.get_user_user_id()
@@ -372,8 +342,6 @@ def follow_user(user_to_follow_id):
     return jsonify({'status': 'success'})
 
 # format timestamp to display how long ago a post was made
-
-
 @app.template_filter('time_ago')
 def time_ago_filter(timestamp):
     now = datetime.now()
@@ -392,8 +360,6 @@ def time_ago_filter(timestamp):
         return f'{days} day{"s" if days != 1 else ""} ago'
 
 # Create a get request for the posts page, all posts.
-
-
 @app.get('/posts')
 def posts():
     if not user_repository_singleton.is_logged_in():
@@ -409,8 +375,6 @@ def posts():
     return render_template('posts.html', list_posts_active=True, all_posts=all_posts, user=user, sanitize_html=sanitize_html)
 
 # Create a get request for the posts page, following posts.
-
-
 @app.get('/posts/following')
 def following_posts():
     if not user_repository_singleton.is_logged_in():
@@ -424,7 +388,7 @@ def following_posts():
 
     return render_template('posts.html', following_posts_active=True, following_posts=following_posts, user=user, sanitize_html=sanitize_html)
 
-
+# Create a get request for single post page.
 @app.get('/posts/<int:post_id>')
 def post(post_id):
     if not user_repository_singleton.is_logged_in():
@@ -441,9 +405,7 @@ def post(post_id):
         following = True
     return render_template('single_post.html', post=post, user=user, sanitize_html=sanitize_html, following=following)
 
-# TODO: Create a get request for the user login page.
-
-
+# Create a get request for the user login page.
 @app.get('/login')
 def login():
     if user_repository_singleton.is_logged_in():
@@ -589,8 +551,6 @@ def create_user():
     return redirect('/register')
 
 # Route for requesting password reset
-
-
 @app.get('/request_password_reset')
 def request_password_form():
     return render_template('request_password_reset.html')
@@ -633,8 +593,6 @@ def password_reset_form(token):
     return render_template('reset_password.html', token=token)
 
 # Route for resetting a password
-
-
 @app.post('/password_reset/<token>')
 def password_reset(token):
     if user_repository_singleton.is_logged_in():
@@ -660,9 +618,7 @@ def password_reset(token):
 
     return redirect(f'/password_reset/{token}')
 
-# TODO: Create a get request for the profile page.
-
-
+# Create a get request for the profile page.
 @app.get('/profile/<string:username>')
 def profile(username: str):
     if not user_repository_singleton.is_logged_in():
@@ -678,10 +634,8 @@ def profile(username: str):
         'static', filename='profile_pics/' + user.profile_picture)
     return render_template('profile.html', user=user, profile_picture=profile_picture, posts=posts)
 
-# TODO: Create a get request for live comments.
+# Create a get request for live comments.
 # add user_id to session dictionary.
-
-
 @app.get('/comment')
 def live_comment():
     comments = live_posts.query.order_by(live_posts.date.desc()).all()
@@ -695,8 +649,6 @@ def live_comment():
     return jsonify(comments_data)
 
 # sokcetIO to handle comments:
-
-
 @socketio.on('send_comment')
 def handle_send_comment(data):
     # if 'user_id' not in session:
@@ -715,13 +667,6 @@ def handle_send_comment(data):
     # emitting  new comments:
     emit('new_comment', {'user_id': user_id, 'content': content,
          'post_id': new_comment.post_id}, broadcast=True)
-
-# TODO: Implement the 'Post Discussions' feature
-
-
-@app.get('/post discussions')
-def Post_discussions():
-    pass
 
 
 @app.get('/profile/<string:username>/edit')
@@ -778,12 +723,6 @@ def update_profile(username: str):
     db.session.commit()
 
     return redirect(f'/profile/{new_username}')
-
-# # TODO: Implement the 'Post Discussions' feature
-# @app.get('post discussions')
-# def Post_discussions():
-#     pass
-
 
 @socketio.on('connect')
 def connect():
