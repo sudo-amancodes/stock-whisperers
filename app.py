@@ -308,9 +308,7 @@ def time_ago_filter(timestamp):
         days = int(time_difference.total_seconds() / (3600 * 24))
         return f'{days} day{"s" if days != 1 else ""} ago'
 
-# TODO: Create a get request for the posts page.
-
-
+# Create a get request for the posts page, all posts.
 @app.get('/posts')
 def posts():
     if not user_repository_singleton.is_logged_in():
@@ -325,7 +323,7 @@ def posts():
 
     return render_template('posts.html', list_posts_active=True, all_posts=all_posts, user=user, sanitize_html=sanitize_html)
 
-
+# Create a get request for the posts page, following posts.
 @app.get('/posts/following')
 def following_posts():
     if not user_repository_singleton.is_logged_in():
