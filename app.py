@@ -80,6 +80,8 @@ temp_user_info = []
 
 #Override Yahoo Finance
 yf.pdr_override()
+global symbol
+global current_symbol
 
 def background_thread(ticker = "AAPL"):
     print("Generating random sensor values")
@@ -110,8 +112,10 @@ def background_thread(ticker = "AAPL"):
         df.loc[0,'high'] = high
         df.loc[0,'low'] = low
         df.loc[0,'close'] = close
-
-        socketio.emit('updateSensorData', {'value': df.to_json()})
+        if symbol == current_symbol:
+            socketio.emit('updateSensorData', {'value': df.to_json()})
+        
+        current_symbol = symbol
         socketio.sleep(5)
 
 def correct_graph_cols(df):
@@ -120,19 +124,31 @@ def correct_graph_cols(df):
     return df.rename(columns={"datetime":"date"})
 
 # Retrieve stock data frame (df) from yfinance API at an interval of 1m
-def previous_graph(ticker = "AAPL"):
+def previous_graph(ticker):
     symbol = yf.Ticker(ticker)
     df = symbol.history(period='5d', interval='1m')
     return correct_graph_cols(df)
 
-@app.route('/')
+@app.get('/')
 def index():
     return render_template('index.html', user = session.get('user'))
 
-@app.route('/data')
-def data():
-    df = previous_graph()
+@app.get('/data')
+def data(): 
+    ticker = 'SPY'
+    df = previous_graph(ticker)
     return df.to_json(orient='records')
+
+@app.post('/data')
+def set_data():
+    jsonData = request.get_json()
+    if jsonData != None:
+        ticker = jsonData['Stock']
+        global current_symbol
+        current_symbol = ticker
+    df = previous_graph(current_symbol)
+    return df.to_json(orient='records')
+
 
 #Create Comments or add a temporary get/post request. That has a pass statement.
 #Example:

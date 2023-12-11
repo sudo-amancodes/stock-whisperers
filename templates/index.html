@@ -480,12 +480,35 @@ Stock whisperers
     function select(element){
         let selectData = element.textContent;
         inputBox.value = selectData;
-        icon.onclick = ()=>{
-            webLink = `https://www.google.com/search?q=${selectData}`;
-            linkTag.setAttribute("href", webLink);
-            linkTag.click();
-        }
+        var regExp = /\(([^)]+)\)/;
+                var stock_ticker = regExp.exec(inputBox.value);
+                fetch('/data', {
+                    headers : {
+                        'Content-Type' : 'application/json'
+                    },
+                    method : 'POST', 
+                    body : JSON.stringify( {
+                        Stock : stock_ticker[1]
+                    })
+                })                
+                .then(response => response.json())
+                .then(data => {
+                    
+                    const formattedData = data.map(item => ({
+                        time: ((new Date(item.date).getTime() / 1000) - (5 * 60 * 60)), // Convert UTC to EST (Standard Time)
+                        open: item.open,
+                        high: item.high,
+                        low: item.low,
+                        close: item.close,
+                        volume: item.volume
+                    }));
+    
+                    candleSeries.setData(formattedData);
+                    //console.log((new Date(item.date).getTime() / 1000))
+                })
+                .catch(error => console.error('Error fetching data:', error));
         searchWrapper.classList.remove("active");
+        console.log(1)
     }
 
     function showSuggestions(list){
