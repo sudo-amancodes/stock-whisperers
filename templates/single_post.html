@@ -28,7 +28,20 @@
             <!--  if user is post creator  -->
             <div class="d-flex align-items-center justify-content-between w-100">
                 <h2 class="d-flex align-items-center">{{ post.title }}</h2>
-                <h6 class="d-inline-block">Posted by you {{ post.date_posted|time_ago }}</h6>
+                <div class="d-flex align-items-center">
+                    <h6 class="d-inline-block">Posted by you {{ post.date_posted|time_ago }}</h6>
+                    <div class="dropdown ms-2">
+                        <button class="btn btn-warning dropdown-toggle" type="button" id="dropdownMenuButton"
+                            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            ...
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item" href="/posts/edit/{{ post.post_id }}">Edit</a>
+                            <a class="dropdown-item link-danger" href="#" id="delete-post">Delete</a>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             {% else %}
@@ -37,10 +50,18 @@
                 <h2 class="d-flex align-items-center">{{ post.title }}</h2>
                 {% if following %}
                 <!--  if user is following post creator  -->
-                <h6 class="d-inline-block">Posted by <a href = /profile/{{post.creator.username}} class="link-warning">{{ post.creator.username }}</a> {{ post.date_posted|time_ago }} <form class="d-inline-block" action="/follow/{{ post.creator.user_id }}" method="post"><button type="submit" id="follow-button" class="btn btn-warning ms-2 followed">Following</button></form></h6>
+                <h6 class="d-inline-block">Posted by <a href=/profile/{{post.creator.username}} class="link-warning">{{
+                        post.creator.username }}</a> {{ post.date_posted|time_ago }} <form class="d-inline-block"
+                        action="/follow/{{ post.creator.user_id }}" method="post"><button type="submit"
+                            id="follow-button" class="btn btn-warning ms-2 followed">Following</button></form>
+                </h6>
                 {% else %}
                 <!--  if user is not following post creator  -->
-                <h6 class="d-inline-block">Posted by <a href = /profile/{{post.creator.username}} class="link-warning">{{ post.creator.username }}</a> {{ post.date_posted|time_ago }} <form class="d-inline-block" action="/follow/{{ post.creator.user_id }}" method="post"><button type="submit" id="follow-button" class="btn btn-warning ms-2">Follow</button></form></h6>
+                <h6 class="d-inline-block">Posted by <a href=/profile/{{post.creator.username}} class="link-warning">{{
+                        post.creator.username }}</a> {{ post.date_posted|time_ago }} <form class="d-inline-block"
+                        action="/follow/{{ post.creator.user_id }}" method="post"><button type="submit"
+                            id="follow-button" class="btn btn-warning ms-2">Follow</button></form>
+                </h6>
                 {% endif %}
             </div>
             {% endif %}
@@ -107,9 +128,11 @@
             <div class="comment-container container pt-3 ps-0 pe-0">
 
                 {% if user.username == comment.comment_creator.username %}
-                <h6 class="d-flex">{{ comment.comment_creator.username }} (you) -<span class="badge badge-secondary">{{ comment.date_posted|time_ago }}</span></h6>
+                <h6 class="d-flex">{{ comment.comment_creator.username }} (you) -<span class="badge badge-secondary">{{
+                        comment.date_posted|time_ago }}</span></h6>
                 {% else %}
-                <h6 class="d-flex">{{ comment.comment_creator.username }} -<span class="badge badge-secondary">{{ comment.date_posted|time_ago }}</span></h6>
+                <h6 class="d-flex">{{ comment.comment_creator.username }} -<span class="badge badge-secondary">{{
+                        comment.date_posted|time_ago }}</span></h6>
                 {% endif %}
 
                 <!--  Top Level Comment Content -->
@@ -121,20 +144,23 @@
                     <div>
                         {% if comment in user.liked_comments %}
                         <button class="d-inline-block like-comment liked" data-comment-id="{{ comment.comment_id }}"
-                        data-user-id="{{ user.user_id }}">Liked</button>
+                            data-user-id="{{ user.user_id }}">Liked</button>
                         {% else %}
                         <button class="d-inline-block like-comment" data-comment-id="{{ comment.comment_id }}"
-                        data-user-id="{{ user.user_id }}">Like</button>
+                            data-user-id="{{ user.user_id }}">Like</button>
                         {% endif %}
                         <p class="like-comment-count d-inline-block">{{ comment.likes }}</p>
                         <input type="submit" class="reply-button" value="Reply">
                     </div>
 
                     <!-- REPLY TEXT AREA -->
-                    <form class="w-100 d-flex flex-column" action="/posts/{{ post.post_id }}/comment/{{ comment.comment_id }}" method="post">
+                    <form class="w-100 d-flex flex-column"
+                        action="/posts/{{ post.post_id }}/comment/{{ comment.comment_id }}" method="post">
                         <div class="d-none d-inline-flex w-100 ps-3 pt-3 border-start flex-column reply-area">
-                            <input id="reply{{ comment.comment_id }}" style="opacity: 0; width: 0; height: 0; float: left;" name="reply" required>
-                            <trix-editor style="color: white;" input="reply{{ comment.comment_id }}" placeholder="What are your thoughts?"></trix-editor>
+                            <input id="reply{{ comment.comment_id }}"
+                                style="opacity: 0; width: 0; height: 0; float: left;" name="reply" required>
+                            <trix-editor style="color: white;" input="reply{{ comment.comment_id }}"
+                                placeholder="What are your thoughts?"></trix-editor>
                             <input class="w-100 align-self-end" type="submit" value="Reply">
                         </div>
                     </form>
@@ -145,23 +171,26 @@
                     <div class="reply-container container pt-3 ps-0 pe-0">
 
                         {% if user.username == reply.comment_creator.username %}
-                        <h6>{{ reply.comment_creator.username }} (you) -<span class="badge badge-secondary">{{ reply.date_posted|time_ago }}</span></h6>
+                        <h6>{{ reply.comment_creator.username }} (you) -<span class="badge badge-secondary">{{
+                                reply.date_posted|time_ago }}</span></h6>
                         {% else %}
                         <h6>{{ reply.comment_creator.username }}, {{ reply.date_posted|time_ago }}</h6>
                         {% endif %}
 
-                        <div class="d-inline-flex align-items-center w-100 ps-3 border-start justify-content-between flex-wrap">
+                        <div
+                            class="d-inline-flex align-items-center w-100 ps-3 border-start justify-content-between flex-wrap">
 
                             <div class="m-0 p-0">{{ sanitize_html(reply.content)|safe }}</div>
 
                             <!--  Like and Reply Buttons  -->
                             <div>
                                 {% if reply in user.liked_comments %}
-                                <button class="d-inline-block like-comment liked" data-comment-id="{{ reply.comment_id }}"
-                                data-user-id="{{ user.user_id }}">Liked</button>
+                                <button class="d-inline-block like-comment liked"
+                                    data-comment-id="{{ reply.comment_id }}"
+                                    data-user-id="{{ user.user_id }}">Liked</button>
                                 {% else %}
                                 <button class="d-inline-block like-comment" data-comment-id="{{ reply.comment_id }}"
-                                data-user-id="{{ user.user_id }}">Like</button>
+                                    data-user-id="{{ user.user_id }}">Like</button>
                                 {% endif %}
                                 <p class="like-comment-count d-inline-block">{{ reply.likes }}</p>
                             </div>
@@ -207,6 +236,22 @@
                         console.error('Error adding like:', error);
                     }
                 });
+            });
+
+            $('#delete-post').click(function (e) {
+                e.preventDefault();
+
+                if (confirm('Are you sure you want to delete this post?')) {
+                    // Create a form
+                    var form = $('<form>', {
+                        'method': 'POST',
+                        'action': '/posts/delete/{{ post.post_id }}'
+                    });
+
+                    // Append the form to the body and submit it
+                    form.appendTo('body').submit();
+                }
+
             });
         });
     </script>
@@ -254,7 +299,7 @@
     </script>
 
     <!--  Follow or Unfollow Dynamic UI  -->
-    
+
     <script>
         function follow_or_not() {
             const follow_button = document.getElementById("follow-button");
@@ -269,7 +314,7 @@
         }
         follow_or_not();
     </script>
-    
+
 
 
     <!--  Like and Reply Dynamic UI  -->
