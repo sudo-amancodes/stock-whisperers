@@ -80,12 +80,15 @@ temp_user_info = []
 
 #Override Yahoo Finance
 yf.pdr_override()
-global symbol
 global current_symbol
 
-def background_thread(ticker = "AAPL"):
+def background_thread():
     print("Generating random sensor values")
+    global current_symbol
+    ticker = current_symbol
     while True:
+
+        print(ticker)
         symbol = yf.Ticker(ticker)
         df = symbol.history(period='1d', interval='1m')
 
@@ -112,10 +115,18 @@ def background_thread(ticker = "AAPL"):
         df.loc[0,'high'] = high
         df.loc[0,'low'] = low
         df.loc[0,'close'] = close
-        if symbol == current_symbol:
-            socketio.emit('updateSensorData', {'value': df.to_json()})
         
-        current_symbol = symbol
+        if ticker == current_symbol:
+            print(ticker, current_symbol)
+
+            socketio.emit('updateSensorData', {'value': df.to_json()})
+            print(df)
+        else:
+            del open
+            del high
+            del low
+            del close
+        ticker = current_symbol
         socketio.sleep(5)
 
 def correct_graph_cols(df):
@@ -125,6 +136,10 @@ def correct_graph_cols(df):
 
 # Retrieve stock data frame (df) from yfinance API at an interval of 1m
 def previous_graph(ticker):
+
+    global current_symbol
+    current_symbol = ticker
+    print(current_symbol)
     symbol = yf.Ticker(ticker)
     df = symbol.history(period='5d', interval='1m')
     return correct_graph_cols(df)
@@ -136,6 +151,7 @@ def index():
 @app.get('/data')
 def data(): 
     ticker = 'SPY'
+    
     df = previous_graph(ticker)
     return df.to_json(orient='records')
 
@@ -144,9 +160,8 @@ def set_data():
     jsonData = request.get_json()
     if jsonData != None:
         ticker = jsonData['Stock']
-        global current_symbol
-        current_symbol = ticker
-    df = previous_graph(current_symbol)
+
+    df = previous_graph(ticker)
     return df.to_json(orient='records')
 
 
@@ -605,6 +620,8 @@ def update_profile(username: str):
 def connect():
     global thread
     print('Client connected')
+    global current_symbol
+    current_symbol = 'SPY'
 
     global thread
     with thread_lock:
