@@ -81,20 +81,19 @@ temp_user_info = []
 #Override Yahoo Finance
 yf.pdr_override()
 
-def background_thread():
+def background_thread(ticker = "AAPL"):
     print("Generating random sensor values")
     while True:
-        symbol = yf.Ticker("AAPL")
+        symbol = yf.Ticker(ticker)
         df = symbol.history(period='1d', interval='1m')
 
         last_close_price = correct_graph_cols(df.tail(2))
         df = correct_graph_cols(df.tail(1))
         
-        time = df.iloc[-1]['date']
+        # time = df.iloc[-1]['date']
 
         open = last_close_price.iloc[-2]['close']
-        print("SECOND LAST\n\n", last_close_price)
-        print("open\n", open)
+
         if 'high' in locals() and high < df.iloc[-1]['high']:
             high = df.iloc[-1]['high']
         elif 'high' not in locals():
@@ -112,8 +111,6 @@ def background_thread():
         df.loc[0,'low'] = low
         df.loc[0,'close'] = close
 
-        print(df)
-
         socketio.emit('updateSensorData', {'value': df.to_json()})
         socketio.sleep(5)
 
@@ -123,8 +120,8 @@ def correct_graph_cols(df):
     return df.rename(columns={"datetime":"date"})
 
 # Retrieve stock data frame (df) from yfinance API at an interval of 1m
-def previous_graph():
-    symbol = yf.Ticker("AAPL")
+def previous_graph(ticker = "AAPL"):
+    symbol = yf.Ticker(ticker)
     df = symbol.history(period='5d', interval='1m')
     return correct_graph_cols(df)
 
