@@ -2,6 +2,16 @@
 
 
 {% block body %}
+<style>
+    .delete{
+        background-color: red;
+        position: absolute;
+        top: 530px;
+        right: 50px;
+        margin: 10px;
+    }
+</style>
+
 <div class="mb-3">
     <h1>Edit Profile</h1>
 </div>
@@ -27,5 +37,9 @@
         <label class="input-group-text" for="profile_picture">Upload</label>
     </div>
     <button type="submit" class="btn btn-secondary">Save Changes</button>
+</form>
+
+<form action="/profile/{{session['user']['username']}}/edit/delete" method="post">
+    <button type="submit" class="btn btn-secondary delete">Delete Account</button>
 </form>
 {% endblock %}

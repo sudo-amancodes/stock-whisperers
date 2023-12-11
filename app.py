@@ -383,6 +383,14 @@ def verify_login():
 
     return redirect('/login')
 
+@app.get('/logout')
+def logout_through_page():
+    if not user_repository_singleton.is_logged_in():
+        flash('Unable to logout because you are not logged in.', category='error')
+        return redirect('/')
+    user_repository_singleton.logout_user()
+    return redirect('/login')
+
 @app.post('/logout')
 def logout():
     if not user_repository_singleton.is_logged_in():
@@ -390,6 +398,16 @@ def logout():
         return redirect('/')
     user_repository_singleton.logout_user()
     return redirect('/login')
+
+@app.post('/profile/<string:username>/edit/delete')
+def delete(username):
+    if not user_repository_singleton.is_logged_in():
+        flash('Unable to delete account because you are not logged in.', category='error')
+        return redirect('/')
+    user_repository_singleton.remove_user(username)
+    user_repository_singleton.logout_user()
+    flash('Account deleted', category='success')
+    return redirect('/register')
 
 @app.get('/register')
 def register():
