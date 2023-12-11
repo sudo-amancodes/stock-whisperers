@@ -87,8 +87,6 @@ def background_thread():
     global current_symbol
     ticker = current_symbol
     while True:
-
-        print(ticker)
         symbol = yf.Ticker(ticker)
         df = symbol.history(period='1d', interval='1m')
 
@@ -117,10 +115,7 @@ def background_thread():
         df.loc[0,'close'] = close
         
         if ticker == current_symbol:
-            print(ticker, current_symbol)
-
             socketio.emit('updateSensorData', {'value': df.to_json()})
-            print(df)
         else:
             del open
             del high
