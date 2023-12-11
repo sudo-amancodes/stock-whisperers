@@ -71,3 +71,13 @@ CREATE TABLE IF NOT EXISTS comment_likes (
     FOREIGN KEY (comment_id) REFERENCES comment(comment_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 ); 
+
+-- CREATE TABLE IF NOT EXISTS temporary_user (
+--     email PRIMARY KEY,
+--     first_name VARCHAR(255) NOT NULL,
+--     last_name VARCHAR(255) NOT NULL,
+--     username VARCHAR(255) UNIQUE NOT NULL,
+--     password VARCHAR(255) NOT NULL,
+--     profile_picture VARCHAR(255),
+--     verification_code_sent_at TIMESTAMP
+-- );
