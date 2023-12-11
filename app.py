@@ -159,6 +159,13 @@ def set_data():
     df = previous_graph(ticker)
     return df.to_json(orient='records')
 
+@app.post('/watchlist')
+def get_watchlist():
+    ticker = request.get_json()['ticker']
+    data = yf.Ticker(ticker).history(period='1y')
+    print(data.iloc[-1].Open)
+    return jsonify({'currentPrice': data.iloc[-1].Close,
+                    'openPrice':data.iloc[-1].Open})
 
 #Create Comments or add a temporary get/post request. That has a pass statement.
 #Example:

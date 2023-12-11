@@ -189,6 +189,58 @@ Stock whisperers
         background: #efefef;
         
       }
+
+      #tickers-grid {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 20px;
+        padding: 10px;
+      }
+      
+      /* Individual stock box styles */
+      .stock-box {
+        width: 200px;
+        padding: 10px;
+        border: 2px solid #ccc;
+        border-radius: 8px;
+        text-align: center;
+        transition: background-color 0.3s ease;
+      }
+      
+      /* Different color classes for stock prices and percentages */
+      .dark-red {
+        color: darkred;
+      }
+      
+      .red {
+        color: red;
+      }
+      
+      .gray {
+        color: gray;
+      }
+      
+      .green {
+        color: green;
+      }
+      
+      .dark-green {
+        color: darkgreen;
+      }
+      
+      /* Flashing effect classes */
+      .red-flask {
+        background-color: rgba(255, 0, 0, 0.5);
+      }
+      
+      .green-flask {
+        background-color: rgba(0, 255, 0, 0.5);
+      }
+      
+      .gray-flask {
+        background-color: rgba(169, 169, 169, 0.5);
+      }
 </style>
 
 <div class="hero-section">
@@ -223,6 +275,7 @@ Stock whisperers
     </div>
 </div>
 </div>
+<div class="watchlist-section">
     <div class="container">
         <div class="coin-price">
             <div class="logo"><img src="https://blogger.googleusercontent.com/img/a/AVvXsEi32rDKQR2Swi7YfHjDzyZUBGEmxTz77OClnm24SZl7kWuls7fsVCIfAObY_JRJIReQnBWZIPSVfDLSqDvqeu4CCXCoNQIoUGK-OSDUGMtDJFxh9vmU6WGajIgXH4CsR_-sXU0qWbyJTJl7N0BSTB8HcAGSpCJ54G1daZPnU6h2oANo2CTGsbHCoaGJHQ" ></div>
@@ -255,11 +308,131 @@ Stock whisperers
         </div>
 
     </div>
+    <form id="add-ticker-form">
+        <div class="wrapper">
+        <a href="" target="_blank" hidden></a>
+        <input type="text" placeholder="Type to search..">
+        <div class="autocom-box">
+          <!-- here list are inserted from javascript -->
+        </div>        
+        </div>
+        <button type="submit">Add</button>
+    </form>
+    <div id="tickers-grid"></div>
     </div>
 
     
     <script>
+        var tickers = JSON.parse(localStorage.getItem('tickers')) || [];
+        var lastPrices = {};
+        var counter = 15;
         
+        const startUpdateCycle = () => {
+            updatePrices();
+            setInterval(() => {
+                counter --;
+                if(counter <= 0){
+                    updatePrices();
+                    counter = 15;
+                }
+            }, 1000)
+        }
+
+        $(document).ready(() => {
+
+        tickers.forEach((ticker)=>{
+            addTickerToGrid(ticker);
+        })
+
+        updatePrices();
+
+        $("#add-ticker-form").submit((e)=>{
+            e.preventDefault();
+            var newTicker = $('#new-ticker').val().toUpperCase();
+            if(!tickers.includes(newTicker)){
+                tickers.push(newTicker);
+                localStorage.setItem('tickers', JSON.stringify(tickers))
+                addTickerToGrid(newTicker);
+            }
+            $('new-ticker').val('');
+            updatePrices();
+        })
+
+        $('#tickers-grid').on('click', '.remove-btn', function() {
+            console.log(1)
+            var tickerToRemove = $(this).data('ticker');
+            tickers = tickers.filter(t => t !== tickerToRemove);
+            localStorage.setItem('tickers', JSON.stringify(tickers))
+            $(`#${tickerToRemove}`).remove();
+        });
+        startUpdateCycle();
+
+        });
+
+        const addTickerToGrid = (ticker) =>{
+            $('#tickers-grid').append(`<div id="${ticker}" class="stock-box"><h2>${ticker}</h2>
+                <p id="${ticker}-price"></p><p id="${ticker}-pct"></p>
+                <button class="remove-btn" data-ticker="${ticker}">Remove</button></div>`)
+
+        }
+        const updatePrices = () => {
+            tickers.forEach((ticker)=>{
+                $.ajax({
+                    url: '/watchlist',
+                    type: "POST",
+                    data: JSON.stringify({
+                        'ticker': ticker
+                    }),
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    success: (data) => {
+                        var changePercent = ((data.currentPrice-data.openPrice)/ data.openPrice) * 100;
+                        var colorclass;
+                        if(changePercent <= -2){
+                            colorclass = 'dark-red';
+                        }
+                        else if(changePercent < 0){
+                            colorclass = 'red';
+                        }
+                        else if(changePercent == 0){
+                            colorclass = 'gray';
+                        }
+                        else if(changePercent <= 2){
+                            colorclass = 'green';
+                        }
+                        else{
+                            colorclass = 'dark-green';
+                        }
+
+                        $(`#${ticker}-price`).text(`$${data.currentPrice.toFixed(2)}`);
+                        $(`#${ticker}-pct`).text(`${changePercent.toFixed(2)}%`);
+
+                        $(`#${ticker}-price`).removeClass(`dark-red red gray green dark-green`).addClass(colorclass);
+                        $(`#${ticker}-pct`).removeClass(`dark-red red gray green dark-green`).addClass(colorclass);
+
+                        var flaskClass;
+                        if(lastPrices[ticker]>data.currentPrice){
+                            flaskClass = 'red-flask';
+                        }else if(lastPrices[ticker]<data.currentPrice){
+                            flaskClass = 'green-flask';
+                        }
+                        else{
+                            flaskClass = 'gray-flask'
+                        }
+                        lastPrices[ticker] = data.currentPrice;
+
+                        $(`#${ticker}`).addClass(flaskClass);
+                        setTimeout(()=>{
+                            $(`#${ticker}`).removeClass(flaskClass);
+                        }, 1000);
+                    }
+                });
+            });
+        }
+
+
+
+
         var chart = LightweightCharts.createChart(document.getElementById('chart-container'), {
             width: document.getElementById('chart-container').clientWidth,
             height: 550
