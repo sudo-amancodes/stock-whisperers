@@ -51,6 +51,7 @@ Stock whisperers
         justify-content: space-between;
         align-items: flex-start;
         margin-bottom: 30px;
+
     }
 
     .hero-section .row {
@@ -60,6 +61,7 @@ Stock whisperers
         align-items: flex-start;
         width: 100%;
         margin-bottom: 20px;
+        
     }
 
     .hero-section .col {
@@ -67,11 +69,15 @@ Stock whisperers
         margin-bottom: 20px;
     }
 
+
     .hero-section #chart-container {
         width: 100%;
         height: 400px;
         border: 1px solid #ccc;
         border-radius: 5px;
+        margin-top: 15vh;
+
+
     }
 
     .comments-section {
@@ -116,11 +122,141 @@ Stock whisperers
     .comments-section .comment-form button:hover {
         background-color: #0056b3;
     }
-    
+
+      .wrapper{
+        margin: auto auto;
+        margin-left: 110px;
+        padding: 25px;
+        position: absolute; /* Add this line */
+        width: 325px;
+
+     }
+     
+     .wrapper .search-input{
+        background: #fff;
+        width: 100%;
+        border-radius: 5px;
+        position: relative;
+        box-shadow: 0px 1px 5px 3px rgba(0,0,0,0.12);
+        z-index: 3; /* Increase the z-index value */
+     }
+
+      .search-input input{
+        height: 55px;
+        width: 100%;
+        outline: none;
+        border: none;
+        border-radius: 5px;
+        padding: 0 60px 0 20px;
+        font-size: 18px;
+        box-shadow: 0px 1px 5px rgba(0,0,0,0.1);
+        
+      }
+      .search-input.active input{
+        border-radius: 5px 5px 0 0;
+        
+      }
+      .search-input .autocom-box{
+        padding: 0;
+        opacity: 0;
+        pointer-events: none;
+        max-height: 280px;
+        overflow-y: auto;
+
+      }
+      .search-input.active .autocom-box{
+        padding: 10px 8px;
+        opacity: 1;
+        pointer-events: auto;
+        
+      }
+      .autocom-box li{
+        list-style: none;
+        padding: 8px 12px;
+        display: none;
+        width: 100%;
+        cursor: default;
+        border-radius: 3px;
+        
+      }
+      
+      .search-input.active .autocom-box li{
+        display: block;
+
+        
+      }
+      .autocom-box li:hover{
+        background: #efefef;
+        
+      }
+
+      #tickers-grid {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 20px;
+        padding: 10px;
+      }
+      
+      /* Individual stock box styles */
+      .stock-box {
+        width: 200px;
+        padding: 10px;
+        border: 2px solid #ccc;
+        border-radius: 8px;
+        text-align: center;
+        transition: background-color 0.3s ease;
+      }
+      
+      /* Different color classes for stock prices and percentages */
+      .dark-red {
+        color: darkred;
+      }
+      
+      .red {
+        color: red;
+      }
+      
+      .gray {
+        color: gray;
+      }
+      
+      .green {
+        color: green;
+      }
+      
+      .dark-green {
+        color: darkgreen;
+      }
+      
+      /* Flashing effect classes */
+      .red-flask {
+        background-color: rgba(255, 0, 0, 0.5);
+      }
+      
+      .green-flask {
+        background-color: rgba(0, 255, 0, 0.5);
+      }
+      
+      .gray-flask {
+        background-color: rgba(169, 169, 169, 0.5);
+      }
 </style>
+
 <div class="hero-section">
+    
     <div class="row">
     <div class ='col'>
+        <div class="wrapper">
+            <div class="search-input">
+              <a href="" target="_blank" hidden></a>
+              <input type="text" placeholder="Type to search..">
+              <div class="autocom-box">
+                <!-- here list are inserted from javascript -->
+              </div>
+              <div class="icon"><i class="fas fa-search"></i></div>
+            </div>
+          </div>
     <div id="chart-container" style="width: 100%; height: 100%;"></div>
     </div>
     <div class="col">
@@ -139,6 +275,7 @@ Stock whisperers
     </div>
 </div>
 </div>
+<div class="watchlist-section">
     <div class="container">
         <div class="coin-price">
             <div class="logo"><img src="https://blogger.googleusercontent.com/img/a/AVvXsEi32rDKQR2Swi7YfHjDzyZUBGEmxTz77OClnm24SZl7kWuls7fsVCIfAObY_JRJIReQnBWZIPSVfDLSqDvqeu4CCXCoNQIoUGK-OSDUGMtDJFxh9vmU6WGajIgXH4CsR_-sXU0qWbyJTJl7N0BSTB8HcAGSpCJ54G1daZPnU6h2oANo2CTGsbHCoaGJHQ" ></div>
@@ -171,11 +308,125 @@ Stock whisperers
         </div>
 
     </div>
+    <form id="add-ticker-form">
+        <input type="text" id="new-ticker" placeholder="Add Ticker" required> 
+        <button type="submit">Add</button>
+    </form>
+    <div id="tickers-grid"></div>
     </div>
 
     
     <script>
+        var tickers = JSON.parse(localStorage.getItem('tickers')) || [];
+        var lastPrices = {};
+        var counter = 15;
         
+        const startUpdateCycle = () => {
+            updatePrices();
+            setInterval(() => {
+                counter --;
+                if(counter <= 0){
+                    updatePrices();
+                    counter = 15;
+                }
+            }, 1000)
+        }
+
+        $(document).ready(() => {
+
+        tickers.forEach((ticker)=>{
+            addTickerToGrid(ticker);
+        })
+
+        updatePrices();
+
+        $("#add-ticker-form").submit((e)=>{
+            e.preventDefault();
+            var newTicker = $('#new-ticker').val().toUpperCase();
+            if(!tickers.includes(newTicker)){
+                tickers.push(newTicker);
+                localStorage.setItem('tickers', JSON.stringify(tickers))
+                addTickerToGrid(newTicker);
+            }
+            $('new-ticker').val('');
+            updatePrices();
+        })
+
+        $('#tickers-grid').on('click', '.remove-btn', function() {
+            console.log(1)
+            var tickerToRemove = $(this).data('ticker');
+            tickers = tickers.filter(t => t !== tickerToRemove);
+            localStorage.setItem('tickers', JSON.stringify(tickers))
+            $(`#${tickerToRemove}`).remove();
+        });
+        startUpdateCycle();
+
+        });
+
+        const addTickerToGrid = (ticker) =>{
+            $('#tickers-grid').append(`<div id="${ticker}" class="stock-box"><h2>${ticker}</h2>
+                <p id="${ticker}-price"></p><p id="${ticker}-pct"></p>
+                <button class="remove-btn" data-ticker="${ticker}">Remove</button></div>`)
+
+        }
+        const updatePrices = () => {
+            tickers.forEach((ticker)=>{
+                $.ajax({
+                    url: '/watchlist',
+                    type: "POST",
+                    data: JSON.stringify({
+                        'ticker': ticker
+                    }),
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    success: (data) => {
+                        var changePercent = ((data.currentPrice-data.openPrice)/ data.openPrice) * 100;
+                        var colorclass;
+                        if(changePercent <= -2){
+                            colorclass = 'dark-red';
+                        }
+                        else if(changePercent < 0){
+                            colorclass = 'red';
+                        }
+                        else if(changePercent == 0){
+                            colorclass = 'gray';
+                        }
+                        else if(changePercent <= 2){
+                            colorclass = 'green';
+                        }
+                        else{
+                            colorclass = 'dark-green';
+                        }
+
+                        $(`#${ticker}-price`).text(`$${data.currentPrice.toFixed(2)}`);
+                        $(`#${ticker}-pct`).text(`${changePercent.toFixed(2)}%`);
+
+                        $(`#${ticker}-price`).removeClass(`dark-red red gray green dark-green`).addClass(colorclass);
+                        $(`#${ticker}-pct`).removeClass(`dark-red red gray green dark-green`).addClass(colorclass);
+
+                        var flaskClass;
+                        if(lastPrices[ticker]>data.currentPrice){
+                            flaskClass = 'red-flask';
+                        }else if(lastPrices[ticker]<data.currentPrice){
+                            flaskClass = 'green-flask';
+                        }
+                        else{
+                            flaskClass = 'gray-flask'
+                        }
+                        lastPrices[ticker] = data.currentPrice;
+
+                        $(`#${ticker}`).addClass(flaskClass);
+                        setTimeout(()=>{
+                            $(`#${ticker}`).removeClass(flaskClass);
+                        }, 1000);
+                    }
+                });
+            });
+        }
+
+
+
+
         var chart = LightweightCharts.createChart(document.getElementById('chart-container'), {
             width: document.getElementById('chart-container').clientWidth,
             height: 550
@@ -354,6 +605,182 @@ Stock whisperers
 
 
          */
+
+        // getting all required elements
+    const searchWrapper = document.querySelector(".search-input");
+    const inputBox = searchWrapper.querySelector("input");
+    const suggBox = searchWrapper.querySelector(".autocom-box");
+    const icon = searchWrapper.querySelector(".icon");
+    let linkTag = searchWrapper.querySelector("a");
+    let webLink;
+
+    // if user press any key and release
+    inputBox.onkeyup = (e)=>{
+        let userData = e.target.value; //user enetered data
+        let emptyArray = [];
+        if(userData){
+            icon.onclick = ()=>{
+                webLink = `https://www.google.com/search?q=${userData}`;
+                linkTag.setAttribute("href", webLink);
+                linkTag.click();
+            }
+            emptyArray = suggestions.filter((data)=>{
+                //filtering array value and user characters to lowercase and return only those words which are start with user enetered chars
+                return data.toLocaleLowerCase().startsWith(userData.toLocaleLowerCase());
+            });
+            emptyArray = emptyArray.map((data)=>{
+                // passing return data inside li tag
+                return data = `<li>${data}</li>`;
+            });
+            searchWrapper.classList.add("active"); //show autocomplete box
+            showSuggestions(emptyArray);
+            let allList = suggBox.querySelectorAll("li");
+            for (let i = 0; i < allList.length; i++) {
+                //adding onclick attribute in all li tag
+                allList[i].setAttribute("onclick", "select(this)");
+            }
+        }else{
+            searchWrapper.classList.remove("active"); //hide autocomplete box
+        }
+    }
+
+    function select(element){
+        let selectData = element.textContent;
+        inputBox.value = selectData;
+        var regExp = /\(([^)]+)\)/;
+                var stock_ticker = regExp.exec(inputBox.value);
+                fetch('/data', {
+                    headers : {
+                        'Content-Type' : 'application/json'
+                    },
+                    method : 'POST', 
+                    body : JSON.stringify( {
+                        Stock : stock_ticker[1]
+                    })
+                })                
+                .then(response => response.json())
+                .then(data => {
+                    
+                    const formattedData = data.map(item => ({
+                        time: ((new Date(item.date).getTime() / 1000) - (5 * 60 * 60)), // Convert UTC to EST (Standard Time)
+                        open: item.open,
+                        high: item.high,
+                        low: item.low,
+                        close: item.close,
+                        volume: item.volume
+                    }));
+    
+                    candleSeries.setData(formattedData);
+                    //console.log((new Date(item.date).getTime() / 1000))
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        searchWrapper.classList.remove("active");
+        console.log(1)
+    }
+
+    function showSuggestions(list){
+        let listData;
+        if(!list.length){
+            userValue = inputBox.value;
+            listData = `<li>${userValue}</li>`;
+        }else{
+        listData = list.join('');
+        }
+        suggBox.innerHTML = listData;
+    }
+    let suggestions = [
+    "3M Company (MMM)",
+    "Abbott Laboratories (ABT)",
+    "AbbVie Inc. (ABBV)",
+    "Adobe Inc. (ADBE)",
+    "Advanced Micro Devices, Inc. (AMD)",
+    "Alibaba Group Holding Limited (BABA)",
+    "Alphabet Inc. Class A (GOOGL)",
+    "Alphabet Inc. Class C (GOOG)",
+    "Amazon.com, Inc. (AMZN)",
+    "AMD (Advanced Micro Devices, Inc.)",
+    "American Express Company (AXP)",
+    "American International Group, Inc. (AIG)",
+    "Amgen Inc. (AMGN)",
+    "Apple Inc. (AAPL)",
+    "AT&T Inc. (T)",
+    "Bank of America Corporation (BAC)",
+    "Berkshire Hathaway Inc. (BRK.B)",
+    "BlackRock, Inc. (BLK)",
+    "Boeing Co. (BA)",
+    "Caterpillar Inc. (CAT)",
+    "Chevron Corporation (CVX)",
+    "Cisco Systems, Inc. (CSCO)",
+    "Citigroup Inc. (C)",
+    "Coca-Cola Company (KO)",
+    "Coinbase Global, Inc. (COIN)",
+    "Comcast Corporation (CMCSA)",
+    "Costco Wholesale Corporation (COST)",
+    "CVS Health Corporation (CVS)",
+    "Delta Air Lines, Inc. (DAL)",
+    "eBay Inc. (EBAY)",
+    "Eli Lilly and Company (LLY)",
+    "Exxon Mobil Corporation (XOM)",
+    "Facebook, Inc. (FB)",
+    "FedEx Corporation (FDX)",
+    "Ford Motor Co. (F)",
+    "General Electric Company (GE)",
+    "General Motors Company (GM)",
+    "Gilead Sciences, Inc. (GILD)",
+    "Goldman Sachs Group, Inc. (GS)",
+    "Home Depot, Inc. (HD)",
+    "International Business Machines Corporation (IBM)",
+    "Intel Corporation (INTC)",
+    "Intuit Inc. (INTU)",
+    "Johnson & Johnson (JNJ)",
+    "JPMorgan Chase & Co. (JPM)",
+    "Lockheed Martin Corporation (LMT)",
+    "Lowe's Companies, Inc. (LOW)",
+    "Mastercard Incorporated (MA)",
+    "McDonald's Corporation (MCD)",
+    "Merck & Co., Inc. (MRK)",
+    "Meta Platforms Inc. (META)",
+    "Microsoft Corporation (MSFT)",
+    "Morgan Stanley (MS)",
+    "Netflix, Inc. (NFLX)",
+    "Nike, Inc. (NKE)",
+    "NIO Inc. (NIO)",
+    "NVIDIA Corporation (NVDA)",
+    "Oracle Corporation (ORCL)",
+    "PayPal Holdings, Inc. (PYPL)",
+    "Pfizer Inc. (PFE)",
+    "Procter & Gamble Company (PG)",
+    "Qualcomm Incorporated (QCOM)",
+    "Raytheon Technologies Corporation (RTX)",
+    "Salesforce.com Inc. (CRM)",
+    "Snap Inc. (SNAP)",
+    "Sony Group Corporation (SONY)",
+    "Square, Inc. (SQ)",
+    "Starbucks Corporation (SBUX)",
+    "T-Mobile US, Inc. (TMUS)",
+    "Target Corporation (TGT)",
+    "Tencent Holdings Limited (TCEHY)",
+    "Tesla, Inc. (TSLA)",
+    "The Boeing Company (BA)",
+    "The Coca-Cola Company (KO)",
+    "The Home Depot, Inc. (HD)",
+    "The Procter & Gamble Company (PG)",
+    "The Walt Disney Company (DIS)",
+    "Uber Technologies, Inc. (UBER)",
+    "Union Pacific Corporation (UNP)",
+    "United Parcel Service, Inc. (UPS)",
+    "United Technologies Corporation (UTX)",
+    "UnitedHealth Group Incorporated (UNH)",
+    "Verizon Communications Inc. (VZ)",
+    "Visa Inc. (V)",
+    "Walgreens Boots Alliance, Inc. (WBA)",
+    "Walmart Inc. (WMT)",
+    "Walt Disney Co. (DIS)",
+    "Walt Disney Company (DIS)",
+    "Wells Fargo & Company (WFC)",
+    "Zoom Video Communications, Inc. (ZM)"
+];
+
     </script>
 
     <!-- <div class = "comments-section"> 
