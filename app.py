@@ -436,10 +436,6 @@ def post(post_id):
         following = True
     return render_template('single_post.html', post=post, user=user, sanitize_html=sanitize_html, following=following)
 
-<<<<<<< HEAD
-=======
-# Create a get request for the user login page.
->>>>>>> main
 @app.get('/login')
 def login():
     if user_repository_singleton.is_logged_in():
@@ -462,9 +458,6 @@ def send_verification_email(email):
 If you did not make this request, please ignore this email
 '''
     mail.send(msg)
-
-# to-do: when user inputs invalid code email resends, move to post route. fix invalid code error
-
 
 @app.get('/verify_user/<username>/<method>')
 def verify_user(username, method):
@@ -552,7 +545,6 @@ def logout():
     user_repository_singleton.logout_user()
     return redirect('/login')
 
-<<<<<<< HEAD
 @app.post('/profile/<string:username>/edit/delete')
 def delete(username):
     if not user_repository_singleton.is_logged_in():
@@ -562,8 +554,6 @@ def delete(username):
     user_repository_singleton.logout_user()
     flash('Account deleted', category='success')
     return redirect('/register')
-=======
->>>>>>> main
 
 @app.get('/register')
 def register():
@@ -584,7 +574,6 @@ def create_user():
     email = request.form.get('email')
     password = request.form.get('password')
 
-    # temp path until we switch to storing pp as a blob
     profile_picture = 'default-profile-pic.jpg'
 
     if not username or not password or not first_name or not last_name or not email:
@@ -673,11 +662,7 @@ def password_reset(token):
     else:
         user.password = bcrypt.generate_password_hash(password).decode()
         db.session.commit()
-<<<<<<< HEAD
         flash('Your password has been updated!', category = 'success')
-=======
-        flash('your password has been updated!', category='success')
->>>>>>> main
         return redirect('/login')
 
     return redirect(f'/password_reset/{token}')
