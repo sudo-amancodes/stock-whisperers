@@ -39,7 +39,19 @@
     <button type="submit" class="btn btn-secondary">Save Changes</button>
 </form>
 
-<form action="/profile/{{session['user']['username']}}/edit/delete" method="post">
-    <button type="submit" class="btn btn-secondary delete">Delete Account</button>
-</form>
+<!-- <button id="Delete-popup" class="btn btn-secondary delete">Delete Account</button> -->
+<!-- <div class="visibility"> -->
+    <form action="/profile/{{session['user']['username']}}/edit/delete" method="post">
+        <button type="submit" class="btn btn-secondary delete">Delete Account</button>
+    </form>
+<!-- </div> -->
+
+<!-- <script>
+    button = document.querySelector('#Delete-popup')
+    button.addEventListener('click', popup)
+
+    function popup() {
+
+    }
+</script> -->
 {% endblock %}
