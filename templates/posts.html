@@ -1,7 +1,9 @@
 {% extends '_layout.html' %}
 
 {% block title %}Upload to Stock Whisperers{% endblock %}
+
 {% block body %}
+
 <style>
     .liked {
         /* style the like button here to show that it is liked */
@@ -17,68 +19,84 @@
         border: 2px solid rgb(52, 53, 54) !important;
     }
 </style>
+
+
 <main class="d-flex justify-content-center flex-column">
-    {% if posts|length == 0 %}
-    <h1 class="mt-3">There are no posts available.</h1>
-    {% else %}
 
-    <h1 class="mt-3 mb-3 text-center">Posts</h1>
-
-    {% for post, creator in posts %}
-    {% if user %}
-    <div id="post" class="container bg-secondary p-3 mb-5 w-50 rounded border border-secondary" onclick="location.href='posts/{{post.post_id}}';" style="color: white;">
-    {% else %}
-    <div id="post" class="container bg-secondary p-3 mb-5 w-50 rounded border border-secondary" onclick="location.href='/login';" style="color: white;">
-    {% endif %}
-        <div class="d-inline-flex align-items-center justify-content-between w-100">
-            <h3>{{ post.title }}</h3>
-            {% if user.is_authenticated and user.user_id == creator.user_id %}
-            <!-- TODO: Add edit and delete buttons -->
-            <!-- <a href="/posts/edit/{{ post.post_id }}"><button>Edit</button></a>
-            <a href="/posts/delete/{{ post.post_id }}"><button>Delete</button></a> -->
-            <h6>Posted by you, {{ post.date_posted|time_ago }}</h6>
+    <!-- TABS: Following / All Posts -->
+    <ul class="nav nav-tabs align-self-center" id="postTabs">
+        <li class="nav-item">
+            {% if 'following' in request.path %}
+            <a class="nav-link active" id="followingTab" data-toggle="tab" href="/posts/following">Following</a>
             {% else %}
-            <h6>Posted by<a href = /profile/{{creator.username}}> {{ creator.username }}</a>, {{ post.date_posted|time_ago }}</h6>
+            <a class="nav-link" id="followingTab" data-toggle="tab" href="/posts/following">Following</a>
             {% endif %}
+        </li>
+        <li class="nav-item">
+            {% if 'following' not in request.path %}
+            <a class="nav-link active" id="allPostsTab" data-toggle="tab" href="/posts">All Posts</a>
+            {% else %}
+            <a class="nav-link" id="allPostsTab" data-toggle="tab" href="/posts">All Posts</a>
+            {% endif %}
+        </li>
+    </ul>
+
+    <!-- TAB CONTENT -->
+    <div class="tab-content mt-3">
+
+        <!-- Following Posts -->
+        {% if 'following' in request.path %}
+        <div class="tab-pane fade show active" id="followingPosts">
+        {% else %}
+        <div class="tab-pane fade" id="followingPosts">
+        {% endif %}
+            {% set posts = following_posts %}
+            {% include 'posts_content.html' %}
         </div>
-        
-        <div class="container p-0">
-            <div class="m-0 p-0">{{ sanitize_html(post.content)|safe }}</div>
-            {% if post.file_upload %}
-            <img src="./../static/post_pics/{{post.file_upload }}" class="mt-2" style="max-width: 300px;" width="100%">
-            {% endif %}
-            <br>
-            <br>    
-            <div>
-                {% if user.is_authenticated %}
-                {% if post in user.liked_posts %}
-                <button class="like-button liked" data-post-id="{{ post.post_id }}" data-user-id="{{ user.user_id }}">Liked</button>
-                {% else %}
-                <button class="like-button" data-post-id="{{ post.post_id }}" data-user-id="{{ user.user_id }}">Like</button>
-                {% endif %}
-                {% else %}
-                <a href="/login"><button>Like</button></a>
-                {% endif %}
-                <p class="like-count d-inline-block">{{ post.likes }}</p>
-                {% if post.comments|length == 1 %}
-                <button>{{ post.comments|length }} Comment</button>
-                {% else %}
-                <button>{{ post.comments|length }} Comments</button>
-                {% endif %}
-            </div>
+
+        <!-- All Posts -->
+        {% if 'following' not in request.path %}
+        <div class="tab-pane fade show active" id="allPosts">
+        {% else %}
+        <div class="tab-pane fade" id="allPosts">
+        {% endif %}
+            {% set posts = all_posts %}
+            {% include 'posts_content.html' %}
         </div>
     </div>
 
-    {% endfor %}
+
+    <!-- SCRIPTS -->
 
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+    <!-- Dynamic TABS -->
+    <script>
+        $(document).ready(function () {
+
+            // Reload the page when visibility changes
+            document.addEventListener("visibilitychange", function () {
+                if (document.visibilityState === "visible") {
+                    var scrollPosition = window.scrollY;
+
+                    // Reload the page
+                    location.reload();
+
+                    // Scroll back to the previous position after the reload
+                    window.scrollTo(0, scrollPosition);
+                }
+            });
+        });
+    </script>
+
+    <!-- Like Button -->
     <script>
         $(document).ready(function () {
             $('.like-button').click(function (event) {
                 event.stopPropagation();
                 var postId = $(this).data('post-id');
                 var userId = $(this).data('user-id');
-    
+
                 $.ajax({
                     type: 'POST',
                     url: '/posts/like',
@@ -93,6 +111,8 @@
             });
         });
     </script>
+
+    <!-- Like Button Dynamic UI -->
     <script>
         function liked_or_not() {
             const like_button = document.getElementsByClassName("like-button");
@@ -113,7 +133,6 @@
         liked_or_not();
     </script>
 
-    {% endif %}
 </main>
 
 {% endblock %}

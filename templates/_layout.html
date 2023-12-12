@@ -26,7 +26,6 @@
         <a class="nav-item nav-link" id="profile" href="/profile/{{ session['user']['username'] }}" >Profile</a>
         <a class="nav-item nav-link" id="logout" href="/logout">Logout</a>
         {% else %}
-        <a class="nav-item nav-link" id="posts" href="/posts">Posts</a>
         <a class="nav-item nav-link" id="login" href="/login">Login</a>
         <a class="nav-item nav-link" id="signUp" href="/register">Sign Up</a>
         {% endif %}
@@ -55,6 +54,19 @@
       {% endfor %}
     {% endif %}
   {% endwith %}
+
+  <script>
+    const button = document.querySelector('.close')
+    if (button !== null) {
+      button.addEventListener('click', hideMsg)
+    }
+
+    function hideMsg() {
+      const message = button.parentElement;
+      message.classList.remove('show')
+      message.style.display = 'none';
+    }
+  </script>
 
   <div class="container pt-4">
     {% block body %}{% endblock %}
