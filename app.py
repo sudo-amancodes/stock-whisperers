@@ -510,7 +510,7 @@ def password_reset(token):
     else:
         user.password = bcrypt.generate_password_hash(password).decode()
         db.session.commit()
-        flash('your password has been updated!', category = 'success')
+        flash('Your password has been updated!', category = 'success')
         return redirect('/login')
     
     return redirect(f'/password_reset/{token}')
