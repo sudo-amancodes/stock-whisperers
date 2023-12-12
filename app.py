@@ -161,17 +161,14 @@ def set_data():
 
 @app.post('/watchlist')
 def get_watchlist():
+    # This function takes the json from the watchlist search and finds the value
+    # Then it returns the json to front end. 
+    # This connects to the ajax function in the frontend. 
     ticker = request.get_json()['ticker']
     data = yf.Ticker(ticker).history(period='1y')
     print(data.iloc[-1].Open)
     return jsonify({'currentPrice': data.iloc[-1].Close,
                     'openPrice':data.iloc[-1].Open})
-
-#Create Comments or add a temporary get/post request. That has a pass statement.
-#Example:
-#@app.get('/test')
-#def testing():
-#    pass
 
 #TODO: Create a get request for the upload page.
 @app.get('/upload')
