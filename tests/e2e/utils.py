@@ -6,5 +6,5 @@ def reset_db():
     friendships.query.delete()
     live_posts.query.delete()
     Comment.query.delete()
-    Post.query.delete()    
+    Post.query.delete() 
     db.session.commit()
