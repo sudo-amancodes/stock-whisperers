@@ -68,8 +68,6 @@ db.init_app(app)
 app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-# app.config['MAIL_USERNAME'] = os.getenv('EMAIL_USER')
-# app.config['MAIL_PASSWORD'] = os.getenv('EMAIL_PASS')
 app.config['MAIL_USERNAME'] = 'the.stock.whisperers@gmail.com'
 app.config['MAIL_PASSWORD'] = 'spwlegjkdfjabdhx'
 mail = Mail(app)
@@ -438,10 +436,10 @@ def post(post_id):
         following = True
     return render_template('single_post.html', post=post, user=user, sanitize_html=sanitize_html, following=following)
 
-# Create a get request for the user login page.
 @app.get('/login')
 def login():
     if user_repository_singleton.is_logged_in():
+        flash('You are already logged in', category='error')
         return redirect('/')
     return render_template('login.html', user=session.get('user'))
 
@@ -461,9 +459,6 @@ If you did not make this request, please ignore this email
 '''
     mail.send(msg)
 
-# to-do: when user inputs invalid code email resends, move to post route. fix invalid code error
-
-
 @app.get('/verify_user/<username>/<method>')
 def verify_user(username, method):
     return render_template('verify_user.html', username=username, method=method)
@@ -474,7 +469,8 @@ def verify_code(username, method):
     global code
     user_code = request.form.get('user-code')
     if not user_code:
-        abort(400)
+        flash('Please enter in a code.', category='error')
+        return redirect(f'/verify_user/{username}/{method}')
     if str(code) != str(user_code):
         flash('Incorrect code. Try Again', category='error')
         return redirect(f'/verify_user/{username}/{method}')
@@ -502,7 +498,8 @@ def verify_code(username, method):
 @app.post('/login')
 def verify_login():
     if user_repository_singleton.is_logged_in():
-        return abort(400)
+        flash('You are already logged in', category='error')
+        return redirect('/')
     username = request.form.get('username')
     password = request.form.get('password')
 
@@ -533,16 +530,35 @@ def verify_login():
 
 
 @app.get('/logout')
-def logout():
+def logout_through_page():
     if not user_repository_singleton.is_logged_in():
-        abort(401)
+        flash('Unable to logout because you are not logged in.', category='error')
+        return redirect('/')
     user_repository_singleton.logout_user()
     return redirect('/login')
 
+@app.post('/logout')
+def logout():
+    if not user_repository_singleton.is_logged_in():
+        flash('Unable to logout because you are not logged in.', category='error')
+        return redirect('/')
+    user_repository_singleton.logout_user()
+    return redirect('/login')
+
+@app.post('/profile/<string:username>/edit/delete')
+def delete(username):
+    if not user_repository_singleton.is_logged_in():
+        flash('Unable to delete account because you are not logged in.', category='error')
+        return redirect('/')
+    user_repository_singleton.remove_user(username)
+    user_repository_singleton.logout_user()
+    flash('Account deleted', category='success')
+    return redirect('/register')
 
 @app.get('/register')
 def register():
     if user_repository_singleton.is_logged_in():
+        flash('You are already logged in. Logout to make a new account', category='error')
         return redirect('/')
     return render_template('register.html', user=session.get('user'))
 
@@ -550,14 +566,14 @@ def register():
 @app.post('/register')
 def create_user():
     if user_repository_singleton.is_logged_in():
-        return abort(400)
+        flash('You are already logged in. Logout to make a new account', category='error')
+        return redirect('/')
     first_name = request.form.get('first-name')
     last_name = request.form.get('last-name')
     username = request.form.get('username')
     email = request.form.get('email')
     password = request.form.get('password')
 
-    # temp path until we switch to storing pp as a blob
     profile_picture = 'default-profile-pic.jpg'
 
     if not username or not password or not first_name or not last_name or not email:
@@ -646,7 +662,7 @@ def password_reset(token):
     else:
         user.password = bcrypt.generate_password_hash(password).decode()
         db.session.commit()
-        flash('your password has been updated!', category='success')
+        flash('Your password has been updated!', category = 'success')
         return redirect('/login')
 
     return redirect(f'/password_reset/{token}')

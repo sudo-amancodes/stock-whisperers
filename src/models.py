@@ -90,9 +90,6 @@ class users(db.Model, UserMixin):
         for following in self.following.all():
             followings.append(following.user2_username)
         return followings
-    
-    # def get_all_followers(self):
-    #     return self.followers().all
 
     def __repr__(self) -> str:
         return f'users({self.first_name}, {self.last_name})'
@@ -237,8 +234,33 @@ class friendships(db.Model):
         UniqueConstraint('user1_username', 'user2_username', name='unique_user_follow'),
         CheckConstraint('user1_username != user2_username', name='check_user_follow'),
     )
+
 comment_likes = db.Table(
     'comment_likes',
     db.Column('user_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True),
     db.Column('comment_id', db.Integer, db.ForeignKey('comment.comment_id'), primary_key=True)
 )
+
+# class temporary_user(db.Model):  
+#     email = db.Column(db.String(255), primary_key = True)
+
+#     first_name = db.Column(db.String(255), nullable = False)
+
+#     last_name = db.Column(db.String(255), nullable = False)
+
+#     username = db.Column(db.String(255), nullable = False, unique = True)
+
+#     password = db.Column(db.String(255), nullable = False)
+
+#     verification_code_sent_at = db.Column(db.DateTime, nullable=True, default=func.now())
+
+#     profile_picture = db.Column(db.String(255), nullable = True)
+
+#     def __init__(self, first_name: str, last_name: str, username: str, email:str , password: str, profile_picture: str):
+#         self.first_name = first_name
+#         self.last_name = last_name
+#         self.username = username
+#         self.email = email
+#         self.password = password
+#         self.profile_picture = profile_picture
+
