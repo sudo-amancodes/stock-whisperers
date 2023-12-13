@@ -52,6 +52,9 @@ class UserRepository:
     def get_user_by_username(self, username):
         return users.query.filter_by(username=username).first()
     
+    def get_user_by_user_id(self, user_id):
+        return users.query.filter_by(user_id=user_id).first()
+    
     def get_user_username(self):
         return session['user']['username']
     

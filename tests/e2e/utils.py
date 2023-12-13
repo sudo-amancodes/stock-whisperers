@@ -8,8 +8,3 @@ def reset_db():
     Comment.query.delete()
     Post.query.delete()    
     db.session.commit()
-
-# def clear_session():
-#     session.clear()
-#     g.pop('user', None)
-
