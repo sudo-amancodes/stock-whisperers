@@ -11,3 +11,8 @@ function reply() {
     }
 }
 reply();
+
+// focus on comment editor when comment button is clicked
+function focus_on_comment() {
+    document.getElementById('comment-editor').focus();
+}

@@ -1,6 +1,9 @@
 {% extends "_layout.html" %}
 {% block title %}Profile{% endblock %}
 {% block styles %}
+<link rel="stylesheet" type="text/css" href="./../static/posts.css">
+{% endblock %}
+{% block scripts %}
 <script src="https://kit.fontawesome.com/07187c1f27.js" crossorigin="anonymous"></script>
 {% endblock %}
 {% block body %}
@@ -16,26 +19,6 @@
     top: -8px;
     right: 0;
     margin: 10px;
-  }
-
-  .like-button {
-    background: none;
-    border: none;
-    color: #e8251f;
-    cursor: pointer;
-  }
-
-  a {
-    text-underline-offset: 6px;
-  }
-
-  #post {
-    border-width: 2px !important;
-  }
-
-  #post:hover {
-    cursor: pointer;
-    border: 2px solid rgb(52, 53, 54) !important;
   }
 </style>
 {% if session['user']['username'] != user.username %}

@@ -1,0 +1,40 @@
+.like-button, .like-comment, .comment-button, .reply-button {
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.heart-icon, .comment-icon, .reply-icon {
+    transition: color 0.2s ease-in-out;
+}
+
+.reply-icon:hover {
+    color: #404040 !important;
+}
+
+.comment-icon:hover {
+    color: #c49300 !important;
+}
+
+.heart-icon:hover {
+    color: #b31712 !important;
+}
+
+a {
+    text-underline-offset: 6px !important;
+}
+
+/* Placeholder color */
+trix-editor:empty:not(:focus)::before {
+    color: white;
+    opacity: 0.5;
+}
+
+#post {
+    border-width: 2px !important;
+}
+
+#post:hover {
+    cursor: pointer;
+    border: 2px solid rgb(52, 53, 54) !important;
+}
