@@ -1,11 +1,19 @@
 {% extends '_layout.html' %}
-
+{% block styles %}
+<script src="https://kit.fontawesome.com/07187c1f27.js" crossorigin="anonymous"></script>
+{% endblock %}
 {% block title %}Stock Whisperer{% endblock %}
 {% block body %}
 <style>
-    .liked {
-        /* style the like button here to show that it is liked */
-        background-color: red;
+    .like-button, .like-comment {
+        border: none;
+        background: none;
+        color: #e8251f;
+        cursor: pointer;
+    }
+
+    a {
+        text-underline-offset: 6px !important;
     }
 
     /* Placeholder color */
@@ -16,7 +24,7 @@
 </style>
 
 <main class="d-flex justify-content-center flex-column">
-
+    
     <!--  Post Container  -->
     <div class="container bg-secondary p-3 mb-3 rounded w-75" style="color: white;">
 
@@ -84,13 +92,13 @@
                 {% if user.is_authenticated %}
                 {% if post in user.liked_posts %}
                 <button class="d-inline-block like-button liked" data-post-id="{{ post.post_id }}"
-                    data-user-id="{{ user.user_id }}">Liked</button>
+                    data-user-id="{{ user.user_id }}"><i class="fa-solid fa-heart fa-xl" style="color: #e8251f;"></i></button>
                 {% else %}
                 <button class="d-inline-block like-button" data-post-id="{{ post.post_id }}"
-                    data-user-id="{{ user.user_id }}">Like</button>
+                    data-user-id="{{ user.user_id }}"><i class="fa-regular fa-heart fa-xl" style="color: #e8251f;"></i></button>
                 {% endif %}
                 {% else %}
-                <a href="/login"><button>Like</button></a>
+                <a href="/login"><button class="like-button"><i class="fa-regular fa-heart fa-xl" style="color: #e8251f;"></i></button></a>
                 {% endif %}
                 <p class="like-count d-inline-block">{{ post.likes }}</p>
                 {% if post.comments|length == 1 %}
@@ -119,9 +127,6 @@
         <!--  All Post Comments  -->
         <div class="comments-container container p-0">
 
-            <!-- TODO: Remove POST ID -->
-            <p>ID: {{ post.post_id }}</p>
-
             <!--  All Top Level Comments  -->
             {% for comment in post.comments %}
             {% if comment.parent_comment_id is none %}
@@ -131,7 +136,7 @@
                 <h6 class="d-flex">{{ comment.comment_creator.username }} (you) -<span class="badge badge-secondary">{{
                         comment.date_posted|time_ago }}</span></h6>
                 {% else %}
-                <h6 class="d-flex">{{ comment.comment_creator.username }} -<span class="badge badge-secondary">{{
+                <h6 class="d-flex"><a class="link-warning" href="/profile/{{ comment.comment_creator.username }}">{{ comment.comment_creator.username }}</a>&nbsp;-<span class="badge badge-secondary">{{
                         comment.date_posted|time_ago }}</span></h6>
                 {% endif %}
 
@@ -144,10 +149,10 @@
                     <div>
                         {% if comment in user.liked_comments %}
                         <button class="d-inline-block like-comment liked" data-comment-id="{{ comment.comment_id }}"
-                            data-user-id="{{ user.user_id }}">Liked</button>
+                            data-user-id="{{ user.user_id }}"><i class="fa-solid fa-heart fa-xl" style="color: #e8251f;"></i></button>
                         {% else %}
                         <button class="d-inline-block like-comment" data-comment-id="{{ comment.comment_id }}"
-                            data-user-id="{{ user.user_id }}">Like</button>
+                            data-user-id="{{ user.user_id }}"><i class="fa-regular fa-heart fa-xl" style="color: #e8251f;"></i></button>
                         {% endif %}
                         <p class="like-comment-count d-inline-block">{{ comment.likes }}</p>
                         <input type="submit" class="reply-button" value="Reply">
@@ -171,10 +176,16 @@
                     <div class="reply-container container pt-3 ps-0 pe-0">
 
                         {% if user.username == reply.comment_creator.username %}
-                        <h6>{{ reply.comment_creator.username }} (you) -<span class="badge badge-secondary">{{
-                                reply.date_posted|time_ago }}</span></h6>
+                        <div class="d-flex">
+                            <h6>{{ reply.comment_creator.username }} (you) -</h6>
+                            <span class="badge badge-secondary">{{reply.date_posted|time_ago }}</span>
+                        </div>
                         {% else %}
-                        <h6>{{ reply.comment_creator.username }}, {{ reply.date_posted|time_ago }}</h6>
+                        <div class="d-flex">
+                            <h6><a class="link-warning" href="/profile/{{ reply.comment_creator.username }}">{{ reply.comment_creator.username }}</a>&nbsp;-</h6>
+                            <span class="badge badge-secondary">{{reply.date_posted|time_ago }}</span>
+                        </div>
+                        
                         {% endif %}
 
                         <div
@@ -187,10 +198,10 @@
                                 {% if reply in user.liked_comments %}
                                 <button class="d-inline-block like-comment liked"
                                     data-comment-id="{{ reply.comment_id }}"
-                                    data-user-id="{{ user.user_id }}">Liked</button>
+                                    data-user-id="{{ user.user_id }}"><i class="fa-solid fa-heart fa-xl" style="color: #e8251f;"></i></button>
                                 {% else %}
                                 <button class="d-inline-block like-comment" data-comment-id="{{ reply.comment_id }}"
-                                    data-user-id="{{ user.user_id }}">Like</button>
+                                    data-user-id="{{ user.user_id }}"><i class="fa-regular fa-heart fa-xl" style="color: #e8251f;"></i></button>
                                 {% endif %}
                                 <p class="like-comment-count d-inline-block">{{ reply.likes }}</p>
                             </div>
@@ -326,11 +337,11 @@
                 like_button[i].addEventListener("click", function () {
                     if (like_button[i].classList.contains("liked")) {
                         like_count[i].innerHTML = parseInt(like_count[i].innerHTML) - 1;
-                        like_button[i].innerHTML = "Like";
                     } else {
-                        like_button[i].innerHTML = "Liked";
                         like_count[i].innerHTML = parseInt(like_count[i].innerHTML) + 1;
                     }
+                    like_button[i].firstChild.classList.toggle("fa-regular");
+                    like_button[i].firstChild.classList.toggle("fa-solid");
                     like_button[i].classList.toggle("liked");
                 });
             }
@@ -340,15 +351,16 @@
         function liked_comment_or_not() {
             const like_button = document.getElementsByClassName("like-comment");
             const like_count = document.getElementsByClassName("like-comment-count");
+            console.log(like_button.length);
             for (let i = 0; i < like_button.length; i++) {
                 like_button[i].addEventListener("click", function () {
                     if (like_button[i].classList.contains("liked")) {
                         like_count[i].innerHTML = parseInt(like_count[i].innerHTML) - 1;
-                        like_button[i].innerHTML = "Like";
                     } else {
-                        like_button[i].innerHTML = "Liked";
                         like_count[i].innerHTML = parseInt(like_count[i].innerHTML) + 1;
                     }
+                    like_button[i].firstChild.classList.toggle("fa-regular");
+                    like_button[i].firstChild.classList.toggle("fa-solid");
                     like_button[i].classList.toggle("liked");
                 });
             }

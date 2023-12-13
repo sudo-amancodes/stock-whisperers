@@ -1,13 +1,17 @@
 {% extends '_layout.html' %}
-
+{% block styles %}
+<script src="https://kit.fontawesome.com/07187c1f27.js" crossorigin="anonymous"></script>
+{% endblock %}
 {% block title %}Upload to Stock Whisperers{% endblock %}
 
 {% block body %}
 
 <style>
-    .liked {
-        /* style the like button here to show that it is liked */
-        background-color: red;
+    .like-button {
+        background: none;
+        border: none;
+        color: #e8251f;
+        cursor: pointer;
     }
 
     #post {
@@ -121,11 +125,11 @@
                 like_button[i].addEventListener("click", function () {
                     if (like_button[i].classList.contains("liked")) {
                         like_count[i].innerHTML = parseInt(like_count[i].innerHTML) - 1;
-                        like_button[i].innerHTML = "Like";
                     } else {
-                        like_button[i].innerHTML = "Liked";
                         like_count[i].innerHTML = parseInt(like_count[i].innerHTML) + 1;
                     }
+                    like_button[i].firstChild.classList.toggle("fa-regular");
+                    like_button[i].firstChild.classList.toggle("fa-solid");
                     like_button[i].classList.toggle("liked");
                 });
             }
