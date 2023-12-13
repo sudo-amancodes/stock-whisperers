@@ -16,6 +16,14 @@
         cursor: pointer;
     }
 
+    .heart-icon {
+        transition: color 0.2s ease-in-out;
+    }
+
+    .heart-icon:hover {
+        color: #9b1410 !important;
+    }
+
     a {
         text-underline-offset: 6px !important;
     }
@@ -95,13 +103,13 @@
                 {% if user.is_authenticated %}
                 {% if post in user.liked_posts %}
                 <button class="d-inline-block like-button liked" data-post-id="{{ post.post_id }}"
-                    data-user-id="{{ user.user_id }}"><i class="fa-solid fa-heart fa-xl" style="color: #e8251f;"></i></button>
+                    data-user-id="{{ user.user_id }}"><i class="fa-solid fa-heart fa-xl heart-icon" style="color: #e8251f;"></i></button>
                 {% else %}
                 <button class="d-inline-block like-button" data-post-id="{{ post.post_id }}"
-                    data-user-id="{{ user.user_id }}"><i class="fa-regular fa-heart fa-xl" style="color: #e8251f;"></i></button>
+                    data-user-id="{{ user.user_id }}"><i class="fa-regular fa-heart fa-xl heart-icon" style="color: #e8251f;"></i></button>
                 {% endif %}
                 {% else %}
-                <a href="/login"><button class="like-button"><i class="fa-regular fa-heart fa-xl" style="color: #e8251f;"></i></button></a>
+                <a href="/login"><button class="like-button"><i class="fa-regular fa-heart fa-xl heart-icon" style="color: #e8251f;"></i></button></a>
                 {% endif %}
                 <p class="like-count d-inline-block">{{ post.likes }}</p>
                 {% if post.comments|length == 1 %}
@@ -152,10 +160,10 @@
                     <div>
                         {% if comment in user.liked_comments %}
                         <button class="d-inline-block like-comment liked" data-comment-id="{{ comment.comment_id }}"
-                            data-user-id="{{ user.user_id }}"><i class="fa-solid fa-heart fa-xl" style="color: #e8251f;"></i></button>
+                            data-user-id="{{ user.user_id }}"><i class="fa-solid fa-heart fa-xl heart-icon" style="color: #e8251f;"></i></button>
                         {% else %}
                         <button class="d-inline-block like-comment" data-comment-id="{{ comment.comment_id }}"
-                            data-user-id="{{ user.user_id }}"><i class="fa-regular fa-heart fa-xl" style="color: #e8251f;"></i></button>
+                            data-user-id="{{ user.user_id }}"><i class="fa-regular fa-heart fa-xl heart-icon" style="color: #e8251f;"></i></button>
                         {% endif %}
                         <p class="like-comment-count d-inline-block">{{ comment.likes }}</p>
                         <input type="submit" class="reply-button" value="Reply">
@@ -201,10 +209,10 @@
                                 {% if reply in user.liked_comments %}
                                 <button class="d-inline-block like-comment liked"
                                     data-comment-id="{{ reply.comment_id }}"
-                                    data-user-id="{{ user.user_id }}"><i class="fa-solid fa-heart fa-xl" style="color: #e8251f;"></i></button>
+                                    data-user-id="{{ user.user_id }}"><i class="fa-solid fa-heart fa-xl heart-icon" style="color: #e8251f;"></i></button>
                                 {% else %}
                                 <button class="d-inline-block like-comment" data-comment-id="{{ reply.comment_id }}"
-                                    data-user-id="{{ user.user_id }}"><i class="fa-regular fa-heart fa-xl" style="color: #e8251f;"></i></button>
+                                    data-user-id="{{ user.user_id }}"><i class="fa-regular fa-heart fa-xl heart-icon" style="color: #e8251f;"></i></button>
                                 {% endif %}
                                 <p class="like-comment-count d-inline-block">{{ reply.likes }}</p>
                             </div>
