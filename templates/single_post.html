@@ -1,6 +1,10 @@
 {% extends '_layout.html' %}
 {% block styles %}
 <script src="https://kit.fontawesome.com/07187c1f27.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.0.0/dist/trix.css">
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript" src="https://unpkg.com/trix@2.0.0/dist/trix.umd.min.js"></script>
 {% endblock %}
 {% block title %}Stock Whisperer{% endblock %}
 {% block body %}
@@ -45,11 +49,10 @@
                         </button>
                         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                             <a class="dropdown-item" href="/posts/edit/{{ post.post_id }}">Edit</a>
-                            <a class="dropdown-item link-danger" href="#" id="delete-post">Delete</a>
+                            <a class="dropdown-item link-danger" href="#" data-post-id="{{ post.post_id }}" id="delete-post">Delete</a>
                         </div>
                     </div>
                 </div>
-
             </div>
 
             {% else %}
@@ -61,14 +64,14 @@
                 <h6 class="d-inline-block">Posted by <a href=/profile/{{post.creator.username}} class="link-warning">{{
                         post.creator.username }}</a> {{ post.date_posted|time_ago }} <form class="d-inline-block"
                         action="/follow/{{ post.creator.user_id }}" method="post"><button type="submit"
-                            id="follow-button" class="btn btn-warning ms-2 followed">Following</button></form>
+                            id="follow-button" data-post-creator-id="{{ post.creator.user_id }}" class="btn btn-warning ms-2 followed">Following</button></form>
                 </h6>
                 {% else %}
                 <!--  if user is not following post creator  -->
                 <h6 class="d-inline-block">Posted by <a href=/profile/{{post.creator.username}} class="link-warning">{{
                         post.creator.username }}</a> {{ post.date_posted|time_ago }} <form class="d-inline-block"
                         action="/follow/{{ post.creator.user_id }}" method="post"><button type="submit"
-                            id="follow-button" class="btn btn-warning ms-2">Follow</button></form>
+                            id="follow-button" data-post-creator-id="{{ post.creator.user_id }}" class="btn btn-warning ms-2">Follow</button></form>
                 </h6>
                 {% endif %}
             </div>
@@ -221,179 +224,22 @@
     <!-- END Comments Container  -->
 
 
-
-
-
     <!--  Scripts  -->
 
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 
-    <!--  Likes and comments  -->
-    <script>
-        $(document).ready(function () {
-            $('.like-button').click(function (event) {
-                event.stopPropagation();
-                var postId = $(this).data('post-id');
-                var userId = $(this).data('user-id');
-
-                $.ajax({
-                    type: 'POST',
-                    url: '/posts/like',
-                    data: { post_id: postId, user_id: userId },
-                    success: function (data) {
-                        console.log('Like added successfully');
-                    },
-                    error: function (error) {
-                        console.error('Error adding like:', error);
-                    }
-                });
-            });
-
-            $('#delete-post').click(function (e) {
-                e.preventDefault();
-
-                if (confirm('Are you sure you want to delete this post?')) {
-                    // Create a form
-                    var form = $('<form>', {
-                        'method': 'POST',
-                        'action': '/posts/delete/{{ post.post_id }}'
-                    });
-
-                    // Append the form to the body and submit it
-                    form.appendTo('body').submit();
-                }
-
-            });
-        });
-    </script>
-    <script>
-        $(document).ready(function () {
-            $('.like-comment').click(function (event) {
-                event.stopPropagation();
-                var commentId = $(this).data('comment-id');
-                var userId = $(this).data('user-id');
-
-                $.ajax({
-                    type: 'POST',
-                    url: '/posts/like_comment',
-                    data: { comment_id: commentId, user_id: userId },
-                    success: function (data) {
-                        console.log('Comment added successfully');
-                    },
-                    error: function (error) {
-                        console.error('Error adding Comment:', error);
-                    }
-                });
-            });
-        });
-    </script>
-
+    <!--  Delete Post  -->
+    <script src="./../static/scripts/delete-post.js"></script>
 
     <!--  Follow  -->
-    <script>
-        $(document).ready(function () {
-            $('#follow-button').click(function (event) {
-                event.stopPropagation();
-                event.preventDefault();
-                $.ajax({
-                    type: 'POST',
-                    url: '/follow/{{ post.creator.user_id }}',
-                    success: function (data) {
-                        console.log('Followed successfully');
-                    },
-                    error: function (error) {
-                        console.error('Error following:', error);
-                    }
-                });
-            });
-        });
-    </script>
-
-    <!--  Follow or Unfollow Dynamic UI  -->
-
-    <script>
-        function follow_or_not() {
-            const follow_button = document.getElementById("follow-button");
-            follow_button.addEventListener("click", function () {
-                if (follow_button.classList.contains("followed")) {
-                    follow_button.innerHTML = "Follow";
-                } else {
-                    follow_button.innerHTML = "Following";
-                }
-                follow_button.classList.toggle("followed");
-            });
-        }
-        follow_or_not();
-    </script>
-
-
+    <script src="./../static/scripts/dynamic-follow.js"></script>
 
     <!--  Like and Reply Dynamic UI  -->
-    <script>
-        function liked_or_not() {
-            const like_button = document.getElementsByClassName("like-button");
-            const like_count = document.getElementsByClassName("like-count");
-            for (let i = 0; i < like_button.length; i++) {
-                like_button[i].addEventListener("click", function () {
-                    if (like_button[i].classList.contains("liked")) {
-                        like_count[i].innerHTML = parseInt(like_count[i].innerHTML) - 1;
-                    } else {
-                        like_count[i].innerHTML = parseInt(like_count[i].innerHTML) + 1;
-                    }
-                    like_button[i].firstChild.classList.toggle("fa-regular");
-                    like_button[i].firstChild.classList.toggle("fa-solid");
-                    like_button[i].classList.toggle("liked");
-                });
-            }
-        }
-        liked_or_not();
-
-        function liked_comment_or_not() {
-            const like_button = document.getElementsByClassName("like-comment");
-            const like_count = document.getElementsByClassName("like-comment-count");
-            console.log(like_button.length);
-            for (let i = 0; i < like_button.length; i++) {
-                like_button[i].addEventListener("click", function () {
-                    if (like_button[i].classList.contains("liked")) {
-                        like_count[i].innerHTML = parseInt(like_count[i].innerHTML) - 1;
-                    } else {
-                        like_count[i].innerHTML = parseInt(like_count[i].innerHTML) + 1;
-                    }
-                    like_button[i].firstChild.classList.toggle("fa-regular");
-                    like_button[i].firstChild.classList.toggle("fa-solid");
-                    like_button[i].classList.toggle("liked");
-                });
-            }
-        }
-        liked_comment_or_not();
-
-        // display reply area when reply button is clicked
-        function reply() {
-            const reply_button = document.getElementsByClassName("reply-button");
-            const reply_area = document.getElementsByClassName("reply-area");
-            for (let i = 0; i < reply_button.length; i++) {
-                reply_button[i].addEventListener("click", function () {
-                    console.log("Button clicked:", i);
-                    console.log("Reply area:", reply_area[i]);
-                    reply_area[i].classList.toggle("d-none");
-                });
-            }
-        }
-        reply();
-    </script>
+    <script src="./../static/scripts/dynamic-likes.js"></script>
+    <script src="./../static/scripts/dynamic-replies.js"></script>
 
     <!--  Trix  -->
-    <script type="text/javascript">
-        (function () {
-            addEventListener("trix-initialize", function (e) {
-                const file_tools = document.querySelector(".trix-button-group--file-tools");
-                file_tools.remove();
-            })
-            addEventListener("trix-file-accept", function (e) {
-                e.preventDefault();
-            })
-        })();
-    </script>
+    <script type="text/javascript" src="./../static/scripts/trix-modifier.js"></script>
 
 </main>
 

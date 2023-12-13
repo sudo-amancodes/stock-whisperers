@@ -5,11 +5,7 @@
 {% for post, creator in posts %}
 
     <!--  Post Container -->
-    {% if 'following' in request.path %}
     <div id="post" class="container bg-secondary p-3 mb-5 w-50 rounded border border-secondary" onclick="location.href='/posts/{{post.post_id}}';" style="color: white;">
-    {% else %}
-    <div id="post" class="container bg-secondary p-3 mb-5 w-50 rounded border border-secondary" onclick="location.href='posts/{{post.post_id}}';" style="color: white;">
-    {% endif %}
 
         <!-- Post Title -->
         <div class="d-inline-flex align-items-center justify-content-between w-100">
@@ -48,8 +44,6 @@
                 <button>{{ post.comments|length }} Comments</button>
                 {% endif %}
             </div>
-
         </div>
-
     </div>
 {% endfor %}

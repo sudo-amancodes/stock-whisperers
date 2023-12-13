@@ -681,7 +681,7 @@ def profile(username: str):
 
     profile_picture = url_for(
         'static', filename='profile_pics/' + user.profile_picture)
-    return render_template('profile.html', user=user, profile_picture=profile_picture, posts=posts)
+    return render_template('profile.html', user=user, profile_picture=profile_picture, posts=posts, sanitize_html=sanitize_html)
 
 # Create a get request for live comments.
 # add user_id to session dictionary.
