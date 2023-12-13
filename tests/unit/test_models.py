@@ -33,3 +33,21 @@ def test_friendships_model():
     
     assert temp_freindship.user1_username == 'Zaid_J'
     assert temp_freindship.user2_username == 'John_D'
+
+# testing the posts model
+def test_posts_model():
+    temp_user = users('Jad', 'Bizri', "jadb", 'jadbizri@hotmail.com', 'Jad123', 'default-profile-pic.jpg')
+    temp_post = Post(1, 'Title', 'content')
+
+    assert type(temp_post) == Post
+    assert temp_post.user_id == 1
+    assert temp_post.title == 'Title'
+    assert temp_post.content == 'content'
+
+    # Checking that changing info works
+    temp_post.title = 'New Title'
+    temp_post.content = 'New Content'
+
+    assert temp_post.title == 'New Title'
+    assert temp_post.content == 'New Content'
+

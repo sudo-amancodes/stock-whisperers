@@ -394,7 +394,7 @@ def time_ago_filter(timestamp):
 @app.get('/posts')
 def posts():
     if not user_repository_singleton.is_logged_in():
-        redirect('/login')
+        return redirect('/login')
     all_posts = post_repository_singleton.get_all_posts_with_users()
     user = user_repository_singleton.get_user_by_username(
         user_repository_singleton.get_user_username())
