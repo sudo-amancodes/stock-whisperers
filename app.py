@@ -593,7 +593,7 @@ def create_user():
     if user_repository_singleton.validate_input(first_name, last_name, username, password):
         global temp_user_info
         temp_user_info = [first_name, last_name, username, email,
-                          bcrypt.generate_password_hash(password).decode(), profile_picture]
+                        bcrypt.generate_password_hash(password).decode(), profile_picture]
         send_verification_email(email)
         return redirect(f'/verify_user/{username}/signup')
 
@@ -619,7 +619,7 @@ def request_password_reset():
         return redirect('/request_password_reset')
     token = temp_user.get_reset_token()
     msg = Message('Password Reset Request',
-                  sender='noreply@stock-whisperers.com', recipients=[temp_user.email])
+                sender='noreply@stock-whisperers.com', recipients=[temp_user.email])
     msg.body = f'''To reset your password, click the following link:
 {url_for('password_reset', token = token, _external = True)}
 
@@ -627,7 +627,7 @@ If you did not make this request, please ignore this email
 '''
     mail.send(msg)
     flash('An email has been sent with instructions to reset your password',
-          category='success')
+        category='success')
     return redirect(url_for('verify_login'))
 
 
@@ -689,22 +689,20 @@ def profile(username: str):
 def live_comment():
     comments = live_posts.query.order_by(live_posts.date.desc()).all()
     comments_data = []
-
     for comment in comments:
         user = user_repository_singleton.get_user_by_user_id(comment.user_id)
         if not user:
-            return abort(401)
+            abort(401)
         comment_data = {
             'post_id': comment.post_id,
             'content': comment.content,
             'user_id': comment.user_id,
             'username': user.username,
-            'date': comment.date.strftime("%Y/%m/%d %H:%M:%S")
+            'date': comment.date.strftime("%Y/%m/%d %H:%M:%S"),
         }
         comments_data.append(comment_data)
 
     return jsonify(comments_data)
-
 
 # sokcetIO to handle comments:
 @socketio.on('send_comment')

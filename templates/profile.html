@@ -14,6 +14,7 @@
     right: 0;
     margin: 10px;
   }
+
 </style>
 {% if session['user']['username'] != user.username %}
 <div class="content-section">
@@ -26,7 +27,7 @@
         <h5 class="card-title">User information:</h5>
         <p class="card-text">
           <div class="media">
-            <img class="rounded-circle" src="{{ profile_picture }}" width = "150" height = "150" style="float: right;">
+            <img class="rounded-circle float-md-right" src="{{ profile_picture }}" width = "150" height = "150">
             </div>
             <strong>Username:</strong>
             <p>{{ user.username }}</p>
@@ -77,9 +78,6 @@
       <div class="d-inline-flex align-items-center justify-content-between w-100">
         <h3>{{ post.title }}</h3>
         {% if session['user']['username'] == user.username %}
-        <!-- TODO: Add edit and delete buttons -->
-        <!-- <a href="/posts/edit/{{ post.post_id }}"><button>Edit</button></a>
-        <a href="/posts/delete/{{ post.post_id }}"><button>Delete</button></a> -->
         <h6>Posted by you, {{ post.date_posted|time_ago }}</h6>
         {% else %}
         <h6>Posted by<a href = /profile/{{creator.username}}> {{ creator.username }}</a>, {{ post.date_posted|time_ago }}</h6>

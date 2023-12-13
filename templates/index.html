@@ -520,10 +520,7 @@ Stock whisperers
 
         fetch('/comment')
         .then(response => {
-            if (response.status === 401) {
-                alert('Please log in to view comments.');
-                // You might want to redirect the user to the login page here
-            } else if (response.ok) {
+            if (response.ok) {
                 return response.json();
             } else {
                 throw new Error(`Error: ${response.status}`);
@@ -538,7 +535,6 @@ Stock whisperers
         })
         .catch(error => {
             console.error('Error fetching comments:', error);
-            // Handle other errors here
         });
 
 
@@ -793,20 +789,5 @@ Stock whisperers
     "Wells Fargo & Company (WFC)",
     "Zoom Video Communications, Inc. (ZM)"
 ];
-
     </script>
-
-    <!-- <div class = "comments-section"> 
-        <h3> Live Comments</h3> 
-        <div id = "comments-container"> 
-
-        </div>  -->
-    <!-- {% if user %}
-    <div class="comment-form"> 
-    <textarea id="comment-input" placeholder="Enter comment"></textarea>
-    <button onclick="submitComment()"> Comment </button>
-    </div> 
-    {% endif %}
-    </div>  -->
-
 {% endblock %}
