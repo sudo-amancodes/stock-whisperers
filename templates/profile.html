@@ -20,6 +20,15 @@
     justify-content: space-between;
   }
 
+  .badge {
+    background-color: #007bff;
+    color: #fff;
+    padding: 3px 6px;
+    border-radius: 50%;
+    font-size: 12px;
+    margin-left: 5px;
+}
+
   .popup {
         width: 220px;
         max-height: 500px;
@@ -56,7 +65,9 @@
       </div>
       <div class="card-body">
         <h5 class="card-title">User information:
-          <button class="btn btn-secondary followers">Followers</button>
+          <button class="btn btn-secondary followers">
+            Followers: <span class="badge">{{followers|length}}</span>
+          </button>
               <div class="popup" id="popup">
                 <h2>Followers:</h2>
                 {% for follower in followers %}
@@ -64,7 +75,9 @@
                 {% endfor %}
                 <button class="btn btn-secondary close">Close</button>
               </div>
-              <button class="btn btn-secondary following">Following</button>
+              <button class="btn btn-secondary following">
+                Following: <span class="badge">{{following|length}}</span> 
+              </button>
               <div class="popup" id="popup2">
                 <h2>Followers:</h2>
                 {% for followee in following %}
@@ -96,23 +109,27 @@
           </div>
           <div class="card-body">
             <h5 class="card-title">Welcome!
-              <button class="btn btn-secondary followers">Followers</button>
-              <div class="popup" id="popup">
-                <h2>Followers:</h2>
-                {% for follower in followers %}
-                    <p>{{follower}}</p>
-                {% endfor %}
-                <button class="btn btn-secondary close">Close</button>
-              </div>
-              <button class="btn btn-secondary following">Following</button>
-              <div class="popup" id="popup2">
-                <h2>Followers:</h2>
-                {% for followee in following %}
-                <p>{{followee}}</p>
-                {% endfor %}
-                <button class="btn btn-secondary close2">Close</button>
-              </div>  
-              <button class="hidden"></button>
+              <button class="btn btn-secondary followers">
+                Followers: <span class="badge">{{followers|length}}</span>
+              </button>
+                  <div class="popup" id="popup">
+                    <h2>Followers:</h2>
+                    {% for follower in followers %}
+                        <p>{{follower}}</p>
+                    {% endfor %}
+                    <button class="btn btn-secondary close">Close</button>
+                  </div>
+                  <button class="btn btn-secondary following">
+                    Following: <span class="badge">{{following|length}}</span> 
+                  </button>
+                  <div class="popup" id="popup2">
+                    <h2>Followers:</h2>
+                    {% for followee in following %}
+                    <p>{{followee}}</p>
+                    {% endfor %}
+                    <button class="btn btn-secondary close2">Close</button>
+                  </div>  
+                  <button class="hidden"></button>
             </h5>
             <p class="card-text">
               <div class="media">
