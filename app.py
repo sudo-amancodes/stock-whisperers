@@ -688,34 +688,43 @@ def profile(username: str):
 @app.get('/comment')
 def live_comment():
     comments = live_posts.query.order_by(live_posts.date.desc()).all()
-    comments_data = [
-        {'post_id': comment.post_id,
-         'content': comment.content,
-         'user_id': comment.user_id,
-         'date': comment.date.strftime("%Y/%m/%d %H:%M:%S")}
-        for comment in comments
-    ]
+    comments_data = []
+
+    for comment in comments:
+        user = user_repository_singleton.get_user_by_user_id(comment.user_id)
+        if not user:
+            return abort(401)
+        comment_data = {
+            'post_id': comment.post_id,
+            'content': comment.content,
+            'user_id': comment.user_id,
+            'username': user.username,
+            'date': comment.date.strftime("%Y/%m/%d %H:%M:%S")
+        }
+        comments_data.append(comment_data)
+
     return jsonify(comments_data)
+
 
 # sokcetIO to handle comments:
 @socketio.on('send_comment')
 def handle_send_comment(data):
-    # if 'user_id' not in session:
-    # if not user_repository_singleton.is_logged_in():
-    # emit('error', {'message': 'Not logged in, please log in to comment :)'})
+    if not user_repository_singleton.is_logged_in():
+        return abort(401)
+        # emit('error', {'message': 'Not logged in, please log in to comment :)'})
     # return
     # abort (401)
     user_id = user_repository_singleton.get_user_user_id()
     content = data['comment']
 
-    # store commentsç
+    # store comments
     new_comment = live_posts(content=content, user_id=user_id)
     db.session.add(new_comment)
     db.session.commit()
 
-    # emitting  new comments:
+    # emitting new comments:
     emit('new_comment', {'user_id': user_id, 'content': content,
-         'post_id': new_comment.post_id}, broadcast=True)
+        'post_id': new_comment.post_id, 'username' : session['user']['username']}, broadcast=True)
 
 
 @app.get('/profile/<string:username>/edit')
