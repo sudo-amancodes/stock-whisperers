@@ -1,4 +1,4 @@
-CREATE DATABASE stock_whisperers
+CREATE DATABASE stock_whisperers IF NOT EXISTS
 
 CREATE TABLE IF NOT EXISTS users (
     user_id SERIAL,
@@ -63,7 +63,6 @@ CREATE TABLE IF NOT EXISTS friendships (
     CONSTRAINT check_user_follow CHECK (user1_username != user2_username)
 );
 
-
 CREATE TABLE IF NOT EXISTS comment_likes (
     comment_id INT,
     user_id INT,
@@ -71,13 +70,3 @@ CREATE TABLE IF NOT EXISTS comment_likes (
     FOREIGN KEY (comment_id) REFERENCES comment(comment_id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ); 
-
--- CREATE TABLE IF NOT EXISTS temporary_user (
---     email PRIMARY KEY,
---     first_name VARCHAR(255) NOT NULL,
---     last_name VARCHAR(255) NOT NULL,
---     username VARCHAR(255) UNIQUE NOT NULL,
---     password VARCHAR(255) NOT NULL,
---     profile_picture VARCHAR(255),
---     verification_code_sent_at TIMESTAMP
--- );
