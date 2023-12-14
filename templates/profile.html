@@ -21,20 +21,28 @@
             Followers: <span class="badge">{{followers|length}}</span>
           </button>
           <div class="popup" id="popup">
-            <h2>Followers:</h2>
-            {% for follower in followers %}
-            <p>{{follower}}</p>
-            {% endfor %}
+            <h2 class="mt-3">Followers:</h2>
+            {% if followers|length == 0 %}
+              <p>None :/</p>
+            {% else %}
+              {% for follower in followers %}
+                <p>{{follower}}</p>
+              {% endfor %}
+            {% endif %}
             <button class="btn btn-secondary close">Close</button>
           </div>
           <button class="btn btn-secondary following">
             Following: <span class="badge">{{following|length}}</span>
           </button>
           <div class="popup" id="popup2">
-            <h2>Following:</h2>
-            {% for followee in following %}
-            <p>{{followee}}</p>
-            {% endfor %}
+            <h2 class="mt-3">Following:</h2>
+            {% if following|length == 0 %}
+              <p>None :/</p>
+            {% else %}
+              {% for followee in following %}
+                <p>{{followee}}</p>
+              {% endfor %}
+            {% endif %}
             <button class="btn btn-secondary close2">Close</button>
           </div>
           <button class="hidden"></button>
@@ -65,20 +73,28 @@
             Followers: <span class="badge">{{followers|length}}</span>
           </button>
           <div class="popup" id="popup">
-            <h2>Followers:</h2>
-            {% for follower in followers %}
-            <p>{{follower}}</p>
-            {% endfor %}
+            <h2 class="mt-3">Followers:</h2>
+            {% if followers|length == 0 %}
+              <p>None :/</p>
+            {% else %}
+              {% for follower in followers %}
+                <p>{{follower}}</p>
+              {% endfor %}
+            {% endif %}
             <button class="btn btn-secondary close">Close</button>
           </div>
           <button class="btn btn-secondary following">
             Following: <span class="badge">{{following|length}}</span>
           </button>
           <div class="popup" id="popup2">
-            <h2>Following:</h2>
-            {% for followee in following %}
-            <p>{{followee}}</p>
-            {% endfor %}
+            <h2 class="mt-3">Following:</h2>
+            {% if following|length == 0 %}
+              <p>None :/</p>
+            {% else %}
+              {% for followee in following %}
+                <p>{{followee}}</p>
+              {% endfor %}
+            {% endif %}
             <button class="btn btn-secondary close2">Close</button>
           </div>
           <button class="hidden"></button>
