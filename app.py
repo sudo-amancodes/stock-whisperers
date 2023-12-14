@@ -768,13 +768,20 @@ def update_profile(username: str):
 
     profile_picture = request.files['profile_picture']
     if profile_picture:
-
         filename = secure_filename(profile_picture.filename)
+        if filename and allowed_file(filename):
         # Set UUID to prevent same file names
-        pic_name = str(uuid.uuid1()) + "_" + filename
-        profile_picture.save(os.path.join(
+            pic_name = str(uuid.uuid1()) + "_" + filename
+            profile_picture.save(os.path.join(
             app.config['UPLOAD_FOLDER'], pic_name))
-        user_to_edit.profile_picture = pic_name
+            try:
+                img = Image.open(os.path.join(
+                app.config['UPLOAD_FOLDER'], pic_name))
+                img.verify()
+            except Exception as e:
+                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], pic_name))
+                abort(400, description="Upload file is not a valid image")
+            user_to_edit.profile_picture = pic_name
 
     user_to_edit.email = new_email
     user_to_edit.username = new_username
