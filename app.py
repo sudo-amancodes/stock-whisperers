@@ -60,7 +60,6 @@ UPLOAD_FOLDER = 'static/profile_pics/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['POST_UPLOAD_FOLDER'] = 'static/post_pics/'
 
-
 db.init_app(app)
 
 # Make sure you are not on school wifi when trying to send emails, it will not work.
