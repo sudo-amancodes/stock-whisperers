@@ -46,7 +46,7 @@ bcrypt = Bcrypt(app)
 app.config['SECRET_KEY'] = os.getenv('APP_SECRET_KEY', 'default')
 
 # If bugs occur with sockets then try:
-app.config['SECRET_KEY'] = 'ABC'
+# app.config['SECRET_KEY'] = 'ABC'
 
 # Sockets Initialization
 socketio = SocketIO(app, cors_allowed_origins='*')
@@ -54,7 +54,7 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 app.debug = True
 
 # DB connection
-app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{os.getenv("DB_USER")}:{os.getenv("DB_PASS")}@{os.getenv("DB_HOST")}:{os.getenv("DB_PORT")}/{os.getenv("DB_NAME")}'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URL')
 
 UPLOAD_FOLDER = 'static/profile_pics/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
