@@ -50,7 +50,7 @@ Stock whisperers
         flex-wrap: wrap;
         justify-content: space-between;
         align-items: flex-start;
-        margin-bottom: 30px;
+        margin-bottom: 50px;
 
     }
 
@@ -60,12 +60,12 @@ Stock whisperers
         justify-content: space-between;
         align-items: flex-start;
         width: 100%;
-        margin-bottom: 20px;
-        
+        margin-bottom: 50px;
+        flex-direction: column;
     }
 
     .hero-section .col {
-        flex: 0 0 calc(50% - 10px);
+        /* flex: 0 0 calc(50% - 10px); */
         margin-bottom: 20px;
     }
 
@@ -79,6 +79,7 @@ Stock whisperers
     }
 
     .comments-section {
+        margin-top: 50px;
         background-color: #f9f9f9;
         padding: 20px;
         border-radius: 5px;
@@ -92,13 +93,13 @@ Stock whisperers
     }
 
     .comments-section #comments-container {
-        margin-top: 15px;
+        margin-top: 50px;
         border-top: 1px solid #ddd;
         padding-top: 10px;
     }
 
     .comments-section .comment-form {
-        margin-top: 20px;
+        margin-top: 50px;
     }
 
     .comments-section .comment-form textarea {
@@ -129,6 +130,7 @@ Stock whisperers
         padding: 25px;
         position: absolute;
         width: 325px;
+        
      }
      
      .wrapper .search-input{
@@ -137,7 +139,7 @@ Stock whisperers
         border-radius: 5px;
         position: relative;
         box-shadow: 0px 1px 5px 3px rgba(0,0,0,0.12);
-        z-index: 3; /* Increase the z-index value */
+        z-index: 3; 
      }
 
       .search-input input{
@@ -176,13 +178,10 @@ Stock whisperers
         width: 100%;
         cursor: default;
         border-radius: 3px;
-        
       }
       
       .search-input.active .autocom-box li{
         display: block;
-
-        
       }
       .autocom-box li:hover{
         background: #efefef;
