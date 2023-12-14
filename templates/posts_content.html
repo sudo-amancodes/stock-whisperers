@@ -15,9 +15,19 @@
         <div class="d-inline-flex align-items-center justify-content-between w-100">
             <h3>{{ post.title }}</h3>
             {% if user.is_authenticated and user.user_id == creator.user_id %}
-            <h6>Posted by you, {{ post.date_posted|time_ago }}</h6>
+            <div>
+                <h6>Posted by you, {{ post.date_posted|time_ago }}</h6>
+            
+                <img class="rounded-circle d-inline-block" src="/static/profile_pics/{{ creator.profile_picture }}" width = "50" height = "50" style="float: right;object-fit: cover;">
+
+            </div>
+            
+            
             {% else %}
-            <h6>Posted by<a class="link-warning" href = /profile/{{creator.username}}> {{ creator.username }}</a>, {{ post.date_posted|time_ago }}</h6>
+            <div>
+                <h6>Posted by<a class="link-warning" href = /profile/{{creator.username}}> {{ creator.username }}</a>, {{ post.date_posted|time_ago }}</h6>
+                <img class="rounded-circle d-inline-block" src="/static/profile_pics/{{ creator.profile_picture }}" width = "50" height = "50" style="float: right; object-fit: cover;">
+            </div>
             {% endif %}
         </div>
 
