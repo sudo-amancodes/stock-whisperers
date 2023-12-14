@@ -46,7 +46,7 @@ bcrypt = Bcrypt(app)
 app.config['SECRET_KEY'] = os.getenv('APP_SECRET_KEY', 'default')
 
 # If bugs occur with sockets then try:
-app.config['SECRET_KEY'] = 'ABC'
+# app.config['SECRET_KEY'] = 'ABC'
 
 # Sockets Initialization
 socketio = SocketIO(app, cors_allowed_origins='*')
