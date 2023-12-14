@@ -11,7 +11,7 @@
 {% block body %}
 
 <main class="d-flex justify-content-center flex-column">
-    
+
     <!--  Post Container  -->
     <div class="container bg-secondary p-3 mb-3 rounded w-75" style="color: white;">
 
@@ -32,7 +32,8 @@
                         </button>
                         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                             <a class="dropdown-item" href="/posts/edit/{{ post.post_id }}">Edit</a>
-                            <a class="dropdown-item link-danger" href="#" data-post-id="{{ post.post_id }}" id="delete-post">Delete</a>
+                            <a class="dropdown-item link-danger" href="#" data-post-id="{{ post.post_id }}"
+                                id="delete-post">Delete</a>
                         </div>
                     </div>
                 </div>
@@ -47,14 +48,16 @@
                 <h6 class="d-inline-block">Posted by <a href=/profile/{{post.creator.username}} class="link-warning">{{
                         post.creator.username }}</a> {{ post.date_posted|time_ago }} <form class="d-inline-block"
                         action="/follow/{{ post.creator.user_id }}" method="post"><button type="submit"
-                            id="follow-button" data-post-creator-id="{{ post.creator.user_id }}" class="btn btn-warning ms-2 followed">Following</button></form>
+                            id="follow-button" data-post-creator-id="{{ post.creator.user_id }}"
+                            class="btn btn-warning ms-2 followed">Following</button></form>
                 </h6>
                 {% else %}
                 <!--  if user is not following post creator  -->
                 <h6 class="d-inline-block">Posted by <a href=/profile/{{post.creator.username}} class="link-warning">{{
                         post.creator.username }}</a> {{ post.date_posted|time_ago }} <form class="d-inline-block"
                         action="/follow/{{ post.creator.user_id }}" method="post"><button type="submit"
-                            id="follow-button" data-post-creator-id="{{ post.creator.user_id }}" class="btn btn-warning ms-2">Follow</button></form>
+                            id="follow-button" data-post-creator-id="{{ post.creator.user_id }}"
+                            class="btn btn-warning ms-2">Follow</button></form>
                 </h6>
                 {% endif %}
             </div>
@@ -78,16 +81,20 @@
                 {% if user.is_authenticated %}
                 {% if post in user.liked_posts %}
                 <button class="d-inline-block like-button liked" data-post-id="{{ post.post_id }}"
-                    data-user-id="{{ user.user_id }}"><i class="fa-solid fa-heart fa-xl heart-icon" style="color: #e8251f;"></i></button>
+                    data-user-id="{{ user.user_id }}"><i class="fa-solid fa-heart fa-xl heart-icon"
+                        style="color: #e8251f;"></i></button>
                 {% else %}
                 <button class="d-inline-block like-button" data-post-id="{{ post.post_id }}"
-                    data-user-id="{{ user.user_id }}"><i class="fa-regular fa-heart fa-xl heart-icon" style="color: #e8251f;"></i></button>
+                    data-user-id="{{ user.user_id }}"><i class="fa-regular fa-heart fa-xl heart-icon"
+                        style="color: #e8251f;"></i></button>
                 {% endif %}
                 {% else %}
-                <a href="/login"><button class="like-button"><i class="fa-regular fa-heart fa-xl heart-icon" style="color: #e8251f;"></i></button></a>
+                <a href="/login"><button class="like-button"><i class="fa-regular fa-heart fa-xl heart-icon"
+                            style="color: #e8251f;"></i></button></a>
                 {% endif %}
                 <p class="like-count d-inline-block">{{ post.likes }}</p>
-                <button class="ms-3 comment-button" onclick="focus_on_comment()"><i class="fa-solid fa-comment fa-xl comment-icon" style="color: #ffc107;"></i></button>
+                <button class="ms-3 comment-button" onclick="focus_on_comment()"><i
+                        class="fa-solid fa-comment fa-xl comment-icon" style="color: #ffc107;"></i></button>
                 <p class="d-inline-block">{{ post.comments|length }}</p>
             </div>
             <!-- END Like and Comment Buttons  -->
@@ -103,7 +110,8 @@
         <p>Add a comment as {{user.username}}</p>
         <form class="w-100 d-flex flex-column" action="/posts/{{ post.post_id }}/comment" method="post">
             <input id="content" style="opacity: 0; width: 0; float: left;" name="content" required>
-            <trix-editor style="color: white;" input="content" placeholder="What are your thoughts?" id="comment-editor"></trix-editor>
+            <trix-editor style="color: white;" input="content" placeholder="What are your thoughts?"
+                id="comment-editor"></trix-editor>
             <input class="w-25 align-self-end mt-2" type="submit" value="Comment">
         </form>
 
@@ -116,10 +124,13 @@
             <div class="comment-container container pt-3 ps-0 pe-0">
 
                 {% if user.username == comment.comment_creator.username %}
-                <h6 class="d-flex">{{ comment.comment_creator.username }} (you) -<span class="badge badge-secondary">{{
+                <h6 class="d-flex">{{ comment.comment_creator.username }} (you) -<span
+                        style="background-color: #6c757d;" class="badge badge-secondary">{{
                         comment.date_posted|time_ago }}</span></h6>
                 {% else %}
-                <h6 class="d-flex"><a class="link-warning" href="/profile/{{ comment.comment_creator.username }}">{{ comment.comment_creator.username }}</a>&nbsp;-<span class="badge badge-secondary">{{
+                <h6 class="d-flex"><a class="link-warning" href="/profile/{{ comment.comment_creator.username }}">{{
+                        comment.comment_creator.username }}</a>&nbsp;-<span style="background-color: #6c757d;"
+                        class="badge badge-secondary">{{
                         comment.date_posted|time_ago }}</span></h6>
                 {% endif %}
 
@@ -130,13 +141,16 @@
 
                     <!--  Like and Reply Buttons  -->
                     <div>
-                        <button class="reply-button"><i class="fa-solid fa-reply fa-xl reply-icon" style="color: black;"></i></button>
+                        <button class="reply-button"><i class="fa-solid fa-reply fa-xl reply-icon"
+                                style="color: black;"></i></button>
                         {% if comment in user.liked_comments %}
                         <button class="d-inline-block like-comment liked" data-comment-id="{{ comment.comment_id }}"
-                            data-user-id="{{ user.user_id }}"><i class="fa-solid fa-heart fa-xl heart-icon" style="color: #e8251f;"></i></button>
+                            data-user-id="{{ user.user_id }}"><i class="fa-solid fa-heart fa-xl heart-icon"
+                                style="color: #e8251f;"></i></button>
                         {% else %}
                         <button class="d-inline-block like-comment" data-comment-id="{{ comment.comment_id }}"
-                            data-user-id="{{ user.user_id }}"><i class="fa-regular fa-heart fa-xl heart-icon" style="color: #e8251f;"></i></button>
+                            data-user-id="{{ user.user_id }}"><i class="fa-regular fa-heart fa-xl heart-icon"
+                                style="color: #e8251f;"></i></button>
                         {% endif %}
                         <p class="like-comment-count d-inline-block">{{ comment.likes }}</p>
                     </div>
@@ -161,14 +175,15 @@
                         {% if user.username == reply.comment_creator.username %}
                         <div class="d-flex">
                             <h6>{{ reply.comment_creator.username }} (you) -</h6>
-                            <span class="badge badge-secondary">{{reply.date_posted|time_ago }}</span>
+                            <span style="background-color: #6c757d;" class="badge badge-secondary">{{reply.date_posted|time_ago }}</span>
                         </div>
                         {% else %}
                         <div class="d-flex">
-                            <h6><a class="link-warning" href="/profile/{{ reply.comment_creator.username }}">{{ reply.comment_creator.username }}</a>&nbsp;-</h6>
-                            <span class="badge badge-secondary">{{reply.date_posted|time_ago }}</span>
+                            <h6><a class="link-warning" href="/profile/{{ reply.comment_creator.username }}">{{
+                                    reply.comment_creator.username }}</a>&nbsp;-</h6>
+                            <span style="background-color: #6c757d;" class="badge badge-secondary">{{reply.date_posted|time_ago }}</span>
                         </div>
-                        
+
                         {% endif %}
 
                         <div
@@ -180,11 +195,12 @@
                             <div>
                                 {% if reply in user.liked_comments %}
                                 <button class="d-inline-block like-comment liked"
-                                    data-comment-id="{{ reply.comment_id }}"
-                                    data-user-id="{{ user.user_id }}"><i class="fa-solid fa-heart fa-xl heart-icon" style="color: #e8251f;"></i></button>
+                                    data-comment-id="{{ reply.comment_id }}" data-user-id="{{ user.user_id }}"><i
+                                        class="fa-solid fa-heart fa-xl heart-icon" style="color: #e8251f;"></i></button>
                                 {% else %}
                                 <button class="d-inline-block like-comment" data-comment-id="{{ reply.comment_id }}"
-                                    data-user-id="{{ user.user_id }}"><i class="fa-regular fa-heart fa-xl heart-icon" style="color: #e8251f;"></i></button>
+                                    data-user-id="{{ user.user_id }}"><i class="fa-regular fa-heart fa-xl heart-icon"
+                                        style="color: #e8251f;"></i></button>
                                 {% endif %}
                                 <p class="like-comment-count d-inline-block">{{ reply.likes }}</p>
                             </div>
