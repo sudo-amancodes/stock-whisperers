@@ -60,7 +60,6 @@ UPLOAD_FOLDER = 'static/profile_pics/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['POST_UPLOAD_FOLDER'] = 'static/post_pics/'
 
-
 db.init_app(app)
 
 # Make sure you are not on school wifi when trying to send emails, it will not work.
@@ -423,7 +422,7 @@ def following_posts():
 @app.get('/posts/<int:post_id>')
 def post(post_id):
     if not user_repository_singleton.is_logged_in():
-        redirect('/login')
+        return redirect('/login')
     post = post_repository_singleton.get_post_by_id(post_id)
     user = user_repository_singleton.get_user_by_username(
         user_repository_singleton.get_user_username())
@@ -446,7 +445,7 @@ def login():
 
 def send_verification_email(email):
     if not email:
-        abort(400)
+        abort(403)
     global code
     code = random.randint(100000, 999999)
     msg = Message('Verification code',
@@ -481,7 +480,7 @@ def verify_code(username, method):
         user = user_repository_singleton.get_user_by_username(
             temp_user_info[2])
         if not user:
-            abort(401)
+            abort(403)
         user_repository_singleton.login_user(user)
         flash('Successfully created an account. Welcome, ' +
               user.first_name + '!', category='success')
@@ -489,7 +488,7 @@ def verify_code(username, method):
 
     user = user_repository_singleton.get_user_by_username(username)
     if not user:
-        abort(401)
+        abort(403)
     flash('Successfully logged in, ' + user.first_name + '!', category='success')
     user_repository_singleton.login_user(user)
     return redirect('/')
@@ -636,7 +635,7 @@ def password_reset_form(token):
     if user_repository_singleton.is_logged_in():
         return redirect('/')
     user = users.verify_reset_token(token)
-    if user is None:
+    if not user:
         flash('Invalid or expired token', category='error')
         return redirect('/login')
     return render_template('reset_password.html', token=token)
@@ -672,11 +671,13 @@ def password_reset(token):
 def profile(username: str):
     if not user_repository_singleton.is_logged_in():
         user = user_repository_singleton.get_user_by_username(username)
+        if not user:
+            abort(403)
         profile_picture = url_for(
             'static', filename='profile_pics/' + user.profile_picture)
 
     user = user_repository_singleton.get_user_by_username(username)
-    if user is None:
+    if not user:
         abort(403)
     posts = post_repository_singleton.get_user_posts(user.user_id)
 
@@ -743,6 +744,9 @@ def update_profile(username: str):
         abort(401)
 
     user_to_edit = users.query.filter_by(username=username).first()
+
+    if not user_to_edit:
+        abort(403)
 
     new_email = request.form.get('email')
     new_username = request.form.get('username')
