@@ -686,11 +686,19 @@ def profile(username: str):
     user = user_repository_singleton.get_user_by_username(username)
     if not user:
         abort(403)
+
+    logged_in_user = user_repository_singleton.get_user_by_user_id(user_repository_singleton.get_user_user_id())
+    if not logged_in_user:
+        abort(403)
+    is_following = False
+    if logged_in_user.is_following(user):
+        is_following = True
+    
     posts = post_repository_singleton.get_user_posts(user.user_id)
 
     profile_picture = url_for(
         'static', filename='profile_pics/' + user.profile_picture)
-    return render_template('profile.html', user=user, profile_picture=profile_picture, posts=posts, followers = user.get_all_followers(), following = user.get_all_following(), sanitize_html=sanitize_html)
+    return render_template('profile.html', user=user, profile_picture=profile_picture, posts=posts, followers = user.get_all_followers(), following = user.get_all_following(), sanitize_html=sanitize_html, is_following=is_following)
 
 # Create a get request for live comments.
 # add user_id to session dictionary.

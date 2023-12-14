@@ -49,7 +49,7 @@
                         post.creator.username }}</a> {{ post.date_posted|time_ago }} <form class="d-inline-block"
                         action="/follow/{{ post.creator.user_id }}" method="post"><button type="submit"
                             id="follow-button" data-post-creator-id="{{ post.creator.user_id }}"
-                            class="btn btn-warning ms-2 followed">Following</button></form>
+                            class="btn btn-warning ms-2 followed">Unfollow</button></form>
                 </h6>
                 {% else %}
                 <!--  if user is not following post creator  -->
