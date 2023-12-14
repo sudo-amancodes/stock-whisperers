@@ -148,7 +148,7 @@ class Post(db.Model):
     liked_by = db.relationship('users', secondary='likes', backref='liked_posts')
 
     # each post's comments
-    comments = db.relationship('Comment', backref='comments')
+    comments = db.relationship('Comment', backref='comments', order_by='Comment.date_posted', lazy=True)
 
     # def __init__(self, title: str, content: str):
     #     self.title = title

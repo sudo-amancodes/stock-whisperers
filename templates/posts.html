@@ -1,25 +1,13 @@
 {% extends '_layout.html' %}
-
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="./../static/posts.css">
+{% endblock %}
+{% block scripts %}
+<script src="https://kit.fontawesome.com/07187c1f27.js" crossorigin="anonymous"></script>
+{% endblock %}
 {% block title %}Upload to Stock Whisperers{% endblock %}
 
 {% block body %}
-
-<style>
-    .liked {
-        /* style the like button here to show that it is liked */
-        background-color: red;
-    }
-
-    #post {
-        border-width: 2px !important;
-    }
-
-    #post:hover {
-        cursor: pointer;
-        border: 2px solid rgb(52, 53, 54) !important;
-    }
-</style>
-
 
 <main class="d-flex justify-content-center flex-column">
 
@@ -71,67 +59,10 @@
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 
     <!-- Dynamic TABS -->
-    <script>
-        $(document).ready(function () {
+    <script src="./../static/scripts/dynamic-tabs.js"></script>
 
-            // Reload the page when visibility changes
-            document.addEventListener("visibilitychange", function () {
-                if (document.visibilityState === "visible") {
-                    var scrollPosition = window.scrollY;
-
-                    // Reload the page
-                    location.reload();
-
-                    // Scroll back to the previous position after the reload
-                    window.scrollTo(0, scrollPosition);
-                }
-            });
-        });
-    </script>
-
-    <!-- Like Button -->
-    <script>
-        $(document).ready(function () {
-            $('.like-button').click(function (event) {
-                event.stopPropagation();
-                var postId = $(this).data('post-id');
-                var userId = $(this).data('user-id');
-
-                $.ajax({
-                    type: 'POST',
-                    url: '/posts/like',
-                    data: { post_id: postId, user_id: userId },
-                    success: function (data) {
-                        console.log('Like added successfully');
-                    },
-                    error: function (error) {
-                        console.error('Error adding like:', error);
-                    }
-                });
-            });
-        });
-    </script>
-
-    <!-- Like Button Dynamic UI -->
-    <script>
-        function liked_or_not() {
-            const like_button = document.getElementsByClassName("like-button");
-            const like_count = document.getElementsByClassName("like-count");
-            for (let i = 0; i < like_button.length; i++) {
-                like_button[i].addEventListener("click", function () {
-                    if (like_button[i].classList.contains("liked")) {
-                        like_count[i].innerHTML = parseInt(like_count[i].innerHTML) - 1;
-                        like_button[i].innerHTML = "Like";
-                    } else {
-                        like_button[i].innerHTML = "Liked";
-                        like_count[i].innerHTML = parseInt(like_count[i].innerHTML) + 1;
-                    }
-                    like_button[i].classList.toggle("liked");
-                });
-            }
-        }
-        liked_or_not();
-    </script>
+    <!-- Like Buttons -->
+    <script src="./../static/scripts/dynamic-likes.js"></script>
 
 </main>
 
