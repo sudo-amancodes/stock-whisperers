@@ -55,12 +55,12 @@ app.debug = True
 
 
 # DB connection
-app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{os.getenv("DB_USER")}:{os.getenv("DB_PASS")}@{os.getenv("DB_HOST")}:{os.getenv("DB_PORT")}/{os.getenv("DB_NAME")}'
+# app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{os.getenv("DB_USER")}:{os.getenv("DB_PASS")}@{os.getenv("DB_HOST")}:{os.getenv("DB_PORT")}/{os.getenv("DB_NAME")}'
 
 # Local DB connection
 
 # Deploy DB connection
-# app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URL')
 
 
 UPLOAD_FOLDER = 'static/profile_pics/'
