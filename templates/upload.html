@@ -1,5 +1,10 @@
 {% extends '_layout.html' %}
-
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.0.0/dist/trix.css">
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript" src="https://unpkg.com/trix@2.0.0/dist/trix.umd.min.js"></script>
+{% endblock %}
 {% block title %}Upload to Stock Whisperers{% endblock %}
 {% block body %}
 
@@ -19,29 +24,13 @@
         </div>
     </form>
 </main>
-<script type="text/javascript">
 
-    function validateForm() {
-        // Validate image file if selected
-        var imageUpload = document.getElementById('image_upload');
-        if (imageUpload.files.length > 0) {
-            var allowedExtensions = /(\.jpg|\.jpeg|\.png|\.gif)$/i;
-            if (!allowedExtensions.exec(imageUpload.value)) {
-                alert('Invalid file type. Please upload a valid image file (jpg, jpeg, png, gif).');
-                return false;
-            }
-        }
-        return true;
-    }
 
-    (function () {
-        addEventListener("trix-initialize", function (e) {
-            const file_tools = document.querySelector(".trix-button-group--file-tools");
-            file_tools.remove();
-        })
-        addEventListener("trix-file-accept", function (e) {
-            e.preventDefault();
-        })
-    })();
-</script>
+<!-- SCRIPTS -->
+
+<script type="text/javascript" src="./../static/scripts/validate-image.js"></script>
+
+<!-- Trix -->
+<script src="./../static/scripts/trix-modifier.js"></script>
+
 {% endblock %}
