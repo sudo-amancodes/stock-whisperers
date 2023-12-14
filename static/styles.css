@@ -181,16 +181,64 @@ span a:hover{
     color: #000;
 }
 
+.rounded-circle {
+    border: 2px solid #808080;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.top-right {
+    position: absolute;
+    top: -8px;
+    right: 0;
+    margin: 10px;
+}
+
+.card-title {
+    display: flex;
+    justify-content: space-between;
+}
+
+.badge {
+    background-color: #007bff;
+    color: #fff;
+    padding: 3px 6px;
+    border-radius: 50%;
+    font-size: 12px;
+    margin-left: 5px;
+}
+
+.popup {
+    width: 220px;
+    max-height: 500px;
+    background: #5ca1cffa;
+    border-radius: 6px;
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(.1);
+    text-align: center;
+    padding: 0 30px 30px;
+    color: #fff;
+    visibility: hidden;
+    transition: transform .4s, top .4s;
+    overflow: scroll;
+}
+
+.open-popup {
+    visibility: visible;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.hidden {
+    visibility: hidden;
+}
+
 @media only screen and (max-width: 768px){
     .side-image{
         border-radius: 10px 10px 0 0;
     }
-    /* img{
-        width: 35px;
-        position: absolute;
-        top: 20px;
-        left: 47%;
-    } */
     .text{
         position: absolute;
         top: 70%;
