@@ -248,7 +248,7 @@ Stock whisperers
         <div class="wrapper">
             <div class="search-input">
               <a href="" target="_blank" hidden></a>
-              <input type="text" placeholder="Type to search..">
+              <input type="text" placeholder="SPY">
               <div class="autocom-box">
                 <!-- here list are inserted from javascript -->
               </div>
@@ -313,8 +313,9 @@ Stock whisperers
     <div id="tickers-grid"></div>
     </div>
 
-    
+    <!-- Replace localStorage with database connection.  -->
     <script>
+        // This connects currently to the 
         var tickers = JSON.parse(localStorage.getItem('tickers')) || [];
         var lastPrices = {};
         var counter = 15;
@@ -343,6 +344,10 @@ Stock whisperers
             var newTicker = $('#new-ticker').val().toUpperCase();
             if(!tickers.includes(newTicker)){
                 tickers.push(newTicker);
+                // Replace localStorage with database connection. 
+                // This function check if ticker is inside of localStrage and if
+                // Not then it pushes the client side storge. And it appears on screen.
+                // The line below sets the ticker. 
                 localStorage.setItem('tickers', JSON.stringify(tickers))
                 addTickerToGrid(newTicker);
             }
@@ -354,6 +359,10 @@ Stock whisperers
             console.log(1)
             var tickerToRemove = $(this).data('ticker');
             tickers = tickers.filter(t => t !== tickerToRemove);
+            // Replace localStorage with database connection.  
+            // This function removes from the client side storage.
+            // The line below removes from the storage based on if the .remove-btn class
+            // Was clicked
             localStorage.setItem('tickers', JSON.stringify(tickers))
             $(`#${tickerToRemove}`).remove();
         });
@@ -367,6 +376,9 @@ Stock whisperers
                 <button class="remove-btn" data-ticker="${ticker}">Remove</button></div>`)
 
         }
+        // This function uses the flask to get the current user tickers. 
+        // For each ticker in tickers, we get the current value that updates.
+        // Update classes to change the color of the list
         const updatePrices = () => {
             tickers.forEach((ticker)=>{
                 $.ajax({
@@ -627,7 +639,6 @@ Stock whisperers
     "Alphabet Inc. Class A (GOOGL)",
     "Alphabet Inc. Class C (GOOG)",
     "Amazon.com, Inc. (AMZN)",
-    "AMD (Advanced Micro Devices, Inc.)",
     "American Express Company (AXP)",
     "American International Group, Inc. (AIG)",
     "Amgen Inc. (AMGN)",
