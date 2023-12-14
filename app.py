@@ -54,7 +54,7 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 app.debug = True
 
 # DB connection
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{os.getenv("DB_USER")}:{os.getenv("DB_PASS")}@{os.getenv("DB_HOST")}:{os.getenv("DB_PORT")}/{os.getenv("DB_NAME")}'
 
 UPLOAD_FOLDER = 'static/profile_pics/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
