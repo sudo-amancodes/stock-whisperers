@@ -189,7 +189,7 @@ span a:hover{
 
 .top-right {
     position: absolute;
-    top: -8px;
+    top: 0px;
     right: 0;
     margin: 10px;
 }

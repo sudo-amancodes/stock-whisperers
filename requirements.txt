@@ -16,8 +16,8 @@ Flask-SocketIO==5.3.6
 Flask-SQLAlchemy==3.1.1
 Flask-WTF==1.2.1
 frozendict==2.3.8
+gevent==23.9.1
 greenlet==3.0.1
-gunicorn==21.2.0
 h11==0.14.0
 html5lib==1.1
 idna==3.4
@@ -65,3 +65,5 @@ Werkzeug==3.0.1
 wsproto==1.2.0
 WTForms==3.1.1
 yfinance==0.2.31
+zope.event==5.0
+zope.interface==6.1
