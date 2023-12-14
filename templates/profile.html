@@ -8,57 +8,6 @@
 {% endblock %}
 {% block body %}
 
-<<<<<<< HEAD
-=======
-  .top-right {
-    position: absolute;
-    top: -8px;
-    right: 0;
-    margin: 10px;
-  }
-
-  .card-title {
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .badge {
-    background-color: #007bff;
-    color: #fff;
-    padding: 3px 6px;
-    border-radius: 50%;
-    font-size: 12px;
-    margin-left: 5px;
-  }
-
-  .popup {
-    width: 220px;
-    max-height: 500px;
-    background: #5ca1cffa;
-    border-radius: 6px;
-    position: absolute;
-    top: 40%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(.1);
-    text-align: center;
-    padding: 0 30px 30px;
-    color: #fff;
-    visibility: hidden;
-    transition: transform .4s, top .4s;
-    overflow: scroll;
-  }
-
-  .open-popup {
-    visibility: visible;
-    top: 50%;
-    transform: translate(-50%, -50%) scale(1);
-  }
-
-  .hidden {
-    visibility: hidden;
-  }
-</style>
->>>>>>> main
 {% if session['user']['username'] != user.username %}
 <div class="content-section">
   <div class="mt3">
@@ -82,11 +31,7 @@
             Following: <span class="badge">{{following|length}}</span>
           </button>
           <div class="popup" id="popup2">
-<<<<<<< HEAD
             <h2>Following:</h2>
-=======
-            <h2>Followers:</h2>
->>>>>>> main
             {% for followee in following %}
             <p>{{followee}}</p>
             {% endfor %}
@@ -126,58 +71,15 @@
             {% endfor %}
             <button class="btn btn-secondary close">Close</button>
           </div>
-<<<<<<< HEAD
-          <div class="card-body">
-            <h5 class="card-title">Welcome!
-              <button class="btn btn-secondary followers">
-                Followers: <span class="badge">{{followers|length}}</span>
-              </button>
-                  <div class="popup" id="popup">
-                    <h2>Followers:</h2>
-                    {% for follower in followers %}
-                        <p>{{follower}}</p>
-                    {% endfor %}
-                    <button class="btn btn-secondary close">Close</button>
-                  </div>
-                  <button class="btn btn-secondary following">
-                    Following: <span class="badge">{{following|length}}</span> 
-                  </button>
-                  <div class="popup" id="popup2">
-                    <h2>Following:</h2>
-                    {% for followee in following %}
-                    <p>{{followee}}</p>
-                    {% endfor %}
-                    <button class="btn btn-secondary close2">Close</button>
-                  </div>  
-                  <button class="hidden"></button>
-            </h5>
-            <p class="card-text">
-              <div class="media">
-                <img class="rounded-circle" src="{{ profile_picture }}" width = "150" height = "150" style="float: right;">
-              </div>
-                <strong>Username:</strong>
-                <p>{{ user.username }}</p>
-                <strong>Email:</strong>
-                <p>{{ user.email }}</p>
-            </p>
-            <form action="/profile/{{session['user']['username']}}/edit" method="get" class="mt-3">
-              <button type="submit" class="btn btn-secondary">Edit Profile</button>
-            </form>
-            <!-- logout button -->
-            <form action="/logout" method="post">
-              <button type="submit" class="btn btn-secondary top-right">Logout</button>
-            </form>
-=======
           <button class="btn btn-secondary following">
             Following: <span class="badge">{{following|length}}</span>
           </button>
           <div class="popup" id="popup2">
-            <h2>Followers:</h2>
+            <h2>Following:</h2>
             {% for followee in following %}
             <p>{{followee}}</p>
             {% endfor %}
             <button class="btn btn-secondary close2">Close</button>
->>>>>>> main
           </div>
           <button class="hidden"></button>
         </h5>
@@ -205,20 +107,6 @@
 
 <br><br>
 
-<<<<<<< HEAD
-        const followers_button = document.querySelector('.followers');
-        followers_button.addEventListener('click', openPopup)
-        const close_button = document.querySelector('.close');
-        close_button.addEventListener('click', closePopup)
-        let popup = document.getElementById('popup');
-        function openPopup() {
-            popup.classList.add("open-popup");
-        }   
-      </script>
-
-// <!-- Followers and following buttons -->
-<script src="./../static/scripts/follow-buttons.js"></script>
-=======
 <!-- Posts -->
 {% set posts = posts %}
 {% include 'posts_content.html' %}
@@ -230,33 +118,7 @@
 <!-- Like Buttons -->
 <script src="./../static/scripts/dynamic-likes.js"></script>
 
-<script>
-  const followers_button = document.querySelector('.followers');
-  followers_button.addEventListener('click', openPopup)
-  const close_button = document.querySelector('.close');
-  close_button.addEventListener('click', closePopup)
-  let popup = document.getElementById('popup');
-  function openPopup() {
-    popup.classList.add("open-popup");
-  }
-
-  function closePopup() {
-    popup.classList.remove("open-popup");
-  }
-
-  const following_button = document.querySelector('.following');
-  following_button.addEventListener('click', openPopup2)
-  const close_button2 = document.querySelector('.close2');
-  close_button2.addEventListener('click', closePopup2)
-  let popup2 = document.getElementById('popup2');
-  function openPopup2() {
-    popup2.classList.add("open-popup");
-  }
-
-  function closePopup2() {
-    popup2.classList.remove("open-popup");
-  }
-</script>
->>>>>>> main
+<!-- Followers and following buttons -->
+<script src="./../static/scripts/follow-buttons.js"></script>
 
 {% endblock %}
