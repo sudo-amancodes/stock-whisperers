@@ -778,7 +778,7 @@ def update_profile(username: str):
         flash('Email already in use', 'error')
         return redirect(f'/profile/{username}/edit')
 
-    profile_picture = request.files['profile_picture']
+    profile_picture = request.files['image_upload']
     if profile_picture:
         filename = secure_filename(profile_picture.filename)
         if filename and allowed_file(filename):

@@ -65,8 +65,8 @@
     <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" value="{{user.email}}">
 </div>
     <div class="input-group mb-3">
-        <input type="file" class="form-control" id="profile_picture" name="profile_picture">
-        <label class="input-group-text" for="profile_picture">Upload</label>
+        <input type="file" class="form-control" id="image_upload" name="image_upload" accept="image/*">
+        <label class="input-group-text" for="image_upload">Upload</label>
     </div>
     <button type="submit" class="btn btn-secondary">Save Changes</button>
 </form>
@@ -95,4 +95,5 @@
         popup.classList.toggle("open-popup");
     }   
 </script>
+<script type="text/javascript" src="./../static/scripts/validate-image.js"></script>
 {% endblock %}
