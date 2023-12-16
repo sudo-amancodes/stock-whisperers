@@ -5,14 +5,10 @@ from flask_wtf.file import FileField, FileAllowed
 # from flask_wtf import FileField
 # Market Data
 import yfinance as yf
-import plotly.graph_objs as go
-import json
-import plotly
-import plotly.express as px
-import pandas as pd
+
 
 # Server Setup
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, send
 from threading import Lock
 from flask_bcrypt import Bcrypt
 import os
@@ -143,6 +139,8 @@ def previous_graph(ticker):
     symbol = yf.Ticker(ticker)
     df = symbol.history(period='5d', interval='1m')
     return correct_graph_cols(df)
+
+
 
 @app.get('/')
 def index():
@@ -700,46 +698,6 @@ def profile(username: str):
         'static', filename='profile_pics/' + user.profile_picture)
     return render_template('profile.html', user=user, profile_picture=profile_picture, posts=posts, followers = user.get_all_followers(), following = user.get_all_following(), sanitize_html=sanitize_html, is_following=is_following)
 
-# Create a get request for live comments.
-# add user_id to session dictionary.
-@app.get('/comment')
-def live_comment():
-    comments = live_posts.query.order_by(live_posts.date.desc()).all()
-    comments_data = []
-    for comment in comments:
-        user = user_repository_singleton.get_user_by_user_id(comment.user_id)
-        if not user:
-            abort(401)
-        comment_data = {
-            'post_id': comment.post_id,
-            'content': comment.content,
-            'user_id': comment.user_id,
-            'username': user.username,
-            'date': comment.date.strftime("%Y/%m/%d %H:%M:%S"),
-        }
-        comments_data.append(comment_data)
-
-    return jsonify(comments_data)
-
-# sokcetIO to handle comments:
-@socketio.on('send_comment')
-def handle_send_comment(data):
-    if not user_repository_singleton.is_logged_in():
-        return abort(401)
-        # emit('error', {'message': 'Not logged in, please log in to comment :)'})
-    # return
-    # abort (401)
-    user_id = user_repository_singleton.get_user_user_id()
-    content = data['comment']
-
-    # store comments
-    new_comment = live_posts(content=content, user_id=user_id)
-    db.session.add(new_comment)
-    db.session.commit()
-
-    # emitting new comments:
-    emit('new_comment', {'user_id': user_id, 'content': content,
-        'post_id': new_comment.post_id, 'username' : session['user']['username']}, broadcast=True)
 
 
 @app.get('/profile/<string:username>/edit')
@@ -807,10 +765,71 @@ def update_profile(username: str):
 
     return redirect(f'/profile/{new_username}')
 
+
+# sokcetIO to handle comments:
+# @socketio.on('send_comment')
+# def handle_send_comment(data):
+#     if not user_repository_singleton.is_logged_in():
+#         return abort(401)
+#         # emit('error', {'message': 'Not logged in, please log in to comment :)'})
+#     # return
+#     # abort (401)
+#     user_id = user_repository_singleton.get_user_user_id()
+#     content = data['comment']
+
+#     # store comments
+#     new_comment = live_posts(content=content, user_id=user_id)
+#     db.session.add(new_comment)
+#     db.session.commit()
+
+#     # emitting new comments:
+#     emit('new_comment', {'user_id': user_id, 'content': content,
+#         'post_id': new_comment.post_id, 'username' : session['user']['username']}, broadcast=True)
+
+# Create a get request for live comments.
+# add user_id to session dictionary.
+@app.get('/comment')
+def live_comment():
+    comments = live_posts.query.order_by(live_posts.date.desc()).limit(15)
+    comments_data = []
+    for comment in comments:
+        
+        user = user_repository_singleton.get_user_by_user_id(comment.user_id)
+        comment_data = {
+            'post_id': comment.post_id,
+            'content': comment.content,
+            'user_id': comment.user_id,
+            'username': user.username,
+            'date': comment.date.strftime("%Y/%m/%d %H:%M:%S"),
+        }
+        comments_data.append(comment_data)
+    comments_data.reverse()
+    return jsonify(comments_data)
+
+@socketio.on('message')
+def handle_message(message):
+    print("Received message: " + message)
+    if not user_repository_singleton.is_logged_in():
+        socketio.emit('redirect', {'url': url_for('login')})
+    else:
+        user_id = user_repository_singleton.get_user_user_id()
+        content = message
+
+        # store comments
+        new_comment = live_posts(content=content, user_id=user_id)
+        db.session.add(new_comment)
+        db.session.commit()
+
+        # emitting new comments:
+        socketio.emit('message', {'user_id': user_id, 'content': content,
+            'post_id': new_comment.post_id, 'username' : session['user']['username']})
+
+
+
 @socketio.on('connect')
 def connect():
     global thread
-    print('Client connected')
+    print('Server connected')
     global current_symbol
     current_symbol = 'SPY'
 
