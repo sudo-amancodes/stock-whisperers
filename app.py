@@ -793,8 +793,11 @@ def live_comment():
     comments = live_posts.query.order_by(live_posts.date.desc()).limit(15)
     comments_data = []
     for comment in comments:
-        
+        print(comment)
         user = user_repository_singleton.get_user_by_user_id(comment.user_id)
+        print(user)
+        if not user:
+            abort(400)
         comment_data = {
             'post_id': comment.post_id,
             'content': comment.content,
@@ -810,7 +813,7 @@ def live_comment():
 def handle_message(message):
     print("Received message: " + message)
     if not user_repository_singleton.is_logged_in():
-        socketio.emit('redirect', {'url': url_for('login')})
+        return socketio.emit('redirect', {'url': url_for('login')})
     else:
         user_id = user_repository_singleton.get_user_user_id()
         content = message
