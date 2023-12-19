@@ -157,8 +157,7 @@ def data():
 
 @app.post('/data')
 def set_data():
-    jsonData = request.get_json()
-    if jsonData != None:
+    if (jsonData := request.get_json()) != None:
         ticker = jsonData['Stock']
 
     df = previous_graph(ticker)
@@ -196,18 +195,16 @@ def upload_post():
     description = request.form.get('text')
     if title == '' or title is None:
         abort(400)
-    user = user_repository_singleton.get_user_by_username(
-        user_repository_singleton.get_user_username())
 
-    if user is None:
+    if (user := user_repository_singleton.get_user_by_username(
+        user_repository_singleton.get_user_username())) is None:
         abort(401)
 
     created_post = post_repository_singleton.create_post(
         title, description, user.user_id)
 
-    image_upload = request.files.get('image_upload')
 
-    if image_upload is not None:
+    if (image_upload := request.files.get('image_upload')) is not None:
         filename = secure_filename(
             image_upload.filename) if image_upload.filename else ''
         if filename and allowed_file(filename):
@@ -265,9 +262,8 @@ def update_post(post_id):
     if title == '' or title is None:
         abort(400)
 
-    image_upload = request.files.get('image_upload')
 
-    if image_upload is not None:
+    if (image_upload := request.files.get('image_upload')) is not None:
         filename = secure_filename(
             image_upload.filename) if image_upload.filename else ''
         if filename and allowed_file(filename):
@@ -347,14 +343,12 @@ def sanitize_html(content):
 @app.post('/posts/<int:post_id>/comment')
 @app.post('/posts/<int:post_id>/comment/<int:parent_comment_id>')
 def comment_reply(post_id, parent_comment_id=0):
-    user = user_repository_singleton.get_user_by_username(
-        user_repository_singleton.get_user_username())
-    if user is None:
+    if (user := user_repository_singleton.get_user_by_username(
+        user_repository_singleton.get_user_username())) is None:
         abort(401)
     user_id = user.user_id
     content = request.form.get('content')
-    reply = request.form.get('reply')
-    if reply is not None:
+    if (reply := request.form.get('reply')) is not None:
         content = reply
     if post_id == '' or post_id is None or content == '' or content is None:
         abort(400)
@@ -512,9 +506,8 @@ def verify_login():
         flash('Please enter a username and a password', category='error')
         return redirect('/login')
 
-    temp_username = users.query.filter((func.lower(users.username) == username.lower()) | (
-        func.lower(users.email) == username.lower())).first()
-    if temp_username is not None:
+    if (temp_username := users.query.filter((func.lower(users.username) == username.lower()) | (
+        func.lower(users.email) == username.lower())).first()) is not None:
         if bcrypt.check_password_hash(temp_username.password, password):
             time_difference = datetime.utcnow() - temp_username.last_login
 
@@ -585,9 +578,8 @@ def create_user():
         flash('Please fill out all of the fields')
         return redirect('/register')
 
-    temp_user = users.query.filter((func.lower(users.username) == username.lower()) | (
-        func.lower(users.email) == email.lower())).first()
-    if temp_user is not None:
+    if (temp_user := users.query.filter((func.lower(users.username) == username.lower()) | (
+        func.lower(users.email) == email.lower())).first()) is not None:
         if temp_user.email.lower() == email.lower():
             flash('email already exists', category='error')
         elif temp_user.username.lower() == username.lower():
@@ -651,8 +643,7 @@ def password_reset_form(token):
 def password_reset(token):
     if user_repository_singleton.is_logged_in():
         return redirect('/')
-    user = users.verify_reset_token(token)
-    if user is None:
+    if (user := users.verify_reset_token(token)) is None:
         flash('Invalid or expired token', category='error')
         return redirect('/request_password_reset')
 
@@ -706,8 +697,7 @@ def get_edit_profile_page(username: str):
     if not user_repository_singleton.is_logged_in():
         abort(401)
 
-    user_to_edit = users.query.filter_by(username=username).first()
-    if user_to_edit is None:
+    if (user_to_edit := users.query.filter_by(username=username).first()) is None:
         redirect(f'/profile/{username}')
     return render_template('edit_profile.html', user=user_to_edit)
 
@@ -737,8 +727,7 @@ def update_profile(username: str):
         flash('Email already in use', 'error')
         return redirect(f'/profile/{username}/edit')
 
-    profile_picture = request.files['image_upload']
-    if profile_picture:
+    if profile_picture := request.files['image_upload']:
         filename = secure_filename(profile_picture.filename)
         if filename and allowed_file(filename):
         # Set UUID to prevent same file names

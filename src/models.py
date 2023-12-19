@@ -43,8 +43,7 @@ class users(db.Model, UserMixin):
 
     def get_reset_token(self, expires_sec=900):
         # must have app_secret key variable in env file
-        app_secret_key = os.getenv('APP_SECRET_KEY')
-        if app_secret_key:
+        if app_secret_key := os.getenv('APP_SECRET_KEY'):
             s = Serializer(app_secret_key)
             token = s.dumps({'user_id' : self.user_id})
             if isinstance(token, bytes):
@@ -55,8 +54,7 @@ class users(db.Model, UserMixin):
     @staticmethod
     def verify_reset_token(token):
         # must have app_secret key variable in env file
-        app_secret_key = os.getenv('APP_SECRET_KEY')
-        if app_secret_key:
+        if app_secret_key := os.getenv('APP_SECRET_KEY'):
             s = Serializer(app_secret_key)
             try:
                 user_id = s.loads(token)['user_id']

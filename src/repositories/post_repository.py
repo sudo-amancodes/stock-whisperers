@@ -13,8 +13,7 @@ class PostRepository:
     
     # get all posts of users that are followed by the logged in user
     def get_all_posts_of_followed_users(self, user_id):
-        user = users.query.get(user_id)
-        if user:
+        if user := users.query.get(user_id):
             followed = user.get_all_following()
             followed_user_posts = []
             for username in followed:
@@ -67,8 +66,7 @@ class PostRepository:
     
     # get the user who created the post
     def get_post_creator_id(self, post_id):
-        post = Post.query.get(post_id)
-        if post:
+        if post := Post.query.get(post_id):
             return post.user_id
 
     # add a comment to a post
@@ -84,8 +82,7 @@ class PostRepository:
     
     # delete a post
     def delete_post(self, post_id):
-        post = Post.query.get(post_id)
-        if post:
+        if post := Post.query.get(post_id):
             db.session.delete(post)
             db.session.commit()
             return True
@@ -93,8 +90,7 @@ class PostRepository:
     
     # update a post
     def update_post(self, post_id, title, content, file_upload):
-        post = Post.query.get(post_id)
-        if post:
+        if post := Post.query.get(post_id):
             post.title = title
             post.content = content
             if post.file_upload:

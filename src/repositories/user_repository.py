@@ -25,8 +25,7 @@ class UserRepository:
         db.session.commit()
         
     def remove_user(self, username):
-        user = users.query.filter_by(username = username).first()
-        if user:
+        if user := users.query.filter_by(username = username).first():
             db.session.delete(user)
             db.session.commit()
 
