@@ -20,13 +20,14 @@ from flask_mail import Mail, Message
 from src.models import db, users, live_posts, Post, friendships
 from datetime import datetime, timedelta
 from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
-import random
 from werkzeug.utils import secure_filename
 # Bleach to prevent cross-site scripting (XSS) attacks, possible when user is posting a comment
 import bleach
 
 # Pillow for image processing
 from PIL import Image
+import secrets
+
 # Allowed file extensions for uploading
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
@@ -452,7 +453,7 @@ def send_verification_email(email):
     if not email:
         abort(403)
     global code
-    code = random.randint(100000, 999999)
+    code = secrets.SystemRandom().randint(100000, 999999)
     msg = Message('Verification code',
                   sender='noreply@stock-whisperers.com', recipients=[email])
     msg.body = f'''Enter the 6-digit code below to verify your identity.
