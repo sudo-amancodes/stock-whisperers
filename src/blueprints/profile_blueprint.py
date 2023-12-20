@@ -7,6 +7,7 @@ from src.repositories.user_repository import user_repository_singleton
 from src.repositories.post_repository import post_repository_singleton
 from werkzeug.utils import secure_filename
 from PIL import Image
+from src.blueprints.posts_blueprint import sanitize_html
 
 router = Blueprint('profile_router', __name__, url_prefix='/profile')
 
@@ -14,15 +15,6 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def sanitize_html(content):
-    allowed_tags = ['p', 'div', 'em', 'strong', 'del', 'a', 'img', 'h1', 'h2',
-                    'h3', 'h4', 'h5', 'h6', 'blockquote', 'ul', 'ol', 'li', 'hr', 'br', 'pre']
-    allowed_attributes = {'*': ['class', 'style'], 'a': ['href', 'target']}
-
-    sanitized_content = bleach.clean(
-        content, tags=allowed_tags, attributes=allowed_attributes)
-    return sanitized_content
 
 @router.post('/<string:username>/edit/delete')
 def delete(username):
