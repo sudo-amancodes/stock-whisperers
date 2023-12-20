@@ -19,7 +19,6 @@ from flask_mail import Mail, Message
 from src.models import db, users, live_posts, Post, friendships
 from datetime import datetime, timedelta
 from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
-import random
 from werkzeug.utils import secure_filename
 # Bleach to prevent cross-site scripting (XSS) attacks, possible when user is posting a comment
 import bleach
@@ -29,6 +28,8 @@ from src.blueprints.profile_blueprint import router as profile_router
 
 # Pillow for image processing
 from PIL import Image
+import secrets
+
 # Allowed file extensions for uploading
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
@@ -311,7 +312,7 @@ def send_verification_email(email):
     if not email:
         abort(403)
     global code
-    code = random.randint(100000, 999999)
+    code = secrets.SystemRandom().randint(100000, 999999)
     msg = Message('Verification code',
                   sender='noreply@stock-whisperers.com', recipients=[email])
     msg.body = f'''Enter the 6-digit code below to verify your identity.
@@ -336,40 +337,6 @@ def register():
         flash('You are already logged in. Logout to make a new account', category='error')
         return redirect('/')
     return render_template('register.html', user=session.get('user'))
-
-@app.get('/verify_user/<username>/<method>')
-def verify_user(username, method):
-    return render_template('verify_user.html', username=username, method=method)
-
-@app.post('/verify_user/<username>/<method>')
-def verify_code(username, method):
-    global code
-    user_code = request.form.get('user-code')
-    if not user_code:
-        flash('Please enter in a code.', category='error')
-        return redirect(f'/verify_user/{username}/{method}')
-    if str(code) != str(user_code):
-        flash('Incorrect code. Try Again', category='error')
-        return redirect(f'/verify_user/{username}/{method}')
-
-    if method == "signup":
-        user_repository_singleton.add_user(
-            temp_user_info[0], temp_user_info[1], temp_user_info[2], temp_user_info[3], temp_user_info[4], temp_user_info[5])
-        user = user_repository_singleton.get_user_by_username(
-            temp_user_info[2])
-        if not user:
-            abort(403)
-        user_repository_singleton.login_user(user)
-        flash('Successfully created an account. Welcome, ' +
-              user.first_name + '!', category='success')
-        return redirect('/')
-
-    user = user_repository_singleton.get_user_by_username(username)
-    if not user:
-        abort(403)
-    flash('Successfully logged in, ' + user.first_name + '!', category='success')
-    user_repository_singleton.login_user(user)
-    return redirect('/')
 
 @app.post('/register')
 def create_user():
@@ -406,6 +373,40 @@ def create_user():
         return redirect(f'/verify_user/{username}/signup')
 
     return redirect('/register')
+
+@app.get('/verify_user/<username>/<method>')
+def verify_user(username, method):
+    return render_template('verify_user.html', username=username, method=method)
+
+@app.post('/verify_user/<username>/<method>')
+def verify_code(username, method):
+    global code
+    user_code = request.form.get('user-code')
+    if not user_code:
+        flash('Please enter in a code.', category='error')
+        return redirect(f'/verify_user/{username}/{method}')
+    if str(code) != str(user_code):
+        flash('Incorrect code. Try Again', category='error')
+        return redirect(f'/verify_user/{username}/{method}')
+
+    if method == "signup":
+        user_repository_singleton.add_user(
+            temp_user_info[0], temp_user_info[1], temp_user_info[2], temp_user_info[3], temp_user_info[4], temp_user_info[5])
+        user = user_repository_singleton.get_user_by_username(
+            temp_user_info[2])
+        if not user:
+            abort(403)
+        user_repository_singleton.login_user(user)
+        flash('Successfully created an account. Welcome, ' +
+              user.first_name + '!', category='success')
+        return redirect('/')
+
+    user = user_repository_singleton.get_user_by_username(username)
+    if not user:
+        abort(403)
+    flash('Successfully logged in, ' + user.first_name + '!', category='success')
+    user_repository_singleton.login_user(user)
+    return redirect('/')
 
 # Route for requesting password reset
 @app.get('/request_password_reset')
