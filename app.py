@@ -274,6 +274,39 @@ def login():
         return redirect('/')
     return render_template('login.html', user=session.get('user'))
 
+@app.post('/login')
+def verify_login():
+    if user_repository_singleton.is_logged_in():
+        flash('You are already logged in', category='error')
+        return redirect('/')
+    username = request.form.get('username')
+    password = request.form.get('password')
+
+    if not username or not password:
+        flash('Please enter a username and a password', category='error')
+        return redirect('/login')
+
+    temp_username = users.query.filter((func.lower(users.username) == username.lower()) | (
+        func.lower(users.email) == username.lower())).first()
+    if temp_username is not None:
+        if bcrypt.check_password_hash(temp_username.password, password):
+            time_difference = datetime.utcnow() - temp_username.last_login
+
+            if time_difference > timedelta(days=14):
+                send_verification_email(temp_username.email)
+                return redirect(f'/verify_user/{temp_username.username}/login')
+            else:
+                flash('Successfully logged in, ' +
+                      temp_username.first_name + '!', category='success')
+                user_repository_singleton.login_user(temp_username)
+                return redirect('/')
+        else:
+            flash('Incorrect username or password', category='error')
+    else:
+        flash('Username does not exist', category='error')
+
+    return redirect('/login')
+
 def send_verification_email(email):
     if not email:
         abort(403)
@@ -288,6 +321,21 @@ def send_verification_email(email):
 If you did not make this request, please ignore this email
 '''
     mail.send(msg)
+    
+@app.post('/logout')
+def logout():
+    if not user_repository_singleton.is_logged_in():
+        flash('Unable to logout because you are not logged in.', category='error')
+        return redirect('/')
+    user_repository_singleton.logout_user()
+    return redirect('/login')
+
+@app.get('/register')
+def register():
+    if user_repository_singleton.is_logged_in():
+        flash('You are already logged in. Logout to make a new account', category='error')
+        return redirect('/')
+    return render_template('register.html', user=session.get('user'))
 
 @app.get('/verify_user/<username>/<method>')
 def verify_user(username, method):
@@ -322,54 +370,6 @@ def verify_code(username, method):
     flash('Successfully logged in, ' + user.first_name + '!', category='success')
     user_repository_singleton.login_user(user)
     return redirect('/')
-
-@app.post('/login')
-def verify_login():
-    if user_repository_singleton.is_logged_in():
-        flash('You are already logged in', category='error')
-        return redirect('/')
-    username = request.form.get('username')
-    password = request.form.get('password')
-
-    if not username or not password:
-        flash('Please enter a username and a password', category='error')
-        return redirect('/login')
-
-    temp_username = users.query.filter((func.lower(users.username) == username.lower()) | (
-        func.lower(users.email) == username.lower())).first()
-    if temp_username is not None:
-        if bcrypt.check_password_hash(temp_username.password, password):
-            time_difference = datetime.utcnow() - temp_username.last_login
-
-            if time_difference > timedelta(days=14):
-                send_verification_email(temp_username.email)
-                return redirect(f'/verify_user/{temp_username.username}/login')
-            else:
-                flash('Successfully logged in, ' +
-                      temp_username.first_name + '!', category='success')
-                user_repository_singleton.login_user(temp_username)
-                return redirect('/')
-        else:
-            flash('Incorrect username or password', category='error')
-    else:
-        flash('Username does not exist', category='error')
-
-    return redirect('/login')
-
-@app.post('/logout')
-def logout():
-    if not user_repository_singleton.is_logged_in():
-        flash('Unable to logout because you are not logged in.', category='error')
-        return redirect('/')
-    user_repository_singleton.logout_user()
-    return redirect('/login')
-
-@app.get('/register')
-def register():
-    if user_repository_singleton.is_logged_in():
-        flash('You are already logged in. Logout to make a new account', category='error')
-        return redirect('/')
-    return render_template('register.html', user=session.get('user'))
 
 @app.post('/register')
 def create_user():
