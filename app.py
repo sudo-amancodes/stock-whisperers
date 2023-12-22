@@ -503,9 +503,9 @@ def live_comment():
     comments = live_posts.query.order_by(live_posts.date.desc()).limit(15)
     comments_data = []
     for comment in comments:
-        print(comment)
+        # print(comment)
         user = user_repository_singleton.get_user_by_user_id(comment.user_id)
-        print(user)
+        # print(user)
         if not user:
             abort(400)
         comment_data = {
