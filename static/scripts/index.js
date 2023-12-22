@@ -210,6 +210,7 @@ fetch('/comment')
     }
 })
 .then(comments => {
+    document.getElementById("comments-container").innerHTML = '';
     comments.forEach(comment => {
         let commentElement = document.createElement("div");
         commentElement.innerHTML = `<strong>${comment.username}:</strong> ${comment.content}`;
