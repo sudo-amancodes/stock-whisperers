@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
-from src.models import Post, db, friendships, users
-from flask import flash, session
+from src.models import Post, db, friendships, users, live_posts, likes, comment_likes, Comment
+from flask import abort, flash, session
+from sqlalchemy import or_
 
 class UserRepository:
     # check if a password meets all requirements
@@ -26,9 +27,31 @@ class UserRepository:
         
     def remove_user(self, username):
         user = users.query.filter_by(username = username).first()
+        if not user:
+            abort(400)
+        existing_friendship = friendships.query.filter(or_(friendships.user1_username == username, friendships.user2_username == username)).first()
+        if existing_friendship:
+            db.session.delete(existing_friendship)
+            db.session.commit()
+        user_live_posts = live_posts.query.filter_by(user_id = user.user_id).all()
+        if user_live_posts:
+            for live_post in user_live_posts:
+                db.session.delete(live_post)
+                db.session.commit()
+        posts = Post.query.filter_by(user_id = user.user_id).all()
+        if posts:
+            for post in posts:
+                db.session.delete(post)
+                db.session.commit()
+        comments = Comment.query.filter_by(user_id = user.user_id).all()
+        if comments:
+            for comment in comments:
+                db.session.delete(comment)
+                db.session.commit()
         if user:
             db.session.delete(user)
             db.session.commit()
+
 
     def login_user(self, user):
         session['user'] = {
@@ -47,13 +70,12 @@ class UserRepository:
 
     def is_logged_in(self):
         return 'user' in session
-
-    # get user by username
-    def get_user_by_username(self, username):
-        return users.query.filter_by(username=username).first()
     
     def get_user_by_user_id(self, user_id):
         return users.query.filter_by(user_id=user_id).first()
+    
+    def get_user_by_username(self, username):
+        return users.query.filter_by(username=username).first()
     
     def get_user_username(self):
         return session['user']['username']
