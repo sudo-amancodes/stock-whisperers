@@ -29,7 +29,7 @@ class UserRepository:
         user = users.query.filter_by(username = username).first()
         if not user:
             abort(400)
-        existing_friendship = friendships.query.filter(or_(friendships.user1_username == username, friendships.user2_username == username)).first()
+        existing_friendship = friendships.query.filter(or_(friendships.user1_id == user.user_id, friendships.user2_id == user.user_id)).first()
         if existing_friendship:
             db.session.delete(existing_friendship)
             db.session.commit()
@@ -94,17 +94,14 @@ class UserRepository:
     
     # follow a user
     def follow_user(self, user_id, user_to_follow_id):
-        user = users.query.get(user_id)
-        user_to_follow = users.query.get(user_to_follow_id)
-        if user and user_to_follow:
-            friendship = friendships.query.filter_by(user1_username=user.username, user2_username=user_to_follow.username).first()
-            if friendship:
-                db.session.delete(friendship)
-                db.session.commit()
-            else:
-                friendship = friendships(user.username, user_to_follow.username)
-                db.session.add(friendship)
-                db.session.commit()
+        friendship = friendships.query.filter_by(user1_id = user_id, user2_id = user_to_follow_id).first()
+        if friendship:
+            db.session.delete(friendship)
+            db.session.commit()
+        else:
+            friendship = friendships(user_id,user_to_follow_id)
+            db.session.add(friendship)
+            db.session.commit()
 
 # Singleton to be used in other modules
 user_repository_singleton = UserRepository()
