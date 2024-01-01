@@ -30,6 +30,8 @@ class users(db.Model, UserMixin):
 
     profile_picture = db.Column(db.String(255), nullable = True)
 
+    trader_tally = db.Column(db.Integer, nullable = False)
+
     followers = db.relationship('friendships', foreign_keys='friendships.user2_username', backref='following', lazy='dynamic')
     following = db.relationship('friendships', foreign_keys='friendships.user1_username', backref='followers', lazy='dynamic')
 
@@ -40,6 +42,8 @@ class users(db.Model, UserMixin):
         self.email = email
         self.password = password
         self.profile_picture = profile_picture
+        self.trader_tally = 0
+        self.role = 'user'
 
     def get_reset_token(self, expires_sec=900):
         # must have app_secret key variable in env file
@@ -97,6 +101,21 @@ class users(db.Model, UserMixin):
     def get_id(self):
         return str(self.user_id)
 
+class Tokens(db.Model):
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), primary_key=True)
+    total_tokens = db.Column(db.Integer, nullable=False, default=0)
+
+class Investments(db.Model):
+    investment_type = db.Column(db.String(255), primary_key=True)
+    stock_name = db.Column(db.String(255), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    tokens_invested = db.Column(db.Integer, nullable=False)
+    investment_date = db.Column(db.DateTime, nullable=False, default=func.now())
+
+class Watchlist(db.Model):
+    ticker_symbol = db.Column(db.String(255), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    date_added = db.Column(db.DateTime, nullable=False, default=func.now())
 
 #live posts table
 class live_posts(db.Model):

@@ -1,4 +1,4 @@
-CREATE DATABASE stock_whisperers IF NOT EXISTS
+CREATE DATABASE stock_whisperers;
 
 CREATE TABLE IF NOT EXISTS users (
     user_id SERIAL,
@@ -7,11 +7,34 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(255) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    role VARCHAR(50),
+    role VARCHAR(50) NOT NULL DEFAULT 'user',
     registration_date TIMESTAMP,
     last_login TIMESTAMP,
     profile_picture VARCHAR(255), 
+    trader_tally INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (user_id)
+);
+
+CREATE TABLE IF NOT EXISTS tokens (
+    user_id INT PRIMARY KEY REFERENCES users(user_id),
+    total_tokens INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS investments (
+    investment_type VARCHAR(255) NOT NULL,
+    stock_name VARCHAR(255) NOT NULL,
+    user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
+    tokens_invested INTEGER NOT NULL,
+    investment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    current_price FLOAT NOT NULL,
+    PRIMARY KEY (investment_type, stock_name)
+);
+
+CREATE TABLE IF NOT EXISTS watchlist (
+    watchlist_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
+    ticker_symbol VARCHAR(10) NOT NULL UNIQUE,
+    date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS live_posts (

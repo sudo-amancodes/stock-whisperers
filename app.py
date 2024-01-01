@@ -170,14 +170,57 @@ def set_data():
     df = previous_graph(ticker)
     return df.to_json(orient='records')
 
-@app.post('/watchlist')
-def get_watchlist():
+@app.post('/display_watchlist')
+def display_watchlist():
     ticker = request.get_json()['ticker']
+    print(ticker)
     data = yf.Ticker(ticker).history(period='1y')
     print(data.iloc[-1].Open)
     return jsonify({'currentPrice': data.iloc[-1].Close,
                     'openPrice':data.iloc[-1].Open})
 
+@app.post('/add_to_watchlist')
+def add_to_watchlist():
+    if not user_repository_singleton.is_logged_in():
+        return redirect('/register')
+    else:
+
+        user_id = user_repository_singleton.get_user_user_id()
+
+        jsonData = request.get_json()
+        if jsonData != None:
+            ticker_symbol = jsonData['Stock']
+
+        user_repository_singleton.add_to_watchlist(user_id, ticker_symbol)
+        return jsonify({'status': 'success'})
+
+@app.post('/remove_from_watchlist')
+def remove_from_watchlist():
+    user_id = user_repository_singleton.get_user_user_id()
+    if user_id == '' or user_id is None:
+        # Redirect to login
+        abort(400)
+
+    jsonData = request.get_json()
+    if jsonData != None:
+        ticker_symbol = jsonData['Stock']
+
+        user_repository_singleton.remove_from_watchlist(user_id, ticker_symbol)
+        return jsonify({'status': 'success'})
+
+@app.get('/get_user_watchlist')
+def get_user_watchlist():
+    # Assuming you have a function `get_watchlist_for_user` that takes a user_id and returns a list of tickers
+    if user_repository_singleton.is_logged_in():
+        user_id = user_repository_singleton.get_user_user_id()
+        
+        if user_id == '' or user_id is None:
+            abort(400)
+            
+        watchlist = user_repository_singleton.get_watchlist(user_id)  # Fetch the watchlist for the current user
+        return jsonify({'watchlist': watchlist, 'login':'true'})  # Return the watchlist as a JSON response
+    watchlist = []
+    return jsonify({'watchlist': watchlist, 'login':'false'})
 #Create Comments or add a temporary get/post request. That has a pass statement.
 #Example:
 #@app.get('/test')
