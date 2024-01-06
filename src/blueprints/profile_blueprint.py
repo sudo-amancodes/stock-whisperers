@@ -2,7 +2,8 @@ import os
 import uuid
 import bleach
 from flask import Blueprint, Flask, abort, redirect, render_template, request, url_for, flash, jsonify, session, blueprints, current_app
-from src.models import users, db
+from sqlalchemy import or_
+from src.models import users, db, friendships
 from src.repositories.user_repository import user_repository_singleton
 from src.repositories.post_repository import post_repository_singleton
 from werkzeug.utils import secure_filename
@@ -110,6 +111,13 @@ def update_profile(username: str):
             user_to_edit.profile_picture = pic_name
 
     user_to_edit.email = new_email
+    # user1_friendship = friendships.query.filter_by(user1_username = username).first()
+    # user2_friendship = friendships.query.filter_by(user2_username = username).first()
+    # if user1_friendship:
+    #     user1_friendship.user1_username = new_username
+    # if user2_friendship:
+    #     user2_friendship.user2_username = new_username
+    # db.session.commit()
     user_to_edit.username = new_username
     user_to_edit.first_name = new_fname
     user_to_edit.last_name = new_lname

@@ -78,12 +78,12 @@ CREATE TABLE IF NOT EXISTS likes (
 
 CREATE TABLE IF NOT EXISTS friendships (
     friendship_id SERIAL,
-    user1_username VARCHAR(255) NOT NULL,
-    user2_username VARCHAR(255) NOT NULL,
-    FOREIGN KEY (user1_username) REFERENCES users(username) ON DELETE CASCADE,
-    FOREIGN KEY (user2_username) REFERENCES users(username) ON DELETE CASCADE,
-    CONSTRAINT unique_user_follow UNIQUE (user1_username, user2_username),
-    CONSTRAINT check_user_follow CHECK (user1_username != user2_username)
+    user1_id INTEGER NOT NULL,
+    user2_id INTEGER NOT NULL,
+    FOREIGN KEY (user1_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (user2_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    CONSTRAINT unique_user_follow UNIQUE (user1_id, user2_id),
+    CONSTRAINT check_user_follow CHECK (user1_id != user2_id)
 );
 
 CREATE TABLE IF NOT EXISTS comment_likes (

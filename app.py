@@ -60,11 +60,8 @@ app.register_blueprint(profile_router)
 # DB connection
 app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{os.getenv("DB_USER")}:{os.getenv("DB_PASS")}@{os.getenv("DB_HOST")}:{os.getenv("DB_PORT")}/{os.getenv("DB_NAME")}'
 
-# Local DB connection
-
 # Deploy DB connection
 # app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URL')
-
 
 UPLOAD_FOLDER = 'static/profile_pics/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -147,12 +144,9 @@ def previous_graph(ticker):
     df = symbol.history(period='5d', interval='1m')
     return correct_graph_cols(df)
 
-
-
 @app.get('/')
 def index():
     return render_template('index.html', user=session.get('user'))
-
 
 @app.get('/data')
 def data(): 
@@ -184,7 +178,7 @@ def add_to_watchlist():
     if not user_repository_singleton.is_logged_in():
         return redirect('/register')
     else:
-
+        
         user_id = user_repository_singleton.get_user_user_id()
 
         jsonData = request.get_json()
@@ -456,7 +450,6 @@ def verify_code(username, method):
 def request_password_form():
     return render_template('request_password_reset.html')
 
-
 @app.post('/request_password_reset')
 def request_password_reset():
     if user_repository_singleton.is_logged_in():
@@ -481,7 +474,6 @@ If you did not make this request, please ignore this email
     flash('An email has been sent with instructions to reset your password',
         category='success')
     return redirect(url_for('verify_login'))
-
 
 @app.get('/password_reset/<token>')
 def password_reset_form(token):
@@ -519,28 +511,6 @@ def password_reset(token):
 
     return redirect(f'/password_reset/{token}')
 
-# sokcetIO to handle comments:
-# @socketio.on('send_comment')
-# def handle_send_comment(data):
-#     if not user_repository_singleton.is_logged_in():
-#         return abort(401)
-#         # emit('error', {'message': 'Not logged in, please log in to comment :)'})
-#     # return
-#     # abort (401)
-#     user_id = user_repository_singleton.get_user_user_id()
-#     content = data['comment']
-
-#     # store comments
-#     new_comment = live_posts(content=content, user_id=user_id)
-#     db.session.add(new_comment)
-#     db.session.commit()
-
-#     # emitting new comments:
-#     emit('new_comment', {'user_id': user_id, 'content': content,
-#         'post_id': new_comment.post_id, 'username' : session['user']['username']}, broadcast=True)
-
-# Create a get request for live comments.
-# add user_id to session dictionary.
 @app.get('/comment')
 def live_comment():
     comments = live_posts.query.order_by(live_posts.date.desc()).limit(15)
@@ -592,11 +562,9 @@ def connect():
         if thread is None:
             thread = socketio.start_background_task(background_thread)
 
-
 """
 Decorator for disconnect
 """
-
 
 @socketio.on('disconnect')
 def disconnect():
