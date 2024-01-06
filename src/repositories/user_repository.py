@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from src.models import Post, db, friendships, users, live_posts, likes, comment_likes, Comment
+from src.models import Post, db, friendships, users, live_posts, likes, comment_likes, Comment, Watchlist
 from flask import abort, flash, session
 from sqlalchemy import or_
 
@@ -92,6 +92,29 @@ class UserRepository:
     def get_user_last_name(self):
         return session['user']['last_name']
     
+    def get_watchlist(self, user_id):
+        watchlist_query = Watchlist.query.filter_by(user_id=user_id).all()
+        watchlist = []
+        for stocks in watchlist_query:
+            watchlist.append(stocks.ticker_symbol)
+
+        if watchlist:
+            return watchlist
+        return None
+    
+    def add_to_watchlist(self, user_id, ticker_symbol):
+        user = users.query.get(user_id)
+        if user:
+            watchlist = Watchlist(ticker_symbol=ticker_symbol, user_id=user_id)
+            db.session.add(watchlist)
+            db.session.commit()
+
+    def remove_from_watchlist(self, user_id, ticker_symbol):
+        user = users.query.get(user_id)
+        if user:
+            Watchlist.query.filter_by(user_id=user_id, ticker_symbol=ticker_symbol).delete()
+            db.session.commit()
+
     # follow a user
     def follow_user(self, user_id, user_to_follow_id):
         friendship = friendships.query.filter_by(user1_id = user_id, user2_id = user_to_follow_id).first()
