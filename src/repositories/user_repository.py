@@ -59,7 +59,8 @@ class UserRepository:
             'user_id' : user.user_id,
             'email' : user.email,
             'first_name' : user.first_name,
-            'last_name' : user.last_name
+            'last_name' : user.last_name,
+            'profile_picture' : user.profile_picture
         }
         # user = users.query.filter_by(username=username).first()
         if user:
@@ -91,6 +92,9 @@ class UserRepository:
     
     def get_user_last_name(self):
         return session['user']['last_name']
+    
+    def get_user_profile_picture(self):
+        return session['user']['profile_picture']
     
     def get_watchlist(self, user_id):
         watchlist_query = Watchlist.query.filter_by(user_id=user_id).all()
