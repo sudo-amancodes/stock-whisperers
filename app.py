@@ -84,7 +84,6 @@ temp_user_info = []
 
 # Override Yahoo Finance
 yf.pdr_override()
-global current_symbol
 
 def background_thread():
     print("Generating random sensor values")
